@@ -1,0 +1,362 @@
+/* LARP full-screen simulator design — separate from the BlockBet casino. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root{
+  color-scheme:dark;
+  font-family:Inter,"Segoe UI",sans-serif;
+  --bg:#0f212e;--bg-2:#1a2c38;--panel:#213743;--line:#2f4553;
+  --text:#fff;--muted:#b1bad3;--green:#00e701;--green-ink:#04140a;
+  --accent:#00e701;--accent2:#1475e1;--border:#2f4553;--surface:#0f212e;
+  --surface2:#213743;--radius:12px;
+}
+html,body{min-height:100%;background:#1a2c38;color:#fff}
+body{overflow-x:hidden;font-family:Inter,"Segoe UI",sans-serif;font-size:14px}
+button,input{font-family:inherit}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+::selection{background:#00e701;color:#04140a}
+.app-shell{display:block;min-height:100dvh;background:var(--bg-2)}
+.sidebar,.topbar,.mobile-nav,.site-footer{display:none!important}
+.main-column{width:100%;min-height:100dvh}
+.immersive-chrome{height:60px;width:100%;position:sticky;top:0;z-index:40;background:#0f212ee8;border-bottom:1px solid #2f4553;backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 clamp(16px,3.2vw,42px)}
+.chrome-home{display:flex;gap:11px;align-items:center;font-weight:900}
+.chrome-logo{height:34px;width:34px;display:grid;place-items:center;background:var(--green);border-radius:9px;color:#04140a;font-size:21px;font-weight:900}
+.chrome-title{font-size:17px;letter-spacing:-.5px}
+.chrome-title small{display:block;color:#a8b5c8;font-size:8px;letter-spacing:1.6px;font-weight:800}
+#chrome-page{font-size:11px;font-weight:800;letter-spacing:1.4px;color:var(--muted)}
+.chrome-right{display:flex;gap:9px}
+.chrome-right button{height:36px;min-width:36px;padding:0 9px;font-size:19px;border:0;background:#213743;border-radius:8px}
+.chrome-right button:hover{background:#2f4553}
+body[data-screen=home] .immersive-chrome{background:#0b1825ee}
+body[data-screen=home] .immersive-chrome #chrome-page{display:none}
+.screen{max-width:100%;width:100%;padding:0 22px 110px;min-height:calc(100dvh - 60px);margin:0 auto}
+body[data-screen=home] .screen{padding:0;min-height:calc(100dvh - 60px)}
+.immersive-dock{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:35;background:#0f212ef0;border:1px solid #365260;box-shadow:0 15px 48px #0009;backdrop-filter:blur(18px);border-radius:16px;padding:7px;display:flex;gap:4px;max-width:calc(100vw - 20px)}
+.immersive-dock a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:64px;height:54px;border-radius:11px;color:#b1bad3;font-size:22px;transition:background .15s}
+.immersive-dock a small{font-size:9px;font-weight:800}
+.immersive-dock a:hover,.immersive-dock a.active{background:#213743;color:white}
+.immersive-dock a.active{box-shadow:inset 0 -3px 0 #00e701}
+body[data-screen=home] .immersive-dock{display:none}
+.simulation-tag,.demo-chip{background:#1c3441;color:#b1bad3;border:1px solid #395561;border-radius:8px;font-size:10px;letter-spacing:.06em}
+.status-dot{background:var(--green);box-shadow:0 0 8px #00e70158}
+.panel{background:var(--bg);border:1px solid #2f4553;border-radius:12px}
+.page-heading{max-width:1200px;margin:0 auto;padding:27px 0 22px;align-items:center}
+.page-heading h1{font:800 clamp(25px,2.9vw,35px)/1.17 Inter,sans-serif;letter-spacing:-.04em;margin:7px 0}
+.page-heading p{color:#b1bad3;max-width:710px;line-height:1.5}
+.eyebrow,.section-kicker{color:#b1bad3;letter-spacing:.09em;font-size:11px;font-weight:800}
+.primary-button{background:var(--green);color:#04140a;border:0;border-radius:8px;box-shadow:none;font-weight:800}
+.primary-button:hover{filter:brightness(1.09)}
+.secondary-button,.outline-button{background:#213743;color:white;border:1px solid #385565;border-radius:8px;box-shadow:none}
+.secondary-button:hover,.outline-button:hover{background:#2f4553}
+.text-button{color:var(--green);text-decoration:none}
+.toast{background:#0f212e;border:1px solid var(--green);color:white}
+.profile-dialog{background:#213743;border:1px solid #2f4553;border-radius:14px}
+.dialog-symbol{color:var(--green)}
+.profile-dialog h2{font-family:Inter,sans-serif}
+.profile-dialog input{background:#0f212e;border:2px solid #2f4553}
+.modal-backdrop{background:#02080ec9}
+/* 01 — Full-screen fictional phone launcher */
+.phone-launcher{position:relative;isolation:isolate;min-height:calc(100dvh - 60px);overflow:hidden;padding:clamp(28px,5vw,58px) max(24px,calc((100vw - 1120px)/2)) 50px;background:linear-gradient(120deg,#091a25,#122f3c 52%,#0e2631)}
+.launcher-wallpaper,.launcher-wallpaper .launcher-glow{position:absolute;inset:0;pointer-events:none}
+.launcher-wallpaper{z-index:-1;overflow:hidden}
+.launcher-wallpaper::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#05101825,#071a2680 80%,#0b2631b0)}
+.launcher-glow{border-radius:50%;filter:blur(75px);opacity:.55}
+.launcher-glow.a{inset:-310px -230px auto auto;width:840px;height:700px;background:radial-gradient(ellipse,#11937d 0,#24685e 42%,transparent 68%)}
+.launcher-glow.b{inset:auto auto -320px -250px;width:760px;height:650px;background:radial-gradient(ellipse,#255e9c 0,#113962 48%,transparent 70%)}
+.launcher-head{position:relative;max-width:760px}
+.launcher-date{color:#d0e3e5;font-size:13px;font-weight:600}
+.launcher-demo{display:inline-block;margin-left:16px;padding:7px 10px;background:#173946b0;border:1px solid #467c7a;border-radius:100px;font-size:10px;font-weight:800;letter-spacing:.1em;color:#99edc8}
+.launcher-head h1{font:900 clamp(57px,8vw,100px)/.92 Inter,sans-serif;margin:32px 0 21px;letter-spacing:-.075em}
+.launcher-head h1 em{font-style:normal;color:#00e701;text-shadow:0 4px 60px #00e70125}
+.launcher-head p{color:#d3e0e4;line-height:1.65;font-size:clamp(13px,1.3vw,16px);max-width:510px;margin:0}
+.launcher-widgets{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.9fr);gap:13px;max-width:690px;margin:38px 0 36px}
+.balance-widget,.fame-widget{border:1px solid #ffffff24;box-shadow:0 18px 34px #0003;background:#102e3bc9;backdrop-filter:blur(20px);border-radius:16px;padding:20px;text-align:left;display:flex;flex-direction:column;justify-content:center;min-height:120px}
+.balance-widget small,.fame-widget>span{color:#c3dce1;font-size:10px;font-weight:800;letter-spacing:.08em}
+.balance-widget small span{float:right;color:#91f6a9}
+.balance-widget strong{font:800 clamp(27px,3vw,40px) Inter,sans-serif;margin:9px 0 6px;letter-spacing:-.04em}
+.balance-widget>span,.fame-widget small{color:#aac7d0;font-size:11px}
+.fame-widget strong{font:800 35px Inter,sans-serif;margin:8px 0;letter-spacing:-.04em}
+.balance-widget:hover,.fame-widget:hover{border-color:#93e7ae}
+.launcher-apps-heading{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:16px}
+.launcher-apps-heading h2{font-size:18px;margin:0;font-weight:800}
+.launcher-apps-heading span{color:#b7d2d6;font-size:11px}
+.launcher-app-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:13px}
+.launcher-app{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.launcher-app-icon{height:76px;width:76px;max-width:100%;border-radius:19px;display:grid;place-items:center;flex:none;font-size:40px;font-weight:800;color:white;box-shadow:inset 0 1px 0 #ffffff4d,0 13px 22px #0004;transition:transform .2s,filter .2s}
+.launcher-app:hover .launcher-app-icon{transform:translateY(-5px) scale(1.03);filter:brightness(1.08)}
+.launcher-app-icon.bank{background:linear-gradient(145deg,#1680a8,#055179)}
+.launcher-app-icon.walletg{background:linear-gradient(145deg,#23b2be,#14628c)}
+.launcher-app-icon.walle­ta{background:linear-gradient(145deg,#444e68,#131827)}
+.launcher-app-icon.walleta{background:linear-gradient(145deg,#79828d,#212b3b)}
+.launcher-app-icon.video{background:linear-gradient(145deg,#ff5c66,#9f1534)}
+.launcher-app-icon.photos{background:linear-gradient(145deg,#df7d34,#b42c94 65%,#503ce0)}
+.launcher-app-icon.shorts{background:linear-gradient(145deg,#131b25,#0d1020);text-shadow:-3px -3px #26e5e4,3px 3px #ff548c}
+.launcher-app-icon.stream{background:linear-gradient(145deg,#fa5c7e,#9c123f)}
+.launcher-app-icon.cases{background:linear-gradient(145deg,#e9a73b,#925209)}
+.launcher-app-icon.blockbet{background:linear-gradient(145deg,#0dfe25,#027a1b);color:#092a14}
+.launcher-app strong{font-size:12px;font-weight:800;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.launcher-app small{font-size:10px;color:#c2cfd4;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.launcher-bottom{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:37px 0 16px;border-top:1px solid #ffffff26;padding-top:20px}
+.launcher-bottom button{background:#183744ba;border:1px solid #4c7080;border-radius:9px;padding:12px 16px;color:#dceaf0;font-weight:800}
+.launcher-bottom button:hover{border-color:var(--green)}
+.launcher-character span{color:var(--green)}
+.launcher-disclaimer{color:#c1ced2;font-size:11px;line-height:1.5;margin:0}
+/* 02 — Bank experience, each bank has its own theme accent */
+.immersive-bank{max-width:1180px;margin:auto;padding:28px 0 0;min-height:calc(100dvh - 130px)}
+.bank-app-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.bank-app-brand{display:flex;gap:13px;align-items:center}
+.bank-app-logo{height:49px;width:49px;display:grid;place-items:center;color:#102332;border-radius:14px;font-size:29px;font-weight:800;box-shadow:0 8px 25px #0003}
+.bank-app-brand strong{display:block;font-size:24px;letter-spacing:-.04em}
+.bank-app-brand small{display:block;color:var(--muted);font-size:10px;margin-top:4px;font-weight:800;letter-spacing:.07em}
+.bank-circle-profile{width:38px;height:38px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-size:15px;font-weight:800}
+.bank-app-balance{text-align:center;margin:46px auto 29px}
+.bank-app-balance>span{font-size:11px;font-weight:800;color:#bdd0dc;letter-spacing:.09em}
+.bank-app-balance h1{font-size:clamp(43px,6vw,72px);letter-spacing:-.065em;line-height:1.1;margin:10px 0 6px;font-variant-numeric:tabular-nums}
+.bank-app-balance p{margin:0;color:var(--muted);font-size:12px}
+.bank-app-actions{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:34px}
+.bank-app-actions button,.bank-app-actions a{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;border:0;background:none;font-size:12px;font-weight:700;min-width:84px}
+.bank-app-actions b{height:57px;width:57px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:var(--panel);border:1px solid #3a5360;color:#fff;transition:background .15s}
+.bank-app-actions button:hover b,.bank-app-actions a:hover b{background:var(--selected-bank);color:#122532}
+.bank-app-body{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.95fr);gap:18px}
+.bank-app-left,.bank-app-right{min-width:0}
+.bank-hero-card{min-height:220px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;padding:25px;border-radius:16px;background:linear-gradient(120deg,var(--selected-bank),#152e40);color:white;isolation:isolate}
+.bank-hero-card::after{content:"";width:350px;height:350px;position:absolute;right:-130px;top:-160px;border:1px solid #ffffff66;border-radius:50%;box-shadow:0 0 0 28px #ffffff08,0 0 0 68px #ffffff08;z-index:-1}
+.mini-bank-heading{font-size:10px;letter-spacing:.14em;font-weight:800;color:#fff}
+.bank-hero-card h2{font-size:23px;margin:9px 0;letter-spacing:-.04em}
+.bank-card-number{font-size:17px;letter-spacing:.13em}
+.card-watermark{position:absolute;right:18px;bottom:24px;font-size:9px;letter-spacing:.15em;font-weight:900}
+.bank-transactions{margin-top:18px;padding:22px;border-radius:12px;background:var(--bg)}
+.bank-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}
+.bank-section-head h2{margin:0;font-size:17px;font-weight:800}
+.bank-section-head span{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.05em}
+.bank-transaction{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #2f4553}
+.bank-transaction:last-child{border-bottom:0}
+.txn-avatar{height:39px;width:39px;background:var(--panel);border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:19px}
+.txn-detail{flex:1;min-width:0}
+.txn-detail b,.txn-detail small{display:block}
+.txn-detail b{font-size:12px}
+.txn-detail small{font-size:11px;color:var(--muted);margin-top:5px}
+.bank-transaction>strong{font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.positive{color:var(--green)}
+.negative{color:#ff899a}
+.bank-app-right{border-radius:12px;background:var(--bg);padding:22px;align-self:start}
+.bank-app-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bank-app-choice{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid transparent;border-radius:9px;padding:10px;text-align:left;min-width:0}
+.bank-app-choice:hover,.bank-app-choice.selected{border-color:var(--selected-bank)}
+.bank-app-choice.selected{background:#284b59}
+.bank-choice-mark{height:35px;width:35px;flex:none;display:grid;place-items:center;border-radius:9px;font-size:22px;color:#172837}
+.bank-app-choice>span:nth-child(2){min-width:0;flex:1}
+.bank-app-choice strong,.bank-app-choice small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bank-app-choice strong{font-size:11px}
+.bank-app-choice small{font-size:9px;color:#b1bad3;margin-top:5px}
+.bank-app-choice>span:last-child{color:#d3e8e9}
+.bank-demo-foot{margin-top:17px;border-top:1px solid var(--line);padding-top:15px;color:var(--muted);font-size:11px;line-height:1.6}
+/* 03 — Full-screen collectible wallet */
+.immersive-wallet{max-width:1100px;margin:0 auto;min-height:calc(100dvh - 150px);padding:26px 0 18px}
+.wallet-app-top{display:flex;align-items:center;justify-content:space-between}
+.wallet-app-top small{font-size:11px;letter-spacing:.09em;font-weight:800;color:var(--muted)}
+.wallet-app-top h1{font-size:31px;letter-spacing:-.04em;margin:7px 0 0}
+.wallet-add-button{width:44px;height:44px;border-radius:50%;font-size:28px;border:0;background:var(--panel)}
+.wallet-app-showcase{display:flex;align-items:center;flex-direction:column;margin:28px auto 35px}
+.wallet-app-label{width:min(450px,100%);display:flex;justify-content:space-between;margin-bottom:14px;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.06em}
+.wallet-large-card{width:min(450px,100%)}
+.wallet-large-card .bank-card{height:260px;border-radius:22px;padding:25px 28px;box-shadow:0 30px 55px #0005;transform:perspective(700px) rotateY(-3deg)}
+.wallet-large-card .card-top>span:first-child{font-size:23px}
+.wallet-large-card .card-demo{font-size:10px}
+.wallet-large-card .chip-icon{height:34px;width:47px}
+.wallet-large-card .chip-icon span{height:33px}
+.wallet-large-card .card-number{font-size:16px}
+.wallet-large-card .card-footer{font-size:13px}
+.wallet-app-showcase>p{font-size:11px;color:var(--muted);margin:17px 0}
+.wallet-app-actions{display:flex;gap:10px}
+.wallet-app-actions button{border:0;background:var(--panel);color:#fff;padding:13px 19px;border-radius:9px;font-size:12px;font-weight:800}
+.wallet-app-actions button:first-child{background:var(--green);color:#04140a}
+.wallet-app-actions button:hover{filter:brightness(1.1)}
+.wallet-card-shelf{background:var(--bg);padding:22px;border-radius:12px}
+.wallet-mini-grid{display:flex;gap:15px;overflow-x:auto;padding:10px 0 12px;scrollbar-width:thin}
+.wallet-mini-choice{flex:none;width:212px;background:var(--panel);border:2px solid transparent;border-radius:12px;padding:10px;text-align:left}
+.wallet-mini-choice.selected{border-color:var(--green)}
+.wallet-mini-choice .bank-card.compact{height:117px}
+.wallet-mini-choice>strong,.wallet-mini-choice>small{display:block}
+.wallet-mini-choice>strong{margin-top:12px;font-size:13px}
+.wallet-mini-choice>small{font-size:10px;color:var(--muted);margin-top:5px}
+.wallet-remove{border:0;background:none;color:var(--muted);font-size:11px;padding:10px 0 0;text-decoration:underline}
+.immersive-wallet>.card-catalog{background:var(--bg);border-radius:12px;margin-top:15px;padding:22px}
+.immersive-wallet .catalog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.immersive-wallet .catalog-grid button{background:var(--panel);border:1px solid var(--line);padding:10px;border-radius:10px;text-align:left;min-width:0}
+.immersive-wallet .catalog-grid button:hover{border-color:var(--green)}
+.immersive-wallet .catalog-grid strong,.immersive-wallet .catalog-grid small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.immersive-wallet .catalog-grid strong{margin-top:10px;font-size:11px}
+.immersive-wallet .catalog-grid small{color:var(--muted);font-size:10px;margin-top:4px}
+.wallet-risk-note{color:var(--muted);font-size:11px;text-align:center;line-height:1.5;margin:22px 0}
+.wallet-orchard{background:transparent}
+.wallet-droid{background:transparent}
+/* 04 — Social creator studio, full-page analytics */
+.social-tabs{max-width:1200px;margin:0 auto 18px;display:flex;gap:8px;flex-wrap:wrap}
+.social-tabs button{background:var(--bg);color:var(--muted);border:1px solid var(--line);border-radius:9px;padding:13px 17px}
+.social-tabs button.active{background:var(--panel);color:white;border-color:var(--green)}
+.studio-layout{max-width:1200px;margin:0 auto;grid-template-columns:minmax(0,1fr) 285px;gap:16px}
+.studio-main,.studio-tools,.content-planner{background:var(--bg);border-color:var(--line);padding:23px}
+.studio-brand h2{font-family:Inter,sans-serif;font-size:22px}
+.studio-brand small{color:var(--muted)}
+.stats-grid>div{background:var(--panel);border-color:#385460;border-radius:10px}
+.stats-grid strong{font-family:Inter,sans-serif}
+.stats-grid span{color:var(--green)}
+.analytics h3{font-family:Inter,sans-serif}
+.chart-bars{border-color:var(--line)}
+.studio-tools{display:flex;flex-direction:column}
+.creator-photo{background:linear-gradient(140deg,#267c64,#00e701);color:#072018;border-radius:50%}
+.studio-tools h2{font-family:Inter,sans-serif}
+.creator-badge{background:var(--panel);color:var(--green)}
+.studio-tools>button{background:var(--panel);border:1px solid var(--line);border-radius:8px;text-align:center}
+.studio-tools>button:hover{background:var(--line)}
+.content-planner{max-width:1200px;margin:16px auto 0}
+.post-form input,.profile-dialog input{background:#0f212e;border:1px solid var(--line);border-radius:8px}
+.draft-row{border-color:var(--line)}
+/* 05 — Full-screen, reactive mock livestream */
+.broadcast-app{max-width:1210px;margin:0 auto;padding:22px 0 8px;min-height:calc(100dvh - 155px);display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+.broadcast-stage{display:flex;justify-content:center;align-items:center}
+.broadcast-scene{position:relative;width:min(100%,560px);height:min(800px,calc(100dvh - 168px));min-height:490px;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 70% 28%,#305a61 0,transparent 45%),linear-gradient(130deg,#061b25,#102b35 70%,#0b1d30);border-radius:16px;box-shadow:0 20px 60px #0005;display:flex;flex-direction:column;justify-content:space-between;padding:20px}
+.broadcast-bg-orb{position:absolute;top:25%;left:35%;z-index:-1;border-radius:50%;height:240px;width:240px;background:radial-gradient(circle,#23b8aa26,transparent 70%);box-shadow:0 0 150px #2be5bb30}
+.broadcast-top{display:flex;align-items:center;gap:10px;font-size:11px}
+.broadcast-streamer{display:flex;gap:8px;align-items:center;flex:1;min-width:0}
+.broadcast-streamer>b{background:var(--green);color:#04140a;font-size:15px;height:36px;width:36px;border-radius:50%;display:grid;place-items:center}
+.broadcast-streamer strong,.broadcast-streamer small{display:block}
+.broadcast-streamer strong{font-size:12px}
+.broadcast-streamer small{font-size:8px;letter-spacing:.06em;color:#b5d1db;margin-top:3px}
+.live-indicator{background:#e9113c;color:white;border-radius:5px;padding:7px 8px;font-size:10px;font-weight:800}
+.broadcast-viewers{padding:8px 9px;background:#0819238c;border-radius:5px;font-size:10px;font-weight:800}
+.broadcast-center{text-align:center;margin:auto 0}
+.broadcast-center>span{display:grid;place-items:center;margin:0 auto;height:116px;width:116px;border-radius:50%;background:#00e70120;border:1px solid #00e70140;font-size:80px;color:var(--green);box-shadow:0 0 85px #00e70123}
+.broadcast-center h1{font-size:clamp(25px,3.5vw,34px);font-weight:900;letter-spacing:-.04em;margin:18px 0 8px}
+.broadcast-center p{font-size:13px;color:#d4dfe7}
+.broadcast-bottom{margin-top:auto}
+.broadcast-social-proof{display:flex;gap:18px;align-items:center;font-weight:800;font-size:11px;color:white;margin:8px 0}
+.broadcast-social-proof span:first-child{color:#ff9cae}
+.broadcast-chat-overlay{max-height:180px;min-height:80px;overflow-y:auto;scrollbar-width:thin;mask-image:linear-gradient(transparent,#000 22%);padding:15px 0 0}
+.broadcast-chat-overlay .chat-line{padding:4px 0;font-size:12px;text-shadow:0 1px 5px #0009}
+.broadcast-chat-overlay .chat-line strong{color:#8bfca3}
+.broadcast-chat-overlay .chat-line.gift{background:#173f3dbe;padding:7px;border-radius:6px}
+.broadcast-chat-overlay .chat-placeholder{padding:15px 0;color:#bad0d7;font-size:12px}
+.broadcast-input{display:flex;gap:8px;margin-top:15px;align-items:center}
+.broadcast-input input{flex:1;width:100%;min-width:0;background:#091a2580;border:1px solid #9bc8cc7a;border-radius:99px;padding:13px 15px;color:white;font-size:12px}
+.broadcast-input button{height:40px;width:40px;border-radius:50%;border:0;background:#ffffff2e;font-size:19px;flex:none}
+.broadcast-input button[type=submit]{background:var(--green);color:#062510}
+.broadcast-sim-stamp{position:absolute;right:10px;top:58px;color:#b5d6d8b0;font-size:9px;letter-spacing:.08em}
+.broadcast-tools{background:var(--bg);border-radius:12px;padding:23px;border:1px solid var(--line)}
+.broadcast-intro h2{font-size:22px;margin:9px 0}
+.broadcast-intro p{color:var(--muted);font-size:12px;line-height:1.6}
+.broadcast-start{width:100%;margin:19px 0;justify-content:center;min-height:46px}
+.stop-button{background:#d82b54;color:white}
+.broadcast-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.broadcast-metrics>div{background:var(--panel);border-radius:8px;padding:12px 8px}
+.broadcast-metrics small{display:block;color:var(--muted);font-size:9px;font-weight:800}
+.broadcast-metrics strong{display:block;margin-top:10px;font-size:20px}
+.broadcast-help{margin-top:28px;border-top:1px solid var(--line);padding-top:10px}
+.broadcast-help h3{font-size:15px}
+.broadcast-help p{font-size:12px;line-height:1.65;color:var(--muted)}
+.broadcast-social-link{color:var(--green);font-weight:800;display:inline-block;margin-top:10px}
+/* 06 — Fictional case opening */
+.case-balance,.case-grid,.odds-panel,.latest-drop{max-width:1200px;margin-left:auto;margin-right:auto}
+.case-balance{background:var(--bg);border-color:var(--line)}
+.case-tile{background:radial-gradient(circle at 54% 34%,#165f50,#102c35 67%);border:1px solid #345362;border-radius:12px}
+.case-tile.cyan{background:radial-gradient(circle at 54% 34%,#23556c,#102c35 67%)}
+.case-tile.gold{background:radial-gradient(circle at 54% 34%,#7b6233,#1b2932 67%)}
+.case-art>span:first-child{background:linear-gradient(140deg,#247365,#30b2a4)}
+.cyan .case-art>span:first-child{background:linear-gradient(140deg,#1d7294,#67d3ef)}
+.gold .case-art>span:first-child{background:linear-gradient(140deg,#8d652d,#e4b968)}
+.case-tile h2,.odds-row b,.latest-drop h2{font-family:Inter,sans-serif}
+.case-cta button{background:var(--green);color:#04140a}
+.odds-row{background:var(--panel);border-color:var(--line)}
+.odds-panel{background:var(--bg)}
+.odds-icon.common{background:#3a4752}
+.odds-icon.uncommon{background:#196656}
+.odds-icon.rare{background:#294a80}
+.odds-icon.legendary{background:#77562c}
+/* responsive */
+@media(max-width:1150px){
+ .launcher-app-grid{grid-template-columns:repeat(5,1fr)}
+ .launcher-apps-heading{margin-top:10px}
+ .bank-app-body{grid-template-columns:1fr}
+ .bank-app-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .broadcast-app{grid-template-columns:minmax(0,1fr) 300px}
+ .immersive-wallet .catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:800px){
+ .immersive-chrome{height:55px;padding:0 15px}
+ .screen{padding:0 14px 110px;min-height:calc(100dvh - 55px)}
+ .phone-launcher{min-height:calc(100dvh - 55px);padding:30px 22px 38px}
+ .launcher-head h1{font-size:65px}
+ .launcher-widgets{margin:28px 0 32px}
+ .launcher-app-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .launcher-app-icon{width:65px;height:65px;border-radius:17px;font-size:36px}
+ .launcher-app strong{font-size:11px}
+ .launcher-app small{font-size:9px}
+ .page-heading{padding:22px 0}
+ .social-tabs{flex-wrap:nowrap;overflow-x:auto}
+ .studio-layout{grid-template-columns:1fr}
+ .studio-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+ .studio-tools .creator-photo,.studio-tools>h2,.studio-tools>p,.studio-tools>.creator-badge,.studio-tools>h3,.studio-tools>.full{grid-column:1/-1}
+ .studio-tools>button{width:100%}
+ .broadcast-app{grid-template-columns:1fr;gap:15px}
+ .broadcast-scene{max-width:560px;height:calc(100dvh - 160px);min-height:520px}
+ .broadcast-tools{max-width:560px;width:100%;margin:auto}
+ .case-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .immersive-wallet .catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:560px){
+ .chrome-title{font-size:15px}
+ .chrome-title small{font-size:7px}
+ #chrome-page{display:none}
+ .immersive-dock{bottom:max(8px,env(safe-area-inset-bottom));width:calc(100vw - 16px);max-width:none;justify-content:space-around;padding:5px 4px}
+ .immersive-dock a{flex:1;min-width:0;width:auto;height:49px;font-size:20px}
+ .immersive-dock a small{font-size:9px}
+ .screen{padding:0 12px 85px}
+ body[data-screen=home] .screen{padding:0}
+ .launcher-head h1{font-size:clamp(57px,12vw,76px);margin:28px 0 14px}
+ .launcher-head p{font-size:13px}
+ .launcher-widgets{gap:9px}
+ .balance-widget,.fame-widget{padding:14px;min-height:110px}
+ .balance-widget small,.fame-widget>span{font-size:9px}
+ .balance-widget strong{font-size:clamp(22px,6vw,29px)}
+ .fame-widget strong{font-size:26px}
+ .launcher-app-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 8px}
+ .launcher-app-icon{width:69px;height:69px}
+ .launcher-apps-heading span{font-size:10px;text-align:right}
+ .launcher-bottom{align-items:stretch;flex-direction:column}
+ .launcher-bottom button{text-align:center}
+ .bank-app-top{align-items:flex-start}
+ .bank-app-brand strong{font-size:21px}
+ .bank-app-balance{margin:39px auto 24px}
+ .bank-app-balance h1{font-size:clamp(38px,11vw,51px)}
+ .bank-app-actions{gap:0;justify-content:space-between}
+ .bank-app-actions b{height:52px;width:52px}
+ .bank-app-actions button,.bank-app-actions a{min-width:0;font-size:10px}
+ .bank-app-list{grid-template-columns:1fr 1fr}
+ .bank-app-right,.bank-transactions{padding:14px}
+ .bank-app-choice{padding:9px 7px}
+ .bank-choice-mark{height:32px;width:32px}
+ .immersive-wallet{padding-top:23px}
+ .wallet-large-card .bank-card{height:212px;padding:19px 20px}
+ .wallet-large-card .card-number{font-size:12px}
+ .wallet-app-showcase{margin-top:25px}
+ .immersive-wallet .catalog-grid{grid-template-columns:1fr 1fr}
+ .wallet-mini-choice{width:185px}
+ .social-tabs button{white-space:nowrap}
+ .studio-main,.studio-tools,.content-planner{padding:15px}
+ .stats-grid{gap:6px}
+ .stats-grid>div{padding:10px}
+ .stats-grid strong{font-size:clamp(17px,5vw,24px)}
+ .stats-grid span{font-size:9px}
+ .studio-tools{grid-template-columns:1fr}
+ .studio-tools>*{grid-column:1/-1}
+ .broadcast-app{padding-top:8px}
+ .broadcast-scene{border-radius:8px;height:calc(100dvh - 160px);min-height:510px;padding:14px}
+ .broadcast-top{gap:6px}
+ .broadcast-streamer>b{height:32px;width:32px}
+ .broadcast-viewers{font-size:9px}
+ .broadcast-metrics strong{font-size:16px}
+ .case-grid{grid-template-columns:1fr}
+ .case-balance{margin-top:5px}
+ .odds-grid{grid-template-columns:1fr}
+ .page-heading h1{font-size:27px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

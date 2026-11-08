@@ -99,6 +99,7 @@ function updateChrome() {
   });
 }
 function render() {
+  document.body.dataset.screen = route();
   updateChrome();
   const page = route();
   const views = { home: homePage, banks: banksPage, "google-wallet": () => walletPage("google"), "apple-wallet": () => walletPage("apple"), social: socialPage, live: livePage, cases: casesPage };
@@ -106,21 +107,32 @@ function render() {
   if (page === "live") scrollChat();
 }
 function homePage() {
-  const name = state.profile || "Explorer";
-  const features = [
-    ["◆", "BLOCKBET", "BlockBet Casino", "Your original play-money gaming world.", "https://playblockbet.com", "bet", true],
-    ["▤", "12 ORIGINAL BANKS", "Virtual Banking", "Switch between beautifully themed demo banks.", "#banks", "banks", false],
-    ["◈", "12 PREMIUM STYLES", "Wallet Collection", "Collect and customise cards that look amazing.", "#google-wallet", "wallet", false],
-    ["▧", "CREATOR TOOLS", "Social Studio", "Build a fictional following and track your growth.", "#social", "studio", false],
-    ["●", "REACTIVE CHAT", "Go Live", "Simulated viewers, gifts and comments that respond.", "#live", "live", false],
-    ["▣", "VISIBLE DROP ODDS", "Case Drops", "Unbox collectible items with published probabilities.", "#cases", "cases", false]
+  const apps = [
+    ["bank", "▤", "Banks", "12 banks", "#banks", ""],
+    ["walletg", "◈", "G Wallet", "Cards & passes", "#google-wallet", ""],
+    ["walleta", "◉", "A Wallet", "Luxury cards", "#apple-wallet", ""],
+    ["video", "▶", "ViewTube", "Studio", "#social", "viewtube"],
+    ["photos", "◎", "Pixora", "Insights", "#social", "pixora"],
+    ["shorts", "♪", "LoopTok", "Followers", "#social", "looptok"],
+    ["stream", "●", "Go Live", "Simulated fans", "#live", ""],
+    ["cases", "▣", "Case Drops", "Collectibles", "#cases", ""],
+    ["blockbet", "◆", "BlockBet", "Play originals", "https://playblockbet.com", ""]
   ];
-  return '<div class="home">' +
-    '<section class="hero"><div class="hero-copy"><div class="eyebrow"><span class="status-dot"></span> THE ALTERNATE REALITY STARTS HERE</div><h1>Your world.<br><em>Your rules.</em></h1><p>A universe of experiences, built for imagination. Manage fictional money, customise luxury cards, become a creator and go live. Nothing real. Everything fun.</p><div class="hero-buttons"><a class="primary-button" href="#banks">Explore the universe <span>↗</span></a><button class="secondary-button" type="button" data-action="profile">Create your character</button></div></div><div class="hero-art" aria-hidden="true"><div class="orbit-ring ring-a"></div><div class="orbit-ring ring-b"></div><div class="planet">✦</div><span class="orbit-label label-a">◈ UNLIMITED STYLE</span><span class="orbit-label label-b">● GO LIVE</span><span class="orbit-label label-c">✧ YOUR REALITY</span></div></section>' +
-    '<section class="overview-strip"><div><small>YOUR CHARACTER</small><strong>' + htmlEscape(name) + '</strong></div><div><small>ROLEPLAY BALANCE</small><strong>' + usd(state.balance) + '</strong></div><div><small>EXPERIENCES</small><strong>7 unique worlds</strong></div><div><small>UNIVERSE STATUS</small><strong class="text-success">● Simulation active</strong></div></section>' +
-    '<div class="section-heading"><div><div class="eyebrow">ALL YOUR WORLDS</div><h2>Choose your next experience<span class="heading-dot">.</span></h2></div><span>Every number, card and account is fictional</span></div>' +
-    '<div class="experience-grid">' + features.map((f) => '<a class="experience-card ' + f[5] + '" href="' + f[4] + '"' + (f[6] ? ' target="_blank" rel="noopener noreferrer"' : "") + '><span class="experience-symbol">' + f[0] + '</span><span class="experience-arrow">↗</span><div><small>' + f[1] + '</small><h3>' + f[2] + '</h3><p>' + f[3] + '</p></div></a>').join("") + '</div>' +
-    '<div class="statement-panel"><span>✦</span><div><strong>It looks real. It is not.</strong><p>LARP is a labelled roleplay simulation. No real banks, social networks, payments or money are connected.</p></div>' + tag(true) + '</div></div>';
+  const today = new Date().toLocaleDateString("en-GB", {weekday: "long", month: "long", day: "numeric"});
+  return '<section class="phone-launcher"><div class="launcher-wallpaper"><div class="launcher-glow a"></div><div class="launcher-glow b"></div></div>' +
+    '<div class="launcher-head"><span class="launcher-date">' + htmlEscape(today) + '</span><span class="launcher-demo">● ROLEPLAY MODE</span>' +
+    '<h1>Your other<br><em>life.</em></h1><p>Everything you wish you had. A world that is entirely yours to play with.</p></div>' +
+    '<div class="launcher-widgets"><button type="button" class="balance-widget" data-action="launch-bank"><small>MY FICTIONAL BALANCE <span>↗</span></small><strong>' + usd(state.balance) + '</strong><span>◈ Across 12 demo banks</span></button>' +
+    '<button type="button" class="fame-widget" data-action="launch-social" data-id="looptok"><span>◉ CREATOR PROFILE</span><strong>' + number(state.social.looptok[0]) + '</strong><small>simulated followers ↗</small></button></div>' +
+    '<div class="launcher-apps-heading"><h2>My apps</h2><span>Tap any app to open full screen</span></div>' +
+    '<div class="launcher-app-grid">' + apps.map((app) =>
+      '<a class="launcher-app" href="' + app[4] + '"' +
+      (app[5] ? ' data-action="launch-social" data-id="' + app[5] + '"' : '') +
+      (app[0] === "blockbet" ? ' target="_blank" rel="noopener noreferrer"' : '') +
+      '><span class="launcher-app-icon ' + app[0] + '">' + app[1] + '</span><strong>' + app[2] + '</strong><small>' + app[3] + '</small></a>'
+    ).join("") + '</div>' +
+    '<div class="launcher-bottom"><button type="button" data-action="fullscreen" class="launch-fullscreen">⛶ Enter full screen</button><button type="button" data-action="profile" class="launcher-character">✦ ' + htmlEscape(state.profile || "Choose a character") + ' <span>✎</span></button></div>' +
+    '<p class="launcher-disclaimer">LARP is a fictional simulator. No real banks, payments, followers, broadcasts or prizes.</p></section>';
 }
 function banksPage() {
   const idx = Math.max(0, Math.min(BANKS.length - 1, Number(state.bank) || 0));
@@ -130,10 +142,15 @@ function banksPage() {
     ["Demo funds (example)", 70000, "Sample transaction"],
     ["Monthly subscription (example)", -999, "Sample transaction"]
   ];
-  return pageTitle("YOUR FINANCIAL WORLD", "Choose your bank.", "12 beautifully designed fictional institutions. Balances are imaginary, local and never linked to a bank.") +
-    '<div class="bank-layout"><section class="panel bank-picker"><div class="panel-title"><h2>Bank collection</h2><span>12 THEMES</span></div><div class="bank-grid">' + BANKS.map((b, i) => '<button type="button" data-action="pick-bank" data-id="' + i + '" class="bank-choice' + (idx === i ? ' chosen' : '') + '"><span class="bank-logo" style="background:' + b[2] + '">' + b[1] + '</span><strong>' + b[0] + '</strong><span>' + (idx === i ? "✓" : "↗") + '</span></button>').join("") + '</div></section>' +
-    '<section class="bank-preview"><div class="bank-display panel"><div class="bank-display-top"><div><span class="bank-logo" style="background:' + bank[2] + '">' + bank[1] + '</span><strong>' + bank[0] + '</strong></div><span class="mini-tag">SIMULATED</span></div><div class="balance-detail"><small>YOUR FICTIONAL BALANCE</small><h2>' + usd(state.balance) + '</h2><p>' + bank[3] + '</p></div><div class="bank-account">Everyday account <span>•••• 0000 · DEMO</span></div><div class="bank-action-row"><button type="button" data-action="credit"><span>＋</span>Add $500 demo</button><button type="button" data-action="spend"><span>↗</span>Spend $25 demo</button></div></div>' +
-    '<div class="panel transactions"><div class="panel-title"><h2>Recent activity</h2><span>LOCAL ONLY</span></div>' + history.slice(0, 6).map((h) => '<div class="activity-row"><span class="activity-icon">' + (h[1] < 0 ? "↗" : "↙") + '</span><span><strong>' + htmlEscape(h[0]) + '</strong><small>' + htmlEscape(h[2]) + '</small></span><b class="' + (h[1] < 0 ? "negative" : "positive") + '">' + (h[1] > 0 ? "+" : h[1] < 0 ? "−" : "") + usd(Math.abs(h[1])) + '</b></div>').join("") + '</div><div class="notice">ⓘ This is not a bank. It cannot move funds, verify an account, generate a statement or make any payment.</div></section></div>';
+  return '<div class="immersive-bank" style="--selected-bank:' + bank[2] + '"><div class="bank-app-top"><div class="bank-app-brand"><span class="bank-app-logo" style="background:' + bank[2] + '">' + bank[1] + '</span><span><strong>' + bank[0] + '</strong><small>FICTIONAL BANK • SIMULATION</small></span></div><span class="bank-circle-profile">' + htmlEscape((state.profile || "G").slice(0,1).toUpperCase()) + '</span></div>' +
+    '<div class="bank-app-balance"><span>YOUR TOTAL BALANCE</span><h1>' + usd(state.balance) + '</h1><p>Available in your pretend account</p></div>' +
+    '<div class="bank-app-actions"><button type="button" data-action="credit"><b>＋</b><span>Add money</span></button><button type="button" data-action="spend"><b>↗</b><span>Send money</span></button><button type="button" data-action="demo-tap"><b>◈</b><span>My card</span></button><a href="#google-wallet"><b>▤</b><span>Wallet</span></a></div>' +
+    '<div class="bank-app-body"><div class="bank-app-left"><div class="bank-hero-card"><div><span class="mini-bank-heading">EVERYDAY ACCOUNT</span><h2>' + bank[0] + '</h2></div><div class="bank-card-number">•••• &nbsp; •••• &nbsp; 0000</div><div class="card-watermark">LARP · DEMO</div></div>' +
+    '<div class="bank-transactions"><div class="bank-section-head"><h2>Transactions</h2><span>SIMULATED HISTORY</span></div>' +
+    history.slice(0,8).map((item) => '<div class="bank-transaction"><span class="txn-avatar">' + (item[1] < 0 ? "↗" : "↙") + '</span><span class="txn-detail"><b>' + htmlEscape(item[0]) + '</b><small>' + htmlEscape(item[2]) + '</small></span><strong class="' + (item[1] < 0 ? 'negative' : 'positive') + '">' + (item[1] > 0 ? "+" : item[1] < 0 ? "−" : "") + usd(Math.abs(item[1])) + '</strong></div>').join('') + '</div></div>' +
+    '<div class="bank-app-right"><div class="bank-section-head"><h2>Switch bank</h2><span>12 OPTIONS</span></div><div class="bank-app-list">' +
+    BANKS.map((b,i) => '<button type="button" class="bank-app-choice ' + (idx===i ? 'selected' : '') + '" data-action="pick-bank" data-id="' + i + '"><span class="bank-choice-mark" style="background:' + b[2] + '">' + b[1] + '</span><span><strong>' + b[0] + '</strong><small>' + b[3] + '</small></span><span>' + (idx===i?'✓':'›') + '</span></button>').join('') +
+    '</div><div class="bank-demo-foot">This is not an actual financial institution. No bank details or transfers are real.</div></div></div></div>';
 }
 function cardMarkup(index, compact = false) {
   const card = CARDS[index] || CARDS[0];
@@ -144,9 +161,12 @@ function walletPage(mode) {
   const title = isApple ? "Orchard Wallet" : "Droid Wallet";
   const available = (Array.isArray(state.cards) ? state.cards : [0]).filter((index) => Number.isInteger(index) && index >= 0 && index < CARDS.length);
   const chosen = available.includes(state.activeCard) ? state.activeCard : (available[0] === undefined ? 0 : available[0]);
-  return pageTitle("YOUR DIGITAL WALLET", title + ".", (isApple ? "Apple Pay-style" : "Google Pay-style") + " concept with original card designs. No real cards, accounts or payments.") +
-    '<div class="wallet-layout"><div class="wallet-phone ' + (isApple ? "orchard" : "droid") + '"><div class="phone-status"><span>9:41</span><span>●●● ▰</span></div><div class="wallet-phone-heading"><span class="wallet-symbol">' + (isApple ? "◉" : "◈") + '</span><div><small>MY COLLECTION</small><h2>' + title + '</h2></div><span>＋</span></div><div class="main-card-holder">' + cardMarkup(chosen) + '</div><div class="card-pagination">● <span>● ●</span></div><div class="phone-actions"><button data-action="demo-tap" type="button"><span>◎</span>Demo tap</button><button type="button" data-action="show-cards"><span>＋</span>Add card</button></div><div class="phone-tip">No real NFC, payment credentials, transactions or card numbers. Just a design collection.</div><div class="phone-handle"></div></div>' +
-    '<div class="panel card-collection"><div class="panel-title"><div><h2>Your card collection</h2><p>Tap to make a card the featured design.</p></div><button type="button" class="outline-button" data-action="show-cards">＋ Add card</button></div><div class="owned-cards">' + (available.length ? available.map((idx) => '<button type="button" class="owned-card' + (chosen === idx ? " active" : "") + '" data-action="select-card" data-id="' + idx + '">' + cardMarkup(idx, true) + '<span><strong>' + CARDS[idx][0] + '</strong><small>' + CARDS[idx][2] + '</small></span><span class="owned-indicator">' + (chosen === idx ? "✓" : "↗") + '</span></button>').join("") : '<p>No cards collected. Add your first virtual design.</p>') + '</div><button type="button" class="text-button" data-action="remove-card">Remove selected card</button><div class="card-collection-foot">ALL CARDS ARE FICTIONAL • NUMBER ENDS 0000</div><div class="card-catalog" id="card-catalog" hidden><h3>Choose a collectible design</h3><div class="catalog-grid">' + CARDS.map((c, i) => '<button type="button" data-action="add-card" data-id="' + i + '">' + cardMarkup(i, true) + '<strong>' + c[0] + '</strong><small>' + (available.includes(i) ? "Select" : "Collect card") + '</small></button>').join("") + '</div></div></div></div>';
+  return '<div class="immersive-wallet ' + (isApple ? 'wallet-orchard' : 'wallet-droid') + '"><header class="wallet-app-top"><div><small>YOUR COLLECTION</small><h1>' + title + '</h1></div><button type="button" data-action="show-cards" class="wallet-add-button" aria-label="Add virtual card">＋</button></header>' +
+    '<div class="wallet-app-showcase"><div class="wallet-app-label"><span>MY CARDS</span><span>● DEMO CARD</span></div><div class="wallet-large-card">' + cardMarkup(chosen) + '</div><p>•••• 0000 &nbsp; · &nbsp; Fictional card</p><div class="wallet-app-actions"><button type="button" data-action="demo-tap">◎ Simulate payment</button><button type="button" data-action="show-cards">＋ Add a card</button></div></div>' +
+    '<div class="wallet-card-shelf"><div class="bank-section-head"><h2>My collection</h2><span>' + available.length + ' STYLES SAVED</span></div><div class="wallet-mini-grid">' +
+    (available.length ? available.map((idx) => '<button type="button" data-action="select-card" data-id="' + idx + '" class="wallet-mini-choice ' + (chosen===idx?'selected':'') + '">' + cardMarkup(idx, true) + '<strong>' + CARDS[idx][0] + '</strong><small>' + CARDS[idx][2] + '</small></button>').join('') : '<p>Add a collectible to start your collection.</p>') +
+    '</div><button type="button" class="wallet-remove" data-action="remove-card">Remove selected card</button></div>' +
+    '<div class="card-catalog" id="card-catalog" hidden><div class="bank-section-head"><h2>Card design store</h2><span>ALL FREE · SIMULATION</span></div><div class="catalog-grid">' + CARDS.map((c,i) => '<button type="button" data-action="add-card" data-id="' + i + '">' + cardMarkup(i,true) + '<strong>' + c[0] + '</strong><small>' + (available.includes(i) ? 'Select card' : 'Collect free') + '</small></button>').join('') + '</div></div><p class="wallet-risk-note">All designs are fictional; they are not payment cards and cannot be used for purchases.</p></div>';
 }
 function socialPage() {
   const p = PLATFORMS[state.socialPlatform] ? state.socialPlatform : "viewtube";
@@ -220,9 +240,12 @@ function runTicker() {
 }
 function livePage() {
   const chat = (Array.isArray(state.comments) ? state.comments : []).slice(-50);
-  return pageTitle("THE LIVE EXPERIENCE", "You're on the air.", "A simulated livestream with fictional viewers, reactive chat and pretend gifts. No video is streamed to anyone.") +
-    '<div class="live-layout"><div class="live-preview panel"><div class="live-video"><div class="live-top-row"><span class="live-indicator">' + (state.live ? "● LIVE SIMULATION" : "● OFFLINE") + '</span><span class="viewer-indicator">◉ <span id="live-viewers">' + number(state.viewers) + '</span> fake viewers</span></div><div class="live-visual"><div class="live-pulse">✦</div><h2>' + (state.live ? "YOUR STAGE IS LIVE" : "YOUR STAGE, YOUR RULES") + '</h2><p>' + (state.live ? "The simulated audience is here. Talk to your chat below." : "Press Go Live to start your imaginary stream.") + '</p></div><span class="live-watermark">LARP • NOT A REAL BROADCAST</span></div><div class="live-controls"><div><span><b id="live-likes">' + number(state.likes) + '</b><small>Simulated likes</small></span><span><b id="live-gifts">' + number(state.gifts) + '</b><small>Imaginary gift coins</small></span></div><button type="button" class="' + (state.live ? "stop-button" : "primary-button") + '" data-action="toggle-live">' + (state.live ? "■ End demo live" : "● Go live (demo)") + '</button></div><div class="notice">ⓘ Neither camera nor audio is broadcast, recorded or sent to a platform. If microphone input is enabled, your browser transcribes locally or using its speech service.</div></div>' +
-    '<div class="panel chat-panel"><div class="chat-heading"><div><span>◉</span><h2>Live chat</h2></div><span>SIMULATED COMMENTS</span></div><div class="chat-log" id="chat-log" role="log" aria-live="polite">' + (chat.length ? chat.map((entry) => '<div class="chat-line' + (entry.gift ? " gifted" : "") + '"><strong>' + htmlEscape(entry.name) + '</strong><span>' + htmlEscape(entry.text) + '</span></div>').join("") : '<div class="chat-placeholder">Your fictional audience is ready. Start the live and type something!</div>') + '</div><form class="chat-form" id="chat-form"><input maxlength="220" name="speech" autocomplete="off" placeholder="Say something to your fake viewers…" aria-label="Message to the simulator" required><button type="button" data-action="microphone" aria-label="Use microphone to type">🎙</button><button class="primary-button" type="submit">Send ↗</button></form><p class="chat-footnote">Comments are generated by local rules. No AI token or private key is exposed.</p></div></div>';
+  return '<div class="broadcast-app"><div class="broadcast-stage"><div class="broadcast-scene"><div class="broadcast-bg-orb"></div><div class="broadcast-top"><span class="broadcast-streamer"><b>' + htmlEscape((state.profile || "G").slice(0,1).toUpperCase()) + '</b><span><strong>' + htmlEscape(state.profile || "Your channel") + '</strong><small>ROLEPLAY BROADCAST</small></span></span><span class="live-indicator">' + (state.live ? "● LIVE · SIM" : "● OFFLINE") + '</span><span class="broadcast-viewers">◉ <span id="live-viewers">' + number(state.viewers) + '</span></span></div>' +
+    '<div class="broadcast-center"><span>✦</span><h1>' + (state.live ? 'You are live!' : 'Your spotlight.') + '</h1><p>' + (state.live ? 'Your simulated audience is listening.' : 'Tap Go Live to start a pretend broadcast.') + '</p></div>' +
+    '<div class="broadcast-bottom"><div class="broadcast-social-proof"><span>♥ <b id="live-likes">' + number(state.likes) + '</b></span><span>🎁 <b id="live-gifts">' + number(state.gifts) + '</b> fictional gifts</span></div>' +
+    '<div class="broadcast-chat-overlay" id="chat-log" role="log" aria-live="polite">' + (chat.length ? chat.map((entry) => '<div class="chat-line' + (entry.gift ? " gifted" : "") + '"><strong>' + htmlEscape(entry.name) + '</strong><span>' + htmlEscape(entry.text) + '</span></div>').join("") : '<div class="chat-placeholder">Your simulated chat will appear here. Say something to get a reaction!</div>') + '</div>' +
+    '<form class="broadcast-input" id="chat-form"><input name="speech" maxlength="220" autocomplete="off" placeholder="Talk to the fake audience…" aria-label="Talk to the simulated livestream" required><button type="button" data-action="microphone" aria-label="Speak a message">🎙</button><button type="submit" aria-label="Send message">➤</button></form></div><span class="broadcast-sim-stamp">LARP SIMULATION · NO REAL VIEWERS</span></div></div>' +
+    '<aside class="broadcast-tools"><div class="broadcast-intro"><span class="section-kicker">LIVE CREATOR</span><h2>Your live room</h2><p>All comments, donations and viewer counts are simulated. Nothing is being broadcast.</p></div><button type="button" class="' + (state.live ? "stop-button" : "primary-button") + ' broadcast-start" data-action="toggle-live">' + (state.live ? "■ End simulated live" : "● Go live (simulation)") + '</button><div class="broadcast-metrics"><div><small>VIEWERS</small><strong>' + number(state.viewers) + '</strong></div><div><small>FAKE GIFTS</small><strong>' + number(state.gifts) + '</strong></div><div><small>LIKES</small><strong>' + number(state.likes) + '</strong></div></div><div class="broadcast-help"><h3>Reactive chat</h3><p>Type or speak. The fictional viewers react to your words, hype you up and send pretend gifts.</p><p>No AI key is exposed. Optional speech recognition may use your browser speech provider.</p></div><a class="broadcast-social-link" href="#social">Visit creator studio ↗</a></aside></div>';
 }
 function casesPage() {
   const drop = state.latestDrop;
@@ -264,6 +287,25 @@ document.addEventListener("click", (event) => {
   const action = button.dataset.action;
   const id = Number(button.dataset.id);
   if (button.dataset.routeGo) { location.hash = "#" + button.dataset.routeGo; return; }
+  if (action === "fullscreen") {
+    const target = document.documentElement;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => toast("Use your browser to leave fullscreen."));
+    } else if (target.requestFullscreen) {
+      target.requestFullscreen().catch(() => toast("Fullscreen was blocked. Use your browser's full-screen option."));
+    } else toast("Use your browser's full-screen option.");
+    return;
+  }
+  if (action === "launch-bank") { location.hash = "#banks"; return; }
+  if (action === "launch-social") {
+    if (PLATFORMS[button.dataset.id]) {
+      state.socialPlatform = button.dataset.id;
+      persist();
+      location.hash = "#social";
+      render();
+    }
+    return;
+  }
   if (action === "profile") { showProfile(); return; }
   if (action === "close-modal") { if (event.target.closest(".profile-dialog") && !event.target.matches('[data-action="close-modal"]')) return; closeProfile(); return; }
   if (action === "sign-out") { state.profile = ""; persist(); closeProfile(); render(); toast("Signed out of local character."); return; }
