@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d18">
+  <meta name="description" content="LARP — a fictional digital life simulator with demo banks, card wallets, social creator studios, live chat and play-only cases.">
+  <title>LARP — Your alternate universe</title>
+  <link rel="icon" type="image/svg+xml" href="./logo.svg">
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#home" aria-label="LARP home">
+        <span class="brand-icon">✦</span>
+        <span class="brand-wordmark"><strong>LARP<span class="brand-dot">.</span></strong><small>PLAYBLOCKBET UNIVERSE</small></span>
+      </a>
+      <div class="nav-caption">EXPLORE</div>
+      <nav class="side-nav" aria-label="Main navigation">
+        <a href="#home" data-route="home"><span class="nav-icon">⌂</span><span>Overview</span></a>
+        <a href="https://playblockbet.com" target="_blank" rel="noopener noreferrer"><span class="nav-icon">◆</span><span>BlockBet</span><span class="external-mark">↗</span></a>
+        <a href="#banks" data-route="banks"><span class="nav-icon">▤</span><span>Virtual Banks</span></a>
+        <a href="#google-wallet" data-route="google-wallet"><span class="nav-icon">◈</span><span>Google Pay-style</span></a>
+        <a href="#apple-wallet" data-route="apple-wallet"><span class="nav-icon">◉</span><span>Apple Pay-style</span></a>
+        <a href="#social" data-route="social"><span class="nav-icon">▧</span><span>Creator Studio</span></a>
+        <a href="#live" data-route="live"><span class="nav-icon live-dot">●</span><span>Simulated Live</span></a>
+        <a href="#cases" data-route="cases"><span class="nav-icon">▣</span><span>Case Drops</span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="demo-status"><span class="status-dot"></span> Simulation mode online</div>
+        <button class="side-profile" id="sidebar-profile" type="button" data-action="profile">
+          <span class="avatar" id="side-avatar">G</span><span class="side-profile-copy"><strong id="side-name">Guest</strong><small>Local roleplay character</small></span><span>↗</span>
+        </button>
+      </div>
+    </aside>
+    <div class="main-column">
+      <header class="topbar">
+        <div class="breadcrumb"><span class="crumb-muted">LARP</span><span class="crumb-divider">/</span><strong id="page-crumb">Overview</strong></div>
+        <div class="header-right">
+          <span class="demo-chip"><span class="status-dot"></span> DEMO ONLY</span>
+          <button class="balance-chip" type="button" data-route-go="banks"><span>◈</span><b id="header-balance">$15,000.00</b><small>PLAY</small></button>
+          <button class="profile-button" type="button" data-action="profile"><span class="avatar" id="header-avatar">G</span><span id="header-name">Guest</span></button>
+        </div>
+      </header>
+      <nav class="mobile-nav" aria-label="Mobile navigation">
+        <a href="#home" data-route="home">⌂<span>Home</span></a>
+        <a href="https://playblockbet.com" target="_blank" rel="noopener noreferrer">◆<span>BlockBet</span></a>
+        <a href="#banks" data-route="banks">▤<span>Banks</span></a>
+        <a href="#google-wallet" data-route="google-wallet">◈<span>G-Wallet</span></a>
+        <a href="#apple-wallet" data-route="apple-wallet">◉<span>A-Wallet</span></a>
+        <a href="#social" data-route="social">▧<span>Socials</span></a>
+        <a href="#live" data-route="live">●<span>Live</span></a>
+        <a href="#cases" data-route="cases">▣<span>Cases</span></a>
+      </nav>
+      <main id="screen" class="screen" tabindex="-1"></main>
+      <footer class="site-footer">LARP • Fictional simulator • No real accounts, payouts, transactions, followers or viewers • <a href="https://playblockbet.com" target="_blank" rel="noopener noreferrer">BlockBet ↗</a></footer>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="dialog-root"></div>
+</body>
+</html>
