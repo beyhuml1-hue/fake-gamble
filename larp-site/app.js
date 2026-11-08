@@ -143,7 +143,7 @@ function banksPage() {
     ["Monthly subscription (example)", -999, "Sample transaction"]
   ];
   return '<div class="immersive-bank" style="--selected-bank:' + bank[2] + '"><div class="bank-app-top"><div class="bank-app-brand"><span class="bank-app-logo" style="background:' + bank[2] + '">' + bank[1] + '</span><span><strong>' + bank[0] + '</strong><small>FICTIONAL BANK • SIMULATION</small></span></div><span class="bank-circle-profile">' + htmlEscape((state.profile || "G").slice(0,1).toUpperCase()) + '</span></div>' +
-    '<div class="bank-app-balance"><span>YOUR TOTAL BALANCE</span><h1>' + usd(state.balance) + '</h1><p>Available in your pretend account</p></div>' +
+    '<div class="bank-app-balance"><span>YOUR TOTAL BALANCE</span><h1>' + usd(state.balance) + '</h1><p>Available in your pretend account</p><button type="button" class="bank-edit-balance" data-action="edit-balance">✎ Customise pretend balance</button></div>' +
     '<div class="bank-app-actions"><button type="button" data-action="credit"><b>＋</b><span>Add money</span></button><button type="button" data-action="spend"><b>↗</b><span>Send money</span></button><button type="button" data-action="demo-tap"><b>◈</b><span>My card</span></button><a href="#google-wallet"><b>▤</b><span>Wallet</span></a></div>' +
     '<div class="bank-app-body"><div class="bank-app-left"><div class="bank-hero-card"><div><span class="mini-bank-heading">EVERYDAY ACCOUNT</span><h2>' + bank[0] + '</h2></div><div class="bank-card-number">•••• &nbsp; •••• &nbsp; 0000</div><div class="card-watermark">LARP · DEMO</div></div>' +
     '<div class="bank-transactions"><div class="bank-section-head"><h2>Transactions</h2><span>SIMULATED HISTORY</span></div>' +
@@ -176,7 +176,7 @@ function socialPage() {
   return pageTitle("CREATOR UNIVERSE", "Your creator studio.", "Three original creator dashboards. Build a fictional audience without connecting or impersonating real social networks.") +
     '<div class="social-tabs">' + Object.entries(PLATFORMS).map(([key, entry]) => '<button type="button" data-action="platform" data-id="' + key + '" class="' + (key === p ? "active" : "") + '"><span style="color:' + entry.color + '">' + entry.symbol + '</span>' + entry.label + '</button>').join("") + '</div>' +
     '<div class="studio-layout"><section class="panel studio-main"><div class="studio-brand"><span style="background:' + platform.color + '">' + platform.symbol + '</span><div><small>CREATOR DASHBOARD / SIMULATED</small><h2>' + platform.name + '</h2></div><span class="mini-tag">DEMO</span></div><div class="stats-grid"><div><small>Followers</small><strong>' + number(stat[0]) + '</strong><span>↗ Fictional audience</span></div><div><small>Total views</small><strong>' + number(stat[1]) + '</strong><span>↗ Sample reach</span></div><div><small>Likes</small><strong>' + number(stat[2]) + '</strong><span>↗ Pretend engagement</span></div></div><div class="analytics"><div class="panel-title"><div><h3>Audience growth</h3><p>Illustrative activity over 12 days</p></div><span>EXAMPLE DATA</span></div><div class="chart-bars">' + bars.map((height, i) => '<div class="bar-column"><div class="bar" style="height:' + height + '%;background:' + platform.color + '"></div><small>' + (i + 1) + '</small></div>').join("") + '</div></div></section>' +
-    '<aside class="panel studio-tools"><div class="creator-photo">✦</div><h2>@larp.creator</h2><p>Your fictional creator career</p><span class="creator-badge">✧ Creator mode</span><h3>Grow your audience</h3><p>Adjust demo analytics using these buttons.</p><button type="button" data-action="grow" data-index="0" data-increment="1000">＋ 1,000 followers</button><button type="button" data-action="grow" data-index="1" data-increment="10000">↗ 10,000 views</button><button type="button" data-action="grow" data-index="2" data-increment="500">♡ 500 likes</button><a class="primary-button full" href="#live">Start a pretend live →</a></aside></div>' +
+    '<aside class="panel studio-tools"><div class="creator-photo">✦</div><h2>@larp.creator</h2><p>Your fictional creator career</p><span class="creator-badge">✧ Creator mode</span><h3>Grow your audience</h3><p>Adjust demo analytics using these buttons.</p><button type="button" data-action="edit-social">✎ Set any fictional stats</button><button type="button" data-action="grow" data-index="0" data-increment="1000">＋ 1,000 followers</button><button type="button" data-action="grow" data-index="1" data-increment="10000">↗ 10,000 views</button><button type="button" data-action="grow" data-index="2" data-increment="500">♡ 500 likes</button><a class="primary-button full" href="#live">Start a pretend live →</a></aside></div>' +
     '<section class="panel content-planner"><div class="panel-title"><div><h2>Content planner</h2><p>Draft pretend uploads that never get published anywhere.</p></div><span>LOCAL ONLY</span></div><form id="post-form" class="post-form"><input name="title" maxlength="80" autocomplete="off" placeholder="Name your next fictional upload" required aria-label="Draft title"><button class="primary-button" type="submit">Make demo post</button></form>' + (Array.isArray(state.posts) ? state.posts.slice(0, 5).map((post) => '<div class="draft-row"><span>▧</span><strong>' + htmlEscape(post) + '</strong><small>Draft only</small></div>').join("") : "") + '</section>';
 }
 function reactTo(text) {
@@ -245,7 +245,7 @@ function livePage() {
     '<div class="broadcast-bottom"><div class="broadcast-social-proof"><span>♥ <b id="live-likes">' + number(state.likes) + '</b></span><span>🎁 <b id="live-gifts">' + number(state.gifts) + '</b> fictional gifts</span></div>' +
     '<div class="broadcast-chat-overlay" id="chat-log" role="log" aria-live="polite">' + (chat.length ? chat.map((entry) => '<div class="chat-line' + (entry.gift ? " gifted" : "") + '"><strong>' + htmlEscape(entry.name) + '</strong><span>' + htmlEscape(entry.text) + '</span></div>').join("") : '<div class="chat-placeholder">Your simulated chat will appear here. Say something to get a reaction!</div>') + '</div>' +
     '<form class="broadcast-input" id="chat-form"><input name="speech" maxlength="220" autocomplete="off" placeholder="Talk to the fake audience…" aria-label="Talk to the simulated livestream" required><button type="button" data-action="microphone" aria-label="Speak a message">🎙</button><button type="submit" aria-label="Send message">➤</button></form></div><span class="broadcast-sim-stamp">LARP SIMULATION · NO REAL VIEWERS</span></div></div>' +
-    '<aside class="broadcast-tools"><div class="broadcast-intro"><span class="section-kicker">LIVE CREATOR</span><h2>Your live room</h2><p>All comments, donations and viewer counts are simulated. Nothing is being broadcast.</p></div><button type="button" class="' + (state.live ? "stop-button" : "primary-button") + ' broadcast-start" data-action="toggle-live">' + (state.live ? "■ End simulated live" : "● Go live (simulation)") + '</button><div class="broadcast-metrics"><div><small>VIEWERS</small><strong>' + number(state.viewers) + '</strong></div><div><small>FAKE GIFTS</small><strong>' + number(state.gifts) + '</strong></div><div><small>LIKES</small><strong>' + number(state.likes) + '</strong></div></div><div class="broadcast-help"><h3>Reactive chat</h3><p>Type or speak. The fictional viewers react to your words, hype you up and send pretend gifts.</p><p>No AI key is exposed. Optional speech recognition may use your browser speech provider.</p></div><a class="broadcast-social-link" href="#social">Visit creator studio ↗</a></aside></div>';
+    '<aside class="broadcast-tools"><div class="broadcast-intro"><span class="section-kicker">LIVE CREATOR</span><h2>Your live room</h2><p>All comments, donations and viewer counts are simulated. Nothing is being broadcast.</p></div><button type="button" class="' + (state.live ? "stop-button" : "primary-button") + ' broadcast-start" data-action="toggle-live">' + (state.live ? "■ End simulated live" : "● Go live (simulation)") + '</button><div class="broadcast-metrics"><div><small>VIEWERS</small><strong>' + number(state.viewers) + '</strong></div><div><small>FAKE GIFTS</small><strong>' + number(state.gifts) + '</strong></div><div><small>LIKES</small><strong>' + number(state.likes) + '</strong></div></div><button type="button" data-action="edit-live" class="broadcast-edit">✎ Customise pretend viewers</button><div class="broadcast-help"><h3>Reactive chat</h3><p>Type or speak. The fictional viewers react to your words, hype you up and send pretend gifts.</p><p>No AI key is exposed. Optional speech recognition may use your browser speech provider.</p></div><a class="broadcast-social-link" href="#social">Visit creator studio ↗</a></aside></div>';
 }
 function casesPage() {
   const drop = state.latestDrop;
@@ -260,9 +260,42 @@ function showProfile() {
   root.innerHTML = '<div class="modal-backdrop" data-action="close-modal"><form class="profile-dialog" id="profile-form" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div class="dialog-head"><span class="dialog-symbol">✦</span><button aria-label="Close" type="button" data-action="close-modal">✕</button></div><h2 id="dialog-title">' + (state.profile ? "Edit your roleplay identity" : "Create a roleplay character") + '</h2><p>Pick a display name on this device. This is not an online account or a real secure sign-in.</p><label for="profile-name">CHARACTER NAME</label><input id="profile-name" name="name" maxlength="22" value="' + htmlEscape(state.profile || "") + '" placeholder="e.g. NovaPlayer" autocomplete="off" required autofocus><button type="submit" class="primary-button full">Save local profile</button>' + (state.profile ? '<button type="button" data-action="sign-out" class="text-button">Sign out of this device</button>' : "") + '<small>Never enter real passwords, account details or card numbers.</small></form></div>';
   $("#profile-name").focus();
 }
+function showValueEditor(type) {
+  const root = $("#dialog-root");
+  const isBalance = type === "balance";
+  const isLive = type === "live";
+  const p = PLATFORMS[state.socialPlatform] ? state.socialPlatform : "viewtube";
+  const title = isBalance ? "Set a pretend balance" : isLive ? "Customise your simulated live" : "Customise creator stats";
+  const fields = isBalance
+    ? [["balance", "Roleplay USD", (state.balance / 100).toFixed(2)]]
+    : isLive
+      ? [["viewers", "Fictional viewers", state.viewers], ["likes", "Pretend likes", state.likes], ["gifts", "Demo gifts", state.gifts]]
+      : [["followers", "Imaginary followers", state.social[p][0]], ["views", "Fictional views", state.social[p][1]], ["likes", "Pretend likes", state.social[p][2]]];
+  root.innerHTML = '<div class="modal-backdrop" data-action="close-modal"><form class="profile-dialog" id="sim-values-form" data-type="' + type + '" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div class="dialog-head"><span class="dialog-symbol">✦</span><button aria-label="Close" type="button" data-action="close-modal">✕</button></div><h2 id="dialog-title">' + title + '</h2><p>Every value is imaginary and displayed only in this roleplay simulator. Nothing is connected to a real account.</p>' +
+    fields.map((field) => '<label for="val-' + field[0] + '">' + field[1] + '</label><input type="number" name="' + field[0] + '" id="val-' + field[0] + '" min="0" max="1000000000" step="' + (isBalance ? '0.01' : '1') + '" value="' + field[2] + '" required inputmode="decimal">').join('') +
+    '<button type="submit" class="primary-button full">Save fictional values</button><small>LARP SIMULATION · NOT REAL MONEY, FOLLOWERS OR DONATIONS</small></form></div>';
+}
+function saveValueEditor(form) {
+  const data = new FormData(form);
+  const pick = (key) => Math.min(1000000000, Math.max(0, Number(data.get(key)) || 0));
+  const type = form.dataset.type;
+  if (type === "balance") {
+    state.balance = Math.round(pick("balance") * 100);
+    state.activity = [["Simulation balance customised", 0, "Local roleplay setting"], ...(Array.isArray(state.activity) ? state.activity : [])].slice(0,10);
+  } else if (type === "live") {
+    state.viewers = Math.round(pick("viewers"));
+    state.likes = Math.round(pick("likes"));
+    state.gifts = Math.round(pick("gifts"));
+  } else if (type === "social") {
+    const p = PLATFORMS[state.socialPlatform] ? state.socialPlatform : "viewtube";
+    state.social[p] = [Math.round(pick("followers")), Math.round(pick("views")), Math.round(pick("likes"))];
+  }
+  persist(); closeProfile(); render(); toast("Your fictional numbers are saved on this device.");
+}
+
 function closeProfile() { $("#dialog-root").innerHTML = ""; }
 function adjustBalance(amount, label) {
-  const next = Math.min(1000000000, Math.max(0, state.balance + amount));
+  const next = Math.min(100000000000, Math.max(0, state.balance + amount));
   const applied = next - state.balance;
   if (!applied) { toast("Not enough fictional credits."); return; }
   state.balance = next;
@@ -306,6 +339,9 @@ document.addEventListener("click", (event) => {
     }
     return;
   }
+  if (action === "edit-balance") { showValueEditor("balance"); return; }
+  if (action === "edit-social") { showValueEditor("social"); return; }
+  if (action === "edit-live") { showValueEditor("live"); return; }
   if (action === "profile") { showProfile(); return; }
   if (action === "close-modal") { if (event.target.closest(".profile-dialog") && !event.target.matches('[data-action="close-modal"]')) return; closeProfile(); return; }
   if (action === "sign-out") { state.profile = ""; persist(); closeProfile(); render(); toast("Signed out of local character."); return; }
@@ -351,7 +387,7 @@ document.addEventListener("click", (event) => {
     let tier = 0;
     for (let i = 0; i < TIERS.length; i++) { sum += TIERS[i].odds; if (roll < sum) { tier = i; break; } }
     const winnings = Math.round(cost * TIERS[tier].multiplier);
-    state.balance = Math.min(1000000000, state.balance - cost + winnings);
+    state.balance = Math.min(100000000000, state.balance - cost + winnings);
     state.latestDrop = { tier, value: winnings };
     state.caseHistory = [{ caseName: c.name, tier, value: winnings }, ...(state.caseHistory || [])].slice(0, 10);
     persist(); render(); toast("Unboxed: " + TIERS[tier].name + " · " + usd(winnings) + " demo credits!");
@@ -359,6 +395,7 @@ document.addEventListener("click", (event) => {
 });
 document.addEventListener("submit", (event) => {
   const form = event.target;
+  if (form.id === "sim-values-form") { event.preventDefault(); saveValueEditor(form); return; }
   if (form.id === "profile-form") {
     event.preventDefault();
     const value = String(new FormData(form).get("name") || "").trim().slice(0, 22);
