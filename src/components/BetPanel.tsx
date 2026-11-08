@@ -27,7 +27,7 @@ export function BetPanel({
   error,
   children,
 }: Props) {
-  const { balance, refill } = useWallet();
+  const { balance, openCashier } = useWallet();
   const [text, setText] = useState(amount.toFixed(2));
   const [focused, setFocused] = useState(false);
 
@@ -103,8 +103,8 @@ export function BetPanel({
       {error ? <p className="form-error">{error}</p> : null}
 
       {broke ? (
-        <button className="bet-btn" type="button" onClick={refill}>
-          Refill $1,000.00
+        <button className="bet-btn" type="button" onClick={openCashier}>
+          Deposit
         </button>
       ) : (
         <button className={cashout ? "bet-btn cashout" : "bet-btn"} type="submit" disabled={disabled}>

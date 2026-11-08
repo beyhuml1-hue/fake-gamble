@@ -3,6 +3,7 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatMult, payout } from "../lib/money";
 import { limboResult } from "../lib/math";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 export function Limbo() {
@@ -35,20 +36,24 @@ export function Limbo() {
     if (!debit(stake)) return;
     setError("");
     setBusy(true);
-    const result = limboResult();
+    setWin(null);
+    const rolled = limboResult();
+    const result = luckOn() ? Math.max(rolled, safeTarget) : rolled;
     const didWin = result >= safeTarget;
     const pay = didWin ? payout(stake, safeTarget) : 0;
     if (pay) credit(pay);
     record("Limbo", stake, pay);
-    setWin(didWin);
     const start = performance.now();
     const step = (now: number) => {
       if (!live.current) return;
-      const t = Math.min(1, (now - start) / 700);
+      const t = Math.min(1, (now - start) / 900);
       const eased = 1 - (1 - t) ** 3;
       setShown(1 + (result - 1) * eased);
       if (t < 1) requestAnimationFrame(step);
-      else setBusy(false);
+      else {
+        setWin(didWin);
+        setBusy(false);
+      }
     };
     requestAnimationFrame(step);
   };
@@ -70,7 +75,7 @@ export function Limbo() {
       }
     >
       <div className="center-stage">
-        <div className={win == null ? "readout" : win ? "readout win" : "readout lose"}>{formatMult(shown)}</div>
+        <div className={busy ? "readout live" : win == null ? "readout" : win ? "readout win pop" : "readout lose pop"}>{formatMult(shown)}</div>
         <label className="field limbo-field">
           <span className="field-label">Target multiplier</span>
           <span className="amount">

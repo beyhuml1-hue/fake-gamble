@@ -1,40 +1,70 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { GAMES } from "../data/games";
-import { formatAmount, PEG_COPY, START_CENTS } from "../lib/money";
+import { formatAmount } from "../lib/money";
+import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 import { BetsTable } from "./BetsTable";
+import { Cashier } from "./Cashier";
 import { Icon } from "./Icons";
 
 export type ShellContext = { query: string };
 
+function useRollingBalance(cents: number) {
+  const [shown, setShown] = useState(cents);
+  const current = useRef(cents);
+  const [dir, setDir] = useState<"" | "up" | "down">("");
+
+  useEffect(() => {
+    const start = current.current;
+    if (start === cents) return;
+    setDir(cents > start ? "up" : "down");
+    const began = performance.now();
+    let frame = 0;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - began) / 520);
+      const eased = 1 - (1 - t) ** 3;
+      const next = Math.round(start + (cents - start) * eased);
+      current.current = next;
+      setShown(next);
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    const clear = window.setTimeout(() => setDir(""), 680);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(clear);
+    };
+  }, [cents]);
+
+  return { shown, dir };
+}
+
 export function AppShell() {
-  const { balance, refill, setPracticeBalance } = useWallet();
+  const { balance, cashierNonce, openCashier } = useWallet();
+  const rolling = useRollingBalance(balance);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
-  const [draft, setDraft] = useState("1000.00");
+  const [muted, setMuted] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
 
-  const applyDraft = () => {
-    const dollars = Number(draft);
-    if (!Number.isFinite(dollars) || dollars < 0) return;
-    setPracticeBalance(Math.round(dollars * 100));
-    setWalletOpen(false);
-  };
+  useEffect(() => {
+    if (cashierNonce > 0) setWalletOpen(true);
+  }, [cashierNonce]);
 
   return (
     <div className="app">
       <aside className={open ? "sidebar open" : "sidebar"}>
         <NavLink to="/" className="brand" end>
-          <span className="brand-mark">$</span>
+          <span className="brand-mark">B</span>
           <span>
-            <strong>Fake Gamble</strong>
-            <small>Play USD</small>
+            <strong>Blockbet</strong>
+            <small>USD</small>
           </span>
         </NavLink>
 
@@ -42,6 +72,10 @@ export function AppShell() {
         <NavLink to="/" end className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}>
           <Icon name="casino" />
           Casino
+        </NavLink>
+        <NavLink to="/stats" className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}>
+          <Icon name="stats" />
+          Stats
         </NavLink>
 
         <p className="nav-label">Originals</p>
@@ -58,7 +92,7 @@ export function AppShell() {
           ))}
         </nav>
 
-        <p className="side-note">18+ · Play money · No slots</p>
+        <p className="side-note">18+</p>
       </aside>
       {open ? <button className="scrim" type="button" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
 
@@ -73,70 +107,60 @@ export function AppShell() {
             <span aria-hidden="true">⌕</span>
             <input
               value={query}
-              placeholder="Search originals"
+              placeholder="Search games"
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
-          <div className="wallet-pill">
+          <nav className="head-links">
+            <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : "")}>
+              Casino
+            </NavLink>
+            <NavLink to="/stats" className={({ isActive }) => (isActive ? "on" : "")}>
+              Stats
+            </NavLink>
+          </nav>
+          <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
             <span className="usd-mark">$</span>
             <span className="bal">
-              <strong>{formatAmount(balance)}</strong>
+              <strong>{formatAmount(rolling.shown)}</strong>
               <small>USD</small>
             </span>
-            <button type="button" className="wallet-btn" onClick={() => setWalletOpen(true)}>
+            <button type="button" className="wallet-btn" onClick={openCashier}>
               Wallet
             </button>
           </div>
+          <button
+            type="button"
+            className="sound-btn"
+            aria-label={muted ? "Unmute" : "Mute"}
+            onClick={() => setMuted(sound.toggle())}
+          >
+            {muted ? (
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M4 10v4h3l4 3V7L7 10H4zM16 9l5 6M21 9l-5 6" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M4 10v4h3l4 3V7L7 10H4zM16 9a4 4 0 0 1 0 6M18.5 7a7 7 0 0 1 0 10" />
+              </svg>
+            )}
+          </button>
+          <span className="avatar" aria-hidden="true">
+            B
+          </span>
         </header>
 
         <div className="content">
           <Outlet context={{ query } satisfies ShellContext} />
           <BetsTable />
           <footer className="site-foot">
-            <p>Practice only. Play USD cannot be withdrawn. If gambling is a problem, visit ncpgambling.org or call 1-800-GAMBLER.</p>
+            <p>18+ · If gambling is a problem, visit ncpgambling.org or call 1-800-GAMBLER.</p>
           </footer>
         </div>
       </div>
 
-      {walletOpen ? (
-        <div className="modal-back" role="presentation" onClick={() => setWalletOpen(false)}>
-          <div
-            className="modal"
-            role="dialog"
-            aria-labelledby="wallet-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 id="wallet-title">Play USD wallet</h2>
-            <p className="peg">{PEG_COPY}</p>
-            <p className="wallet-balance">
-              <span>Balance</span>
-              <strong>{formatAmount(balance)} USD</strong>
-            </p>
-            <label className="field">
-              <span className="field-label">Set practice balance</span>
-              <span className="amount">
-                <span className="amount-prefix">$</span>
-                <input value={draft} inputMode="decimal" onChange={(event) => setDraft(event.target.value)} />
-              </span>
-            </label>
-            <div className="modal-actions">
-              <button
-                className="ghost-btn"
-                type="button"
-                onClick={() => {
-                  refill();
-                  setDraft((START_CENTS / 100).toFixed(2));
-                }}
-              >
-                Refill $1,000
-              </button>
-              <button className="bet-btn" type="button" onClick={applyDraft}>
-                Save balance
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <Cashier open={walletOpen} onClose={() => setWalletOpen(false)} />
     </div>
   );
 }
+

@@ -90,6 +90,48 @@ export const GAMES = [
     note: "99% RTP",
     gradient: "linear-gradient(160deg,#0c4a6e 0%,#2563eb 45%,#f472b6 140%)",
   },
+  {
+    id: "baccarat",
+    name: "Baccarat",
+    blurb: "Player, banker, or tie.",
+    note: "Banker 5% commission",
+    gradient: "linear-gradient(160deg,#052e16 0%,#166534 55%,#fde68a 140%)",
+  },
+  {
+    id: "pump",
+    name: "Pump",
+    blurb: "Inflate the balloon. Cash out before it pops.",
+    note: "99% RTP",
+    gradient: "linear-gradient(160deg,#450a0a 0%,#e11d48 55%,#fecdd3 140%)",
+  },
+  {
+    id: "cases",
+    name: "Cases",
+    blurb: "Apple Box, cars, Nike. You get the item's price.",
+    note: "99% RTP",
+    gradient: "linear-gradient(180deg,#0f212e,#1a2c38)",
+  },
+  {
+    id: "upgrader",
+    name: "Upgrader",
+    blurb: "Set a multiplier. Land in the green.",
+    note: "99% RTP",
+    gradient: "linear-gradient(160deg,#052e16 0%,#16a34a 55%,#fde68a 140%)",
+  },
+  {
+    id: "chicken",
+    name: "Chicken Road",
+    blurb: "Walk the lanes. Cash out before a car.",
+    note: "99% RTP",
+    gradient: "linear-gradient(160deg,#422006 0%,#eab308 55%,#fef9c3 140%)",
+  },
+  {
+    id: "darts",
+    name: "Darts",
+    blurb: "Throw. Closer to the middle pays more.",
+    note: "99% RTP",
+    gradient: "linear-gradient(160deg,#450a0a 0%,#dc2626 55%,#fecaca 140%)",
+  },
 ] as const;
 
 export type GameId = (typeof GAMES)[number]["id"];

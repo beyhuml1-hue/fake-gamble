@@ -4,6 +4,8 @@ import { GameLayout } from "../components/GameLayout";
 import { towerMultiplier } from "../lib/math";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { shuffle } from "../lib/random";
+import { sound } from "../lib/sound";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const LEVELS = {
@@ -20,15 +22,18 @@ export function Dragon() {
   const { balance, debit, credit, record } = useWallet();
   const [amount, setAmount] = useState(1);
   const [level, setLevel] = useState<Level>("Easy");
+  const [tiles, setTiles] = useState<number>(LEVELS.Easy.tiles);
   const [dragons, setDragons] = useState<number[][] | null>(null);
   const [row, setRow] = useState(0);
   const [picks, setPicks] = useState<number[]>([]);
   const [bust, setBust] = useState(false);
+  const [cashed, setCashed] = useState(false);
   const [stake, setStake] = useState(0);
   const [error, setError] = useState("");
 
   const config = LEVELS[level];
-  const active = dragons != null && !bust && row < ROWS;
+  const ended = bust || cashed || row >= ROWS;
+  const active = dragons != null && !ended;
   const cleared = bust ? Math.max(0, picks.length - 1) : picks.length;
   const live = towerMultiplier(Math.max(cleared, 0), config.tiles, config.dragons);
   const next = towerMultiplier(cleared + 1, config.tiles, config.dragons);
@@ -43,9 +48,11 @@ export function Dragon() {
     if (!debit(bet)) return;
     setError("");
     setStake(bet);
+    setTiles(config.tiles);
     setRow(0);
     setPicks([]);
     setBust(false);
+    setCashed(false);
     setDragons(
       Array.from({ length: ROWS }, () => shuffle([...Array(config.tiles).keys()]).slice(0, config.dragons)),
     );
@@ -56,19 +63,29 @@ export function Dragon() {
     const pay = payout(stake, towerMultiplier(picks.length, config.tiles, config.dragons));
     if (pay) credit(pay);
     record("Dragon Tower", stake, pay);
-    setDragons(null);
+    setCashed(true);
   };
 
   const choose = (tile: number) => {
     if (!active || !dragons) return;
-    const bad = dragons[row]!.includes(tile);
+    let rowDragons = dragons[row]!;
+    if (luckOn() && rowDragons.includes(tile)) {
+      const swap = [...Array(tiles).keys()].find((index) => index !== tile && !rowDragons.includes(index));
+      if (swap != null) {
+        rowDragons = rowDragons.map((dragon) => (dragon === tile ? swap : dragon));
+        setDragons(dragons.map((entry, index) => (index === row ? rowDragons : entry)));
+      }
+    }
+    const bad = rowDragons.includes(tile);
     const nextPicks = [...picks, tile];
     setPicks(nextPicks);
     if (bad) {
+      sound.bomb();
       setBust(true);
       record("Dragon Tower", stake, 0);
       return;
     }
+    sound.gem();
     if (row + 1 === ROWS) {
       const pay = payout(stake, towerMultiplier(ROWS, config.tiles, config.dragons));
       if (pay) credit(pay);
@@ -95,16 +112,16 @@ export function Dragon() {
           profitCents={profit}
           label={active && picks.length ? `Cash out ${formatUSD(payout(stake, live))}` : "Bet"}
           onAction={active ? cashout : start}
-          disabled={Boolean(active && picks.length === 0) || (bust && dragons != null)}
+          disabled={Boolean(active && picks.length === 0)}
           cashout={Boolean(active && picks.length)}
-          locked={dragons != null && !bust && row < ROWS}
+          locked={active}
           error={error}
         >
           <div className="field">
             <span className="field-label">Difficulty</span>
             <div className="select wrap">
               {(Object.keys(LEVELS) as Level[]).map((item) => (
-                <button key={item} type="button" className={level === item ? "on" : ""} disabled={dragons != null} onClick={() => setLevel(item)}>
+                <button key={item} type="button" className={level === item ? "on" : ""} disabled={active} onClick={() => setLevel(item)}>
                   {item}
                 </button>
               ))}
@@ -116,41 +133,31 @@ export function Dragon() {
       <div className="tower">
         <div className="mines-mult">
           <span>Next</span>
-          <strong>{formatMult(next)}</strong>
+          <strong key={picks.length} className="mult-pop">
+            {formatMult(next)}
+          </strong>
         </div>
         {Array.from({ length: ROWS }, (_, index) => {
           const r = ROWS - 1 - index;
           const current = r === row && active;
           return (
             <div key={r} className={current ? "tower-row active" : "tower-row"}>
-              {Array.from({ length: config.tiles }, (_, tile) => {
+              {Array.from({ length: dragons ? tiles : config.tiles }, (_, tile) => {
                 const picked = picks[r] === tile;
-                const show = bust || r < picks.length;
-                const dragon = show && dragons?.[r]?.includes(tile);
-                const cls = dragon ? "tile-btn dragon" : picked ? "tile-btn safe" : "tile-btn";
+                const isDragon = Boolean(dragons?.[r]?.includes(tile));
+                const showDragon = ended && isDragon;
+                const showSafe = picked && !isDragon;
+                const cls = showDragon ? "tile-btn dragon" : showSafe ? "tile-btn safe" : "tile-btn";
                 return (
                   <button key={tile} type="button" className={cls} disabled={!current} onClick={() => choose(tile)}>
-                    {dragon ? "✕" : picked ? "●" : ""}
+                    {showDragon ? "💣" : showSafe ? "●" : ""}
                   </button>
                 );
               })}
             </div>
           );
         })}
-        {bust ? (
-          <button
-            className="text-btn"
-            type="button"
-            onClick={() => {
-              setBust(false);
-              setDragons(null);
-              setPicks([]);
-              setRow(0);
-            }}
-          >
-            New climb
-          </button>
-        ) : null}
+        {ended && dragons ? <p className="hint">{bust ? "Bombs revealed." : "Round over. Bombs are marked."}</p> : null}
       </div>
     </GameLayout>
   );

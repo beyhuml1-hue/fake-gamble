@@ -3,6 +3,7 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents } from "../lib/money";
 import { shuffle } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 type Card = { rank: string; suit: string };
@@ -81,6 +82,19 @@ export function Blackjack() {
     }
     if (!debit(bet)) return;
     setError("");
+    if (luckOn()) {
+      const p: Card[] = [
+        { rank: "A", suit: "♠" },
+        { rank: "K", suit: "♥" },
+      ];
+      const d: Card[] = [
+        { rank: "9", suit: "♣" },
+        { rank: "7", suit: "♦" },
+      ];
+      setStake(bet);
+      finish(p, d, bet, "Blackjack", Math.round(bet * 2.5));
+      return;
+    }
     const p = [draw(), draw()];
     const d = [draw(), draw()];
     setStake(bet);

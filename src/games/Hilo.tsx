@@ -4,6 +4,7 @@ import { GameLayout } from "../components/GameLayout";
 import { EDGE } from "../lib/math";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { shuffle } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 type Card = { rank: string; suit: string };
@@ -43,8 +44,15 @@ export function Hilo() {
     return { higher: price(higher), lower: price(lower), same: price(same) };
   }, [card, shoe]);
 
-  const pull = (source: Card[]) => {
+  const pull = (source: Card[], want?: (card: Card) => boolean) => {
     const next = source.length < 10 ? freshShoe() : [...source];
+    if (want && luckOn()) {
+      const index = next.findIndex(want);
+      if (index >= 0) {
+        const [picked] = next.splice(index, 1);
+        next.push(picked!);
+      }
+    }
     const drawn = next.pop()!;
     setShoe(next);
     setCard(drawn);
@@ -71,7 +79,10 @@ export function Hilo() {
     if (!active || !card) return;
     const step = odds[dir];
     if (!step) return;
-    const drawn = pull(shoe);
+    const drawn = pull(shoe, (item) => {
+      const diff = rankOf(item) - rankOf(card);
+      return dir === "higher" ? diff > 0 : dir === "lower" ? diff < 0 : diff === 0;
+    });
     const diff = rankOf(drawn) - rankOf(card);
     const ok = dir === "higher" ? diff > 0 : dir === "lower" ? diff < 0 : diff === 0;
     if (!ok) {
@@ -118,7 +129,7 @@ export function Hilo() {
     >
       <div className="hilo">
         {card ? (
-          <div className={card.suit === "♥" || card.suit === "♦" ? "hilo-card red" : "hilo-card"}>
+          <div key={`${card.rank}${card.suit}`} className={card.suit === "♥" || card.suit === "♦" ? "hilo-card red" : "hilo-card"}>
             <span>{card.rank}</span>
             <strong>{card.suit}</strong>
           </div>

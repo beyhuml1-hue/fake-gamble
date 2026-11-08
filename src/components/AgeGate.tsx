@@ -30,15 +30,12 @@ export function AgeGate({ children }: { children: ReactNode }) {
         {state === "no" ? (
           <>
             <h1>Adults only</h1>
-            <p>Fake Gamble is a play-money casino for people 18 and older.</p>
+            <p>Blockbet is for people 18 and older.</p>
           </>
         ) : (
           <>
             <h1>Are you 18 or older?</h1>
-            <p>
-              Fake Gamble is a free casino simulator. The balance is Play USD, pegged 1:1 to the US dollar.
-              There are no deposits, no withdrawals, and no real prizes.
-            </p>
+            <p>Blockbet is an adults-only casino. You need to be 18 or older to enter.</p>
             <div className="age-actions">
               <button className="bet-btn" type="button" onClick={enter}>
                 I’m 18 or older — enter
@@ -47,7 +44,7 @@ export function AgeGate({ children }: { children: ReactNode }) {
                 I’m under 18
               </button>
             </div>
-            <p className="fineprint">18+ · Play money only · No real-money gambling</p>
+            <p className="fineprint">18+ · Play responsibly</p>
           </>
         )}
       </div>

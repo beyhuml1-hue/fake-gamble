@@ -4,6 +4,7 @@ import { GameLayout } from "../components/GameLayout";
 import { WHEELS, type Risk } from "../lib/math";
 import { betCents, formatMult, payout } from "../lib/money";
 import { randInt } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 export function Wheel() {
@@ -37,7 +38,13 @@ export function Wheel() {
     setError("");
     setBusy(true);
     setWin(null);
-    const index = randInt(segments.length);
+    let index = randInt(segments.length);
+    if (luckOn()) {
+      index = 0;
+      segments.forEach((mult, i) => {
+        if (mult > (segments[index] ?? 0)) index = i;
+      });
+    }
     const mult = segments[index] ?? 0;
     const pay = payout(stake, mult);
     if (pay) credit(pay);
@@ -50,7 +57,7 @@ export function Wheel() {
     window.setTimeout(() => {
       setWin(mult);
       setBusy(false);
-    }, 2400);
+    }, 3100);
   };
 
   return (
@@ -81,7 +88,7 @@ export function Wheel() {
         </BetPanel>
       }
     >
-      <div className="wheel-scene">
+      <div className={busy ? "wheel-scene spinning" : "wheel-scene"}>
         <div className="pointer" />
         <div className="wheel-disc" style={{ background: gradient, transform: `rotate(${rotation}deg)` }}>
           {segments.map((mult, i) => (

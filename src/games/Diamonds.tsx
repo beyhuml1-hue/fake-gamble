@@ -4,6 +4,7 @@ import { GameLayout } from "../components/GameLayout";
 import { DIAMOND_LABEL, DIAMOND_PAY, diamondHand } from "../lib/math";
 import { betCents, payout } from "../lib/money";
 import { randInt } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#22d3ee", "#3b82f6", "#c084fc"];
@@ -30,7 +31,7 @@ export function Diamonds() {
     if (!debit(stake)) return;
     setError("");
     setBusy(true);
-    const drawn = Array.from({ length: 5 }, () => randInt(7));
+    const drawn = luckOn() ? [0, 0, 0, 0, 1] : Array.from({ length: 5 }, () => randInt(7));
     const hand = diamondHand(drawn);
     const mult = DIAMOND_PAY[hand];
     const pay = payout(stake, mult);
@@ -70,7 +71,7 @@ export function Diamonds() {
       <div className="center-stage">
         <div className="gems">
           {gems.map((gem, index) => (
-            <span key={index} className="gem" style={{ background: gem < 0 ? "#213743" : COLORS[gem] }} />
+            <span key={`${index}-${gem}`} className={gem < 0 ? "gem" : "gem in"} style={{ background: gem < 0 ? "#213743" : COLORS[gem] }} />
           ))}
         </div>
         <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>{label}</p>

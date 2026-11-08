@@ -3,6 +3,7 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatUSD, payout } from "../lib/money";
 import { randInt } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
@@ -29,6 +30,14 @@ function wins(bet: Bet, n: number): boolean {
   if (bet.kind === "half") return bet.low ? n <= 18 : n >= 19;
   if (bet.kind === "dozen") return n >= (bet.d - 1) * 12 + 1 && n <= bet.d * 12;
   return false;
+}
+
+function forcedNumber(bet: Bet): number {
+  if (bet.kind === "straight") return bet.n;
+  if (bet.kind === "color") return bet.color === "red" ? 1 : 2;
+  if (bet.kind === "parity") return bet.even ? 2 : 1;
+  if (bet.kind === "half") return bet.low ? 1 : 19;
+  return bet.d === 1 ? 1 : bet.d === 2 ? 13 : 25;
 }
 
 function label(bet: Bet | null): string {
@@ -77,7 +86,7 @@ export function Roulette() {
     if (!debit(stake)) return;
     setError("");
     setBusy(true);
-    const n = ORDER[randInt(ORDER.length)]!;
+    const n = luckOn() ? forcedNumber(bet) : ORDER[randInt(ORDER.length)]!;
     const didWin = wins(bet, n);
     const pay = didWin ? payout(stake, multFor(bet)) : 0;
     if (pay) credit(pay);
@@ -89,7 +98,7 @@ export function Roulette() {
       setResult(n);
       setWin(didWin);
       setBusy(false);
-    }, 2600);
+    }, 3100);
   };
 
   const numbers = [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34];
@@ -115,7 +124,7 @@ export function Roulette() {
       }
     >
       <div className="roulette">
-        <div className="wheel-scene compact">
+        <div className={busy ? "wheel-scene compact spinning" : "wheel-scene compact"}>
           <div className="pointer" />
           <div className="wheel-disc small" style={{ background: gradient, transform: `rotate(${rotation}deg)` }} />
           <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>

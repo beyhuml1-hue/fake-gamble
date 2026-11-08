@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { crashPoint } from "../lib/math";
+import { luckOn } from "../lib/luck";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
@@ -53,8 +54,13 @@ export function Crash() {
       else ctx.lineTo(x, y);
     });
     ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3.5;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 14;
     ctx.stroke();
+    ctx.shadowBlur = 0;
   };
 
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
@@ -78,7 +84,7 @@ export function Crash() {
     if (!debit(stake)) return;
     setError("");
     wager.current = stake;
-    crashAt.current = crashPoint();
+    crashAt.current = luckOn() ? 100 : crashPoint();
     settled.current = false;
     multRef.current = 1;
     setMult(1);
@@ -137,7 +143,11 @@ export function Crash() {
       }
     >
       <div className="crash-stage">
-        <div className={phase === "crashed" ? "readout lose" : phase === "cashed" ? "readout win" : "readout"}>
+        <div
+          className={
+            phase === "running" ? "readout live" : phase === "crashed" ? "readout lose pop" : phase === "cashed" ? "readout win pop" : "readout"
+          }
+        >
           {formatMult(mult)}
         </div>
         <canvas ref={canvasRef} className="board-canvas short" />

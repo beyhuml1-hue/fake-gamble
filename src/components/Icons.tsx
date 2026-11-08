@@ -74,7 +74,14 @@ export function Icon({ name }: { name: string }) {
         <circle cx="12" cy="5" r="1" fill="currentColor" />
       </>
     ),
-    dragon: <path d="M12 20V6M8 10l4-4 4 4M7 20h10" />,
+    dragon: (
+      <>
+        <rect x="4" y="15" width="16" height="5" rx="1" />
+        <rect x="6" y="10" width="12" height="4" rx="1" />
+        <rect x="8" y="5" width="8" height="4" rx="1" />
+        <circle cx="12" cy="3" r="1.2" fill="currentColor" />
+      </>
+    ),
     flip: (
       <>
         <circle cx="12" cy="12" r="8" />
@@ -82,10 +89,63 @@ export function Icon({ name }: { name: string }) {
       </>
     ),
     diamonds: <path d="M12 3l7 8-7 10L5 11l7-8z" />,
+    baccarat: (
+      <>
+        <rect x="3" y="5" width="10" height="14" rx="1.4" />
+        <rect x="11" y="5" width="10" height="14" rx="1.4" />
+      </>
+    ),
+    pump: (
+      <>
+        <path d="M12 20c-4 0-6-3-6-7a6 6 0 1 1 12 0c0 4-2 7-6 7z" />
+        <path d="M12 4v3" />
+      </>
+    ),
+    cases: (
+      <>
+        <rect x="3" y="8" width="18" height="12" rx="2" />
+        <path d="M3 12h18M10 12v3h4v-3" />
+      </>
+    ),
+    upgrader: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 12l5-2" />
+        <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+      </>
+    ),
+    chicken: (
+      <>
+        <circle cx="12" cy="12" r="5" />
+        <path d="M16 10l3-1M9 16l-1 3M15 16l1 3M10 8l1-3" />
+      </>
+    ),
+    darts: (
+      <>
+        <circle cx="12" cy="13" r="6" />
+        <circle cx="12" cy="13" r="2" />
+        <path d="M12 3v5" />
+      </>
+    ),
     casino: (
       <>
         <path d="M4 10h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8z" />
         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+      </>
+    ),
+    phone: (
+      <>
+        <rect x="7" y="3" width="10" height="18" rx="2" />
+        <path d="M11 18h2" />
+      </>
+    ),
+    stats: (
+      <>
+        <path d="M4 19V5" />
+        <path d="M4 19h16" />
+        <path d="M8 15v-4" />
+        <path d="M12 15V8" />
+        <path d="M16 15v-6" />
       </>
     ),
   };

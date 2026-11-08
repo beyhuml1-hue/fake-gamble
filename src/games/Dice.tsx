@@ -4,7 +4,20 @@ import { GameLayout } from "../components/GameLayout";
 import { betCents, payout } from "../lib/money";
 import { chanceMultiplier } from "../lib/math";
 import { random } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
+
+const DIE_FACE = [
+  "",
+  "rotateX(0deg) rotateY(0deg)",
+  "rotateY(-90deg)",
+  "rotateX(-90deg)",
+  "rotateX(90deg)",
+  "rotateY(90deg)",
+  "rotateY(180deg)",
+];
+
+const DIE_FACE_LABELS = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
 export function Dice() {
   const { balance, debit, credit, record } = useWallet();
@@ -12,6 +25,7 @@ export function Dice() {
   const [chance, setChance] = useState(50);
   const [mode, setMode] = useState<"under" | "over">("under");
   const [shown, setShown] = useState(50);
+  const [face, setFace] = useState(1);
   const [win, setWin] = useState<boolean | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [error, setError] = useState("");
@@ -38,20 +52,28 @@ export function Dice() {
     if (!debit(stake)) return;
     setError("");
     setSpinning(true);
-    const result = random() * 100;
+    setWin(null);
+    let result = random() * 100;
+    if (luckOn()) result = mode === "under" ? chance * 0.45 : 100 - chance * 0.45;
     const didWin = mode === "under" ? result < chance : result > 100 - chance;
     const pay = didWin ? payout(stake, mult) : 0;
     if (pay) credit(pay);
     record("Dice", stake, pay);
-    setWin(didWin);
-
+    const from = shown;
     const start = performance.now();
     const step = (now: number) => {
       if (!live.current) return;
-      const t = Math.min(1, (now - start) / 650);
-      setShown(t < 1 ? random() * 100 : result);
+      const t = Math.min(1, (now - start) / 860);
+      const wobble = (1 - t) ** 2;
+      const noise = (random() - 0.5) * 64 * wobble;
+      const eased = from + (result - from) * (1 - (1 - t) ** 3);
+      setShown(t < 1 ? eased + noise : result);
       if (t < 1) requestAnimationFrame(step);
-      else setSpinning(false);
+      else {
+        setFace(Math.min(6, 1 + Math.floor(result / (100 / 6))));
+        setWin(didWin);
+        setSpinning(false);
+      }
     };
     requestAnimationFrame(step);
   };
@@ -73,7 +95,19 @@ export function Dice() {
       }
     >
       <div className="dice-layout">
-        <div className={win == null ? "readout" : win ? "readout win" : "readout lose"}>
+        <div className="die-scene" aria-hidden="true">
+          <div
+            className={spinning ? "die tumble" : "die"}
+            style={{ transform: spinning ? undefined : DIE_FACE[face] }}
+          >
+            {DIE_FACE_LABELS.map((label, index) => (
+              <span key={label} className={`die-face f${index + 1}`}>
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className={spinning ? "readout spin" : win == null ? "readout" : win ? "readout win pop" : "readout lose pop"}>
           {shown.toFixed(2)}
         </div>
         <div className="stat-row">

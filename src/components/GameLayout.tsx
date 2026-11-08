@@ -13,7 +13,7 @@ export function GameLayout({
 }) {
   useEffect(() => {
     const previous = document.title;
-    document.title = `${title} · Fake Gamble`;
+    document.title = `${title} · Blockbet`;
     return () => {
       document.title = previous;
     };
@@ -30,7 +30,7 @@ export function GameLayout({
           {panel}
         </div>
         <div className="game-stage">{children}</div>
-        <p className="game-meta">Play USD only · 1 Play USD = $1.00 · Results are drawn in this browser · No cash out</p>
+        <p className="game-meta">USD balance · Results settle instantly</p>
       </div>
     </section>
   );

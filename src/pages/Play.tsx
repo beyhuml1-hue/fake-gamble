@@ -2,8 +2,12 @@ import type { ComponentType } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import type { GameId } from "../data/games";
 import { gameById } from "../data/games";
+import { Baccarat } from "../games/Baccarat";
+import { Cases } from "../games/Cases";
+import { Chicken } from "../games/Chicken";
 import { Blackjack } from "../games/Blackjack";
 import { Crash } from "../games/Crash";
+import { Darts } from "../games/Darts";
 import { Diamonds } from "../games/Diamonds";
 import { Dice } from "../games/Dice";
 import { Dragon } from "../games/Dragon";
@@ -13,7 +17,9 @@ import { Keno } from "../games/Keno";
 import { Limbo } from "../games/Limbo";
 import { Mines } from "../games/Mines";
 import { Plinko } from "../games/Plinko";
+import { Pump } from "../games/Pump";
 import { Roulette } from "../games/Roulette";
+import { Upgrader } from "../games/Upgrader";
 import { Wheel } from "../games/Wheel";
 
 const PAGES: Record<GameId, ComponentType> = {
@@ -30,6 +36,12 @@ const PAGES: Record<GameId, ComponentType> = {
   dragon: Dragon,
   flip: Flip,
   diamonds: Diamonds,
+  baccarat: Baccarat,
+  pump: Pump,
+  cases: Cases,
+  upgrader: Upgrader,
+  chicken: Chicken,
+  darts: Darts,
 };
 
 export function Play() {

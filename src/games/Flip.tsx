@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
-import { betCents, payout } from "../lib/money";
+import { betCents, formatUSD, payout } from "../lib/money";
 import { EDGE } from "../lib/math";
 import { random } from "../lib/random";
+import { luckOn } from "../lib/luck";
+import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 
 const MULT = 2 * (1 - EDGE);
+const FLIP_MS = 1700;
+
+type Pending = { stake: number; pay: number; win: boolean; heads: boolean };
 
 export function Flip() {
   const { balance, debit, credit, record } = useWallet();
@@ -15,7 +20,38 @@ export function Flip() {
   const [deg, setDeg] = useState(0);
   const [busy, setBusy] = useState(false);
   const [win, setWin] = useState<boolean | null>(null);
+  const [landed, setLanded] = useState<"heads" | "tails" | null>(null);
+  const [paid, setPaid] = useState(0);
   const [error, setError] = useState("");
+  const pending = useRef<Pending | null>(null);
+  const timer = useRef(0);
+  const creditRef = useRef(credit);
+  const recordRef = useRef(record);
+  creditRef.current = credit;
+  recordRef.current = record;
+
+  const settle = () => {
+    const job = pending.current;
+    if (!job) return;
+    pending.current = null;
+    if (job.pay) creditRef.current(job.pay);
+    recordRef.current("Flip", job.stake, job.pay);
+    setWin(job.win);
+    setLanded(job.heads ? "heads" : "tails");
+    setPaid(job.pay);
+    setBusy(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(timer.current);
+      const job = pending.current;
+      if (!job) return;
+      pending.current = null;
+      if (job.pay) creditRef.current(job.pay);
+      recordRef.current("Flip", job.stake, job.pay);
+    };
+  }, []);
 
   const cents = Math.round(amount * 100);
   const profit = Math.max(0, payout(Math.max(cents, 0), MULT) - Math.max(cents, 0));
@@ -29,20 +65,28 @@ export function Flip() {
     if (!debit(stake)) return;
     setError("");
     setBusy(true);
-    const heads = random() < 0.5;
+    setWin(null);
+    setLanded(null);
+    sound.flip();
+    const heads = luckOn() ? side === "heads" : random() < 0.5;
     const didWin = (heads && side === "heads") || (!heads && side === "tails");
     const pay = didWin ? payout(stake, MULT) : 0;
-    if (pay) credit(pay);
-    record("Flip", stake, pay);
-    setWin(didWin);
-    const turns = 5 + Math.floor(random() * 3);
+    pending.current = { stake, pay, win: didWin, heads };
+    const turns = 6 + Math.floor(random() * 2);
     const landing = heads ? 0 : 180;
-    setDeg((prev) => {
-      const base = Math.ceil(prev / 360) * 360 + turns * 360;
-      return base + landing;
-    });
-    window.setTimeout(() => setBusy(false), 900);
+    setDeg((prev) => Math.ceil(prev / 360) * 360 + turns * 360 + landing);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(settle, FLIP_MS);
   };
+
+  const line =
+    busy || landed == null
+      ? busy
+        ? "Flipping…"
+        : `${MULT.toFixed(2)}× if you call it`
+      : win
+        ? `${landed === "heads" ? "Heads" : "Tails"} · ${formatUSD(paid)}`
+        : `${landed === "heads" ? "Heads" : "Tails"} · miss`;
 
   return (
     <GameLayout
@@ -53,9 +97,10 @@ export function Flip() {
           amount={amount}
           onAmount={setAmount}
           profitCents={profit}
-          label="Bet"
+          label="Flip"
           onAction={play}
           disabled={busy}
+          locked={busy}
           error={error}
         >
           <div className="field">
@@ -74,14 +119,18 @@ export function Flip() {
     >
       <div className="center-stage">
         <div className="coin-scene">
-          <div className="coin" style={{ transform: `rotateY(${deg}deg)` }}>
-            <div className="face heads">H</div>
-            <div className="face tails">T</div>
+          <div className={busy ? "coin flipping" : "coin"} style={{ transform: `rotateY(${deg}deg)` }}>
+            <div className="face heads">
+              <b>$</b>
+              <small>HEADS</small>
+            </div>
+            <div className="face tails">
+              <b>★</b>
+              <small>TAILS</small>
+            </div>
           </div>
         </div>
-        <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>
-          {win == null ? `${MULT.toFixed(2)}× on a correct call` : win ? "Win" : "Miss"}
-        </p>
+        <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>{line}</p>
       </div>
     </GameLayout>
   );

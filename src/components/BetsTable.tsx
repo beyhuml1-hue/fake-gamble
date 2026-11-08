@@ -8,7 +8,7 @@ export function BetsTable() {
     <section className="bets">
       <div className="bets-head">
         <h2>Your bets</h2>
-        <span>Play USD</span>
+        <span>USD</span>
       </div>
       <div className="bets-scroll">
         <table>
@@ -25,7 +25,7 @@ export function BetsTable() {
             {history.length === 0 ? (
               <tr>
                 <td colSpan={5} className="empty-row">
-                  Bets you place show up here. The balance never leaves this browser.
+                  Your settled bets show up here.
                 </td>
               </tr>
             ) : (

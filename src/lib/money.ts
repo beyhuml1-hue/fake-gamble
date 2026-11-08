@@ -1,9 +1,8 @@
-export const START_CENTS = 100_000;
+export const START_CENTS = 2_000;
 export const MIN_BET = 10;
 export const MAX_BALANCE = 100_000_000;
 
-export const PEG_COPY =
-  "Play USD is denominated 1:1 with the US dollar. It is play money: nothing on this site can be deposited or withdrawn.";
+export const PEG_COPY = "Balances are shown in USD.";
 
 export function formatUSD(cents: number): string {
   const sign = cents < 0 ? "-" : "";
