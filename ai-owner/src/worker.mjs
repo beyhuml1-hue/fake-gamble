@@ -264,11 +264,16 @@ async function feed(env,actor,now=Date.now()){
  return {me:p,people,messages:messages.reverse(),rain:{round:r,endsAt:(r+1)*RAIN,joined:!!joined.n,count:count.n,amount:c.rain_amount},now,staging:true};
 }
 async function report(env,now=Date.now()){
- const reportDay=stamp(now-DAY),prior=await first(env,"SELECT status FROM ao_reports WHERE day=?1",reportDay);
- if(prior?.status==="sent")return;
+ const reportDay=stamp(now-DAY),prior=await first(env,"SELECT status,at_ms FROM ao_reports WHERE day=?1",reportDay);
+ if(prior?.status==="sent"||prior?.status==="pending"&&now-prior.at_ms<3600000)return;
  const from=Date.parse(reportDay+"T00:00:00Z"),to=from+DAY-1;
  const bets=await first(env,"SELECT COUNT(*) AS n,COALESCE(SUM(stake),0) AS s,COALESCE(SUM(payout),0) AS p FROM ao_bets WHERE at_ms BETWEEN ?1 AND ?2",from,to);
- const content="📊 BlockBet AI Owner | IMAGINARY STAGING report "+reportDay+"\nBets: "+bets.n+" | Wagered: "+bets.s+" | Payouts: "+bets.p+" | Simulated profit: "+(bets.s-bets.p)+" fake coins.";
+ const top=await all(env,"SELECT p.handle,SUM(b.payout-b.stake) AS net FROM ao_bets b JOIN ao_players p ON p.id=b.player_id WHERE b.at_ms BETWEEN ?1 AND ?2 GROUP BY b.player_id ORDER BY net DESC LIMIT 3",from,to);
+ const content="📊 BlockBet AI Owner | IMAGINARY STAGING report "+reportDay+
+ "\nBets: "+bets.n+" | Wagered: "+bets.s+" | Payouts: "+bets.p+
+ " | Simulated profit: "+(bets.s-bets.p)+" fake coins."+
+ "\nBiggest test winners: "+(top.length?top.map(x=>x.handle+" "+x.net).join(", "):"none")+
+ "\nThese are imaginary test figures only.";
  const result=await announcement(env,content,{id:"report-daemon",surface:"cron"});
  await run(env,"INSERT INTO ao_reports(day,status,content,at_ms) VALUES(?1,?2,?3,?4) ON CONFLICT(day) DO UPDATE SET status=excluded.status,content=excluded.content,at_ms=excluded.at_ms",reportDay,result.status==="sent"?"sent":"pending",content,now);
 }
@@ -377,6 +382,17 @@ export default {
   if(request.method==="GET"&&u.pathname==="/preview")return new Response(PREVIEW_HTML,{status:200,headers:{"content-type":"text/html; charset=utf-8","cache-control":"no-store","content-security-policy":"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'","x-content-type-options":"nosniff"}});
 
   if(u.pathname==="/discord/bridge"&&request.method==="POST")return discord(request,env);
+  if(u.pathname==="/internal/scheduler"&&request.method==="POST"){
+   if(!env.DISCORD_BRIDGE_SECRET||request.headers.get("x-discord-bridge")!==env.DISCORD_BRIDGE_SECRET)return bad("Forbidden.",403);
+   let args;try{args=await request.json();}catch{return bad("Bad JSON.");}
+   if(!["hourly","daily"].includes(args.kind))return bad("Unknown schedule job.");
+   const at=Date.now();
+   try{
+    await automatic(env,at);
+    if(args.kind==="daily")await report(env,at);
+    return json({ok:true,kind:args.kind,staging:true});
+   }catch(e){console.warn("Staging schedule failed",e instanceof Error?e.name:"unexpected");return bad("Scheduled job failed.",503);}
+  }
   if(!env.STAGING_ACCESS_TOKEN||request.headers.get("x-staging-access")!==env.STAGING_ACCESS_TOKEN)return bad("Staging access required.",401);
   if(origin&&origin!==env.STAGING_WEB_ORIGIN&&origin!==u.origin)return bad("Origin not permitted.",403);
   try{

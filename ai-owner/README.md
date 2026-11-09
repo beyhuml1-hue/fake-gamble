@@ -53,3 +53,5 @@ No production Worker routes, database tables or site balances are modified by th
 - `@ai Announce today's leaderboard to Discord.` (test admin; queues if Discord token not configured)
 
 The staging Worker also serves `/preview`, a browser-only isolated chat drawer preview. The rotated NanoGPT key must be bound as a Worker secret before real AI inference works. Cloudflare's Free cron quota may prevent activating schedules; do not delete existing production schedules. Verified test bug events are automatically compensated on a scheduler run within the reward budget.
+
+**Free plan scheduling fallback:** When Cloudflare has no Cron Trigger slots left, keep the Discord bot service running. Its built-in five-minute scheduler calls the secret-protected `/internal/scheduler` route. Database job claims prevent duplicate surprise/loyalty/giveaway awards. Reports are generated after 08:00 UTC, and remain queued until the Discord announcement credentials are configured. No production Cron Trigger is changed.

@@ -219,3 +219,19 @@ test("AI cannot issue bug compensation without a verified matching ticket",async
   await assert.rejects(()=>executeTool(s.env,s.adminActor,"compensate_bug",{player:"CleoCoins",amount:35,ticket:"BUG-1001"},"replay-ticket"),/Ticket/);
  }finally{s.sqlite.close();}
 });
+
+test("Discord scheduler endpoint is secret-verified and queues daily reports safely",async()=>{
+ const s=setup();
+ try{
+  const url="https://ai-owner-staging.example/internal/scheduler";
+  const call=(secret,kind)=>owner.fetch(new Request(url,{method:"POST",headers:{"content-type":"application/json","x-discord-bridge":secret},body:JSON.stringify({kind})}),s.env);
+  assert.equal((await call("wrong","daily")).status,403);
+  assert.equal((await call(s.env.DISCORD_BRIDGE_SECRET,"unknown")).status,400);
+  const response=await call(s.env.DISCORD_BRIDGE_SECRET,"daily");
+  assert.equal(response.status,200);
+  assert.equal((await response.json()).staging,true);
+  assert.equal(s.sqlite.prepare("SELECT COUNT(*) AS n FROM ao_reports").get().n,1);
+  await call(s.env.DISCORD_BRIDGE_SECRET,"daily");
+  assert.equal(s.sqlite.prepare("SELECT COUNT(*) AS n FROM ao_announcements").get().n,1);
+ }finally{s.sqlite.close();}
+});

@@ -35,4 +35,27 @@ client.on(Events.MessageCreate,async message=>{
  }
 });
 client.on(Events.Error,()=>console.warn("Discord gateway error"));
+// The Discord process doubles as a schedule driver when Cloudflare's free
+// account has no spare Cron Trigger slots. The Worker enforces idempotency.
+let lastScheduleBucket=-1;
+async function driveSchedule(){
+ const current=new Date(),bucket=Math.floor(current.getTime()/300000);
+ if(bucket===lastScheduleBucket||current.getUTCMinutes()%5!==0)return;
+ lastScheduleBucket=bucket;
+ const kinds=["hourly"];
+ if(current.getUTCHours()>=8)kinds.push("daily");
+ for(const kind of kinds){
+  try{
+   const response=await fetch(process.env.AI_OWNER_API_URL+"/internal/scheduler",{
+    method:"POST",
+    headers:{"content-type":"application/json","x-discord-bridge":process.env.DISCORD_BRIDGE_SECRET},
+    body:JSON.stringify({kind}),
+    signal:AbortSignal.timeout(18000)
+   });
+   if(!response.ok)console.warn("Staging scheduler "+kind+" returned HTTP "+response.status);
+  }catch{console.warn("Staging scheduler "+kind+" unreachable");}
+ }
+}
+setInterval(()=>void driveSchedule(),30000);
+void driveSchedule();
 await client.login(process.env.DISCORD_BOT_TOKEN);
