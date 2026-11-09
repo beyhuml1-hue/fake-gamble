@@ -18,12 +18,11 @@ test("heads and tails are distinct accessible SVG textures for the same coin",()
  assert.notEqual(heads,tails);
 });
 
-test("live demo posting is opt-in and uses server authentication",()=>{
+test("community bets publish automatically for signed-in players",()=>{
  const wallet=readFileSync(new URL("../src/state/wallet.tsx",import.meta.url),"utf8");
  const api=readFileSync(new URL("../functions/api/auth/live-bets.js",import.meta.url),"utf8");
- assert.match(wallet,/shareLiveRef\.current/);
- assert.match(wallet,/=== "yes"/);
- assert.match(wallet,/if \(email !== "phone" && shareLiveRef\.current\)/);
+ assert.doesNotMatch(wallet,/shareLive|live-opt-in/);
+ assert.match(wallet,/if \(email !== "phone"\)/);
  assert.match(api,/currentUser\(request,env\)/);
  assert.match(api,/sameOrigin\(request\)/);
  assert.match(api,/auth_live_bets/);

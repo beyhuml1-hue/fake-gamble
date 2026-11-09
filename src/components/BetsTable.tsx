@@ -19,16 +19,19 @@ function validRow(row: LiveRow) {
 }
 
 export function BetsTable() {
-  const { history, shareLive, setShareLive } = useWallet();
-  const [tab, setTab] = useState<"live" | "mine">("live");
+  const { history } = useWallet();
+  const [tab, setTab] = useState<"live" | "mine">("mine");
   const [bets, setBets] = useState<LiveRow[]>([]);
   const [status, setStatus] = useState<"loading" | "online" | "offline">("loading");
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
 
   useEffect(() => {
+    if (tab !== "live") return;
     let disposed = false;
+    let pending = false;
     async function refresh() {
-      if (document.hidden) return;
+      if (document.hidden || pending) return;
+      pending = true;
       try {
         const response = await fetch("/api/auth/live-bets", {
           method:"GET", cache:"no-store", credentials:"same-origin"
@@ -41,6 +44,8 @@ export function BetsTable() {
         setUpdatedAt(Date.now());
       } catch {
         if (!disposed) setStatus("offline");
+      } finally {
+        pending = false;
       }
     }
     void refresh();
@@ -54,7 +59,7 @@ export function BetsTable() {
       window.removeEventListener("blockbet:bet", onBet);
       window.removeEventListener("focus", onBet);
     };
-  }, []);
+  }, [tab]);
 
   const entries = tab === "live" ? bets.map(row => ({
     ...row, time: row.at
@@ -67,21 +72,17 @@ export function BetsTable() {
       <div className="bets-head live-bets-heading">
         <div>
           <h2>Live Bets <span className={status === "online" ? "live-feed-dot online" : "live-feed-dot"} aria-label={status}/></h2>
-          <p>Player-submitted bets using demo credits — no real money</p>
+          <p>Bets use Play USD. Community results come from players’ devices.</p>
         </div>
         <div className="live-bets-tabs" role="group" aria-label="Bet history view">
-          <button type="button" className={tab==="live" ? "selected" : ""} onClick={()=>setTab("live")}>Community</button>
-          <button type="button" className={tab==="mine" ? "selected" : ""} onClick={()=>setTab("mine")}>Your bets</button>
+          <button type="button" className={tab==="live" ? "selected" : ""} onClick={()=>setTab("live")} aria-pressed={tab==="live"}>Community Bets</button>
+          <button type="button" className={tab==="mine" ? "selected" : ""} onClick={()=>setTab("mine")} aria-pressed={tab==="mine"}>Your Bets</button>
         </div>
       </div>
       <div className="live-feed-meta">
-        <span>{tab==="live" ? status==="online" ? "● LIVE DEMO FEED" : status==="offline" ? "● FEED OFFLINE" : "● CONNECTING…" : "● YOUR LOCAL HISTORY"}</span>
+        <span>{tab==="live" ? status==="online" ? "LIVE" : status==="offline" ? "FEED OFFLINE" : "CONNECTING…" : "THIS DEVICE"}</span>
         <span>{tab==="live" ? updatedAt ? "Refreshes every 5 seconds" : "Connecting to players…" : "Saved on this device"}</span>
       </div>
-      <label className="live-bets-opt-in">
-        <input type="checkbox" checked={shareLive} onChange={e=>setShareLive(e.target.checked)}/>
-        <span><strong>Share my demo bets</strong><small>Off by default. Signed-in players only. Your email is never shown; others see an anonymous player ID and submitted game results.</small></span>
-      </label>
       <div className="bets-scroll">
         <table>
           <thead>
@@ -99,8 +100,8 @@ export function BetsTable() {
               <tr><td colSpan={6} className="empty-row">
                 {tab==="mine" ? "Your settled bets will appear here."
                   : status==="offline" ? "Live feed unavailable. Your games still work."
-                  : status==="loading" ? "Connecting to live demo bets…" :
-                  "No community bets yet. Sign in and place a demo bet to be first."}
+                  : status==="loading" ? "Connecting to community bets…" :
+                  "No community bets yet. Sign in and place a bet to be first."}
               </td></tr>
             ) : entries.map(row=>{
               const mult=row.wager>0 ? row.payout/row.wager : 0;
@@ -117,7 +118,6 @@ export function BetsTable() {
           </tbody>
         </table>
       </div>
-      <p className="live-bets-disclaimer">Demo feed updates automatically. Entries come from signed-in users' game clients, not fabricated players. Wagers and results are not independently verified by the server.</p>
     </section>
   );
 }

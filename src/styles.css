@@ -1547,7 +1547,7 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .lobby[data-cover-style="arcade"] .tile:hover { border-color: #d0b982; }
 
 
-/* Community Live Bets — factual player-submitted demo data, updated every 5s. */
+/* Community bet feed */
 .live-bets {border:1px solid #2e4856;box-shadow:0 16px 42px #0002}
 .live-bets-heading {display:flex;justify-content:space-between;gap:14px;align-items:center;padding:22px 19px 10px}
 .live-bets-heading h2 {font-size:19px;display:flex;align-items:center;gap:12px}
@@ -1561,14 +1561,40 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .live-feed-meta span:first-child{color:#00e701}
 .live-bet-player {font-weight:700;color:#d8e8e8}
 .player-dot {display:inline-block;width:7px;height:7px;border-radius:50%;background:#00e701;margin-right:9px}
-.live-bets-disclaimer {font-size:11px;line-height:1.5;padding:12px 18px 18px;margin:0;color:#91a9b5;border-top:1px solid #2e4856}
 .live-nav-dot {margin:0 7px 0 1px}
 .head-live-dot {vertical-align:middle;margin-left:4px}
 @media(max-width:680px){.live-bets-heading{align-items:stretch;flex-direction:column}.live-bets-tabs{align-self:start}.live-feed-meta{flex-direction:column;align-items:flex-start;gap:5px}}
 
 
-.live-bets-opt-in{margin:1px 18px 16px;padding:12px 14px;border:1px solid #3a5562;border-radius:9px;display:flex;align-items:center;gap:11px;background:#1a2c38;cursor:pointer}
-.live-bets-opt-in input{width:19px;height:19px;flex:none;accent-color:#00e701}
-.live-bets-opt-in strong,.live-bets-opt-in small{display:block}
-.live-bets-opt-in strong{font-size:12px}
-.live-bets-opt-in small{color:#b1bad3;line-height:1.45;margin-top:4px;font-size:11px;font-weight:400}
+
+.community-page { max-width: 740px; margin: 18px auto; }
+.community-heading, .chat-profile header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.community-heading h1, .community-rain h2, .chat-profile h2 { margin: 0; }
+.community-heading > span { color: var(--muted); font-size: 13px; }
+.community-heading strong { display: block; color: var(--green); font-size: 18px; font-variant-numeric: tabular-nums; }
+.community-rain, .chat-profile, .chat-thread {
+  margin-top: 14px;
+  padding: clamp(12px, 3vw, 20px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+.community-rain {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  background: #173431;
+}
+.community-rain p, .chat-profile p { margin: 6px 0 0; color: var(--muted); line-height: 1.5; }
+.rain-details { grid-column: 1 / -1; font-size: 13px; }
+.chat-thread { height: clamp(220px, 48dvh, 520px); overflow-y: auto; }
+.chat-message + .chat-message { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.chat-message time { margin-inline-start: 8px; color: var(--muted); font-size: 12px; }
+.chat-message p { margin: 4px 0 0; line-height: 1.5; overflow-wrap: anywhere; }
+.chat-player { background: none; border: 0; padding: 4px 0; color: var(--green); font-weight: 750; }
+.chat-player:hover { text-decoration: underline; }
+.community-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 12px; }
+.community-form label { grid-column: 1 / -1; font-size: 13px; font-weight: 700; }
+.community-form input { min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.community-form button { align-self: start; }

@@ -39,8 +39,6 @@ type WalletValue = {
   history: BetRecord[];
   ledger: LedgerRow[];
   cashierNonce: number;
-  shareLive: boolean;
-  setShareLive: (value: boolean) => void;
   debit: (cents: number) => boolean;
   credit: (cents: number) => void;
   record: (game: string, wager: number, payout: number) => void;
@@ -141,13 +139,6 @@ export function WalletProvider({ email, children, adjustment }: {
   const saved = applyAdjustment(stored, adjustment);
   if (saved !== stored) setSaved(saved);
   const [cashierNonce, setCashierNonce] = useState(0);
-  // Sharing bets to the public community feed requires explicit opt-in.
-  const [shareLive, setShareLive] = useState<boolean>(() => {
-    try { return localStorage.getItem(`blockbet.live-opt-in:${email}`) === "yes"; }
-    catch { return false; }
-  });
-  const shareLiveRef = useRef(shareLive);
-  shareLiveRef.current = shareLive;
   const balanceRef = useRef(saved.balance);
   const cardRef = useRef(saved.card);
   balanceRef.current = saved.balance;
@@ -175,13 +166,6 @@ export function WalletProvider({ email, children, adjustment }: {
     history: saved.history,
     ledger: saved.ledger,
     cashierNonce,
-    shareLive,
-    setShareLive: (value) => {
-      shareLiveRef.current = value;
-      setShareLive(value);
-      try { localStorage.setItem(`blockbet.live-opt-in:${email}`, value ? "yes" : "no"); }
-      catch { /* private mode */ }
-    },
     debit: (cents) => {
       if (!Number.isFinite(cents) || cents <= 0 || balanceRef.current < cents) return false;
       assign(balanceRef.current - cents);
@@ -197,9 +181,9 @@ export function WalletProvider({ email, children, adjustment }: {
       if (payout <= 0) sound.lose();
       const row: BetRecord = { id: crypto.randomUUID(), game, wager, payout, at: Date.now() };
       setSaved((prev) => ({ ...prev, history: [row, ...prev.history].slice(0, 250) }));
-      // Share settled demo activity from signed-in players only.
+      // Share settled bets from signed-in players only.
       // Publishing is best-effort and never changes the wallet outcome.
-      if (email !== "phone" && shareLiveRef.current) {
+      if (email !== "phone") {
         void fetch("/api/auth/live-bets", {
           method: "POST",
           credentials: "same-origin",

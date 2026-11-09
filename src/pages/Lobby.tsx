@@ -62,7 +62,7 @@ export function Lobby() {
         <div>
           <p className="kicker">Play money</p>
           <h1>Casino lobby</h1>
-          <p>Play with demo credits. No deposits or withdrawals.</p>
+          <p>Play with Play USD. No deposits or withdrawals.</p>
         </div>
         <Link to="/stats" className="hero-metrics" aria-label="View play stats">
           <span>
