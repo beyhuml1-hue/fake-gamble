@@ -5,14 +5,14 @@ import { GAMES } from "../data/games";
 import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
-const ART_KEY = "blockbet.cover-style";
+const ART_KEY = "blockbet.cover-style.v2";
 const ARCADE_COVERS = new Set(["plinko", "crash", "cases", "chicken", "darts", "blackjack"]);
 
 function savedArtStyle() {
   try {
-    return localStorage.getItem(ART_KEY) === "classic" ? "classic" : "arcade";
+    return localStorage.getItem(ART_KEY) === "arcade" ? "arcade" : "classic";
   } catch {
-    return "arcade";
+    return "classic";
   }
 }
 
