@@ -36,8 +36,8 @@ export async function onRequestPost(context) {
       return json({ error: "Enter an amount from $0.00 to $1,000,000.00." }, 400);
     }
     await env.DB.prepare(
-      "INSERT INTO auth_account_controls (user_id, balance_cents, balance_revision) VALUES (?1, ?2, ?3) " +
-      "ON CONFLICT(user_id) DO UPDATE SET balance_cents = excluded.balance_cents, balance_revision = excluded.balance_revision"
+      "INSERT INTO auth_account_controls (user_id, balance_cents, balance_revision, balance_mode) VALUES (?1, ?2, ?3, 'set') " +
+      "ON CONFLICT(user_id) DO UPDATE SET balance_cents = excluded.balance_cents, balance_revision = excluded.balance_revision, balance_mode = 'set'"
     ).bind(target.id, cents, crypto.randomUUID()).run();
   } else if (input.action === "ban" || input.action === "unban") {
     if (isAdmin(target, env)) return json({ error: "The owner account cannot be banned." }, 400);

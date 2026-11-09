@@ -4,7 +4,7 @@ import {
 } from "react";
 
 type Phase = "loading" | "unavailable" | "login" | "signup" | "verify" | "authenticated" | "guest";
-export type BalanceAdjustment = { cents: number; revision: string };
+export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" };
 type Account = { email: string; admin?: boolean; balanceAdjustment?: BalanceAdjustment | null };
 type AuthValue = {
   isAdmin: boolean;

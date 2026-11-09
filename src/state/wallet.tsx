@@ -127,7 +127,7 @@ function reference() {
 
 function applyAdjustment(saved: Saved, adjustment?: BalanceAdjustment | null): Saved {
   if (!adjustment || adjustment.revision === saved.balanceRevision) return saved;
-  return { ...saved, balance: clamp(adjustment.cents), balanceRevision: adjustment.revision };
+  return { ...saved, balance: clamp(adjustment.mode === "add" ? saved.balance + adjustment.cents : adjustment.cents), balanceRevision: adjustment.revision };
 }
 
 export function WalletProvider({ email, children, adjustment }: {

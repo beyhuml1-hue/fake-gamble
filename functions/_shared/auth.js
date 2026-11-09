@@ -137,13 +137,13 @@ export function isAdmin(user, env) {
 
 export async function sessionUser(env, user) {
   const control = await env.DB.prepare(
-    "SELECT balance_cents, balance_revision FROM auth_account_controls WHERE user_id = ?1"
+    "SELECT balance_cents, balance_revision, balance_mode FROM auth_account_controls WHERE user_id = ?1"
   ).bind(user.id).first();
   return {
     email: user.email,
     admin: isAdmin(user, env),
     balanceAdjustment: control?.balance_revision
-      ? { cents: control.balance_cents, revision: control.balance_revision }
+      ? { cents: control.balance_cents, revision: control.balance_revision, mode: control.balance_mode || "set" }
       : null,
   };
 }
@@ -167,7 +167,7 @@ export async function dbReady(env) {
     await env.DB.prepare("SELECT email FROM auth_otp LIMIT 1").first();
     await env.DB.prepare("SELECT key FROM auth_rate LIMIT 1").first();
     await env.DB.prepare("SELECT digest FROM auth_sessions LIMIT 1").first();
-    await env.DB.prepare("SELECT user_id FROM auth_account_controls LIMIT 1").first();
+    await env.DB.prepare("SELECT user_id, balance_mode FROM auth_account_controls LIMIT 1").first();
     return true;
   } catch {
     return false;
