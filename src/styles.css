@@ -1618,7 +1618,20 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
   transform-style: preserve-3d;
   transition: none;
   -webkit-transform-style: preserve-3d;
-  filter: drop-shadow(0 17px 17px rgba(0,0,0,.34));
+  /* Filter on the rotating parent would flatten the back face in browsers. */
+}
+.reference-coin-scene::after {
+  content: "";
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  width: calc(var(--coin-diameter) * .8);
+  height: 26px;
+  background: radial-gradient(ellipse, rgba(0,0,0,.52), transparent 70%);
+  filter: blur(8px);
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: -1;
 }
 .reference-coin-face {
   position: absolute;

@@ -18,6 +18,9 @@ test("Coinflip lets players show both heads and tails before betting", () => {
 
 test("Coin stays face-on and only spins during a wager", () => {
   assert.match(css, /\.reference-coin-body \{[\s\S]*?transition: none;/);
+  // Parent filters force transform-style to flatten, hiding the opposite face.
+  const bodyRule = css.match(/\.reference-coin-body \{([^}]+)\}/)?.[1] || "";
+  assert.doesNotMatch(bodyRule, /filter\s*:/);
   assert.match(css, /\.reference-coin-scene\.is-flipping \.reference-coin-body \{[\s\S]*?transition: transform 1\.7s/);
   assert.match(coin, /spinning \? "reference-coin-scene is-flipping" : "reference-coin-scene"/);
   assert.match(css, /\/covers\/cover-flip\.jpg/);
