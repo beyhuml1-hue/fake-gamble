@@ -97,6 +97,14 @@ CREATE TABLE IF NOT EXISTS ao_announcements (
  actor TEXT NOT NULL,
  at_ms INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ao_bug_events (
+ id TEXT PRIMARY KEY,
+ player_id TEXT NOT NULL REFERENCES ao_players(id),
+ description TEXT NOT NULL,
+ award INTEGER NOT NULL CHECK(award BETWEEN 1 AND 500),
+ status TEXT NOT NULL DEFAULT 'verified' CHECK(status IN('verified','paid')),
+ created_ms INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS ao_reports (
  day TEXT PRIMARY KEY,
  status TEXT NOT NULL CHECK(status IN('pending','sent')),
@@ -171,3 +179,5 @@ INSERT OR IGNORE INTO ao_bets(id,player_id,game,stake,payout,at_ms) VALUES
  ('sample-4','demo-erin','Plinko',200,20,1794200300000),
  ('sample-5','demo-hugo','Mines',300,650,1794200400000),
  ('sample-6','demo-gabi','Case opening',50,30,1794200500000);
+
+INSERT OR IGNORE INTO ao_bug_events(id,player_id,description,award,status,created_ms) VALUES('BUG-1001','demo-cleo','Imaginary case-spin display bug',35,'verified',1794200000000);

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BlockBet AI Owner · Staging</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0f1e2a;color:#e8f2f4;font:14px Inter,system-ui,sans-serif}button,input,select{font:inherit}
+.site{min-height:100vh;padding:70px max(5vw,25px);background:radial-gradient(ellipse at 75% 0%,#1b5339,transparent 35%),linear-gradient(120deg,#0f1e2a,#213845)}
+.site h1{font-size:clamp(34px,6vw,64px);letter-spacing:-.05em;margin:12px 0}.site h1 em{color:#00e701;font-style:normal}.site p{max-width:570px;line-height:1.7;color:#b6c8d1}
+.pill{display:inline-block;border:1px solid #498a66;background:#1a4036;padding:9px 13px;border-radius:20px;color:#b4ffbe;font-size:12px}
+.launch{position:fixed;right:22px;bottom:20px;border:1px solid #69d67c;border-radius:12px;background:#1b4632;color:#fff;padding:13px 19px;box-shadow:0 14px 35px #0009;cursor:pointer;font-weight:800}
+.drawer{position:fixed;right:10px;top:10px;bottom:10px;width:min(410px,calc(100vw - 20px));background:#142936;border:1px solid #4d6a75;border-radius:14px;box-shadow:0 20px 80px #000c;display:none;flex-direction:column;overflow:hidden}
+.drawer.open{display:flex}.top{display:flex;justify-content:space-between;align-items:center;background:#112430;border-bottom:1px solid #395b65;padding:14px}
+.top strong{font-size:17px}.top small{display:block;color:#89eaa3;margin-top:3px}.top button{background:#2a4756;color:#fff;border:1px solid #567080;border-radius:8px;font-size:22px;width:34px;height:34px;cursor:pointer}
+.rain{background:linear-gradient(130deg,#51422a,#342e29);border-bottom:1px solid #846632;padding:12px}
+.rain>div{display:flex;align-items:center;gap:9px}.rain .icon{font-size:28px}.rain b{color:#ffe2a2}.rain small{color:#f1d2a4;display:block;margin:3px 0}.rain button{margin-left:auto;background:#ffdc85;color:#32220b;border:0;border-radius:8px;padding:9px;font-size:12px;cursor:pointer;font-weight:800}
+.controls{display:flex;align-items:center;gap:9px;justify-content:space-between;padding:9px 11px;border-bottom:1px solid #324c5a;font-size:11px}
+.controls select{min-width:0;max-width:140px;padding:7px;background:#284553;color:#fff;border:1px solid #5c7e89;border-radius:6px}
+.balance{color:#9affab;font-weight:800}.tabs{display:flex;padding:7px;gap:6px;border-bottom:1px solid #325060}
+.tabs button{flex:1;background:#203b4a;color:#bed4dd;border:1px solid #426675;padding:8px;border-radius:6px;cursor:pointer}.tabs button.active{background:#245d3b;color:#b5ffbd;border-color:#00e701}
+.thread{flex:1;overflow:auto;min-height:0;padding:13px;display:flex;flex-direction:column;gap:8px}
+.message{border:1px solid #44606c;background:#213c4c;border-radius:9px;padding:9px}
+.message.ai{background:#214b3c;border-color:#3f9962}.message strong{color:#9fffaf;font-size:11px}
+.message time{color:#9eb9c5;font-size:10px;margin-left:8px}
+.message p{color:#e6f3f5;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0 0;line-height:1.55;font-size:12px}
+.entry{display:flex;gap:7px;padding:11px;border-top:1px solid #385968;background:#0e2331}
+.entry input{min-width:0;flex:1;padding:10px;border-radius:7px;border:1px solid #527484;background:#233e4d;color:white}
+.entry button,.connect button,.admin button{padding:9px 14px;background:#00e701;color:#102717;border:0;border-radius:7px;cursor:pointer;font-weight:850}
+.entry button:disabled,.rain button:disabled{opacity:.5;cursor:not-allowed}
+.connect{padding:19px;display:flex;flex-direction:column;gap:12px}
+.connect h3{margin:0}.connect p{font-size:12px;color:#b5cdd1;line-height:1.7}
+.connect input,.admin input{background:#203e4e;color:#fff;padding:11px;border:1px solid #587581;border-radius:8px;width:100%}
+.connect small{color:#a3bdc7}.error{color:#ffb2be;background:#502b37;padding:9px;margin:0;font-size:12px}
+.admin{display:none;flex:1;overflow:auto;padding:14px}.admin pre{font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;background:#112635;padding:12px;border-radius:8px}
+.mentions{display:none;gap:5px;flex-wrap:wrap;padding:9px;background:#253f4a}.mentions button{background:#2e5546;border:1px solid #58886a;color:#b5ffbb;padding:6px 9px;border-radius:6px;cursor:pointer}
+.bottom{padding:8px 12px;border-top:1px solid #3f5b6b;display:flex;justify-content:space-between;color:#9db7c0;font-size:10px}
+@media(max-width:600px){.drawer{top:0;right:0;bottom:0;width:100%;border-radius:0}.site{padding:30px 20px}}
+</style></head><body>
+<main class="site"><span class="pill">ISOLATED TEST ENVIRONMENT · NO REAL PLAYER DATA</span><h1>PlayBlockBet <em>AI Owner</em></h1>
+<p>This is an interactive preview of the new website chat. Open the panel on the right, select an imaginary account, join Rain, mention players or message @ai. The live casino is unchanged.</p>
+<p>Management tools need a separate staging admin token. The AI needs a secure NanoGPT key configured on the Worker.</p></main>
+<button id="launch" class="launch">✦ Open Chat + AI</button>
+<aside id="drawer" class="drawer" aria-label="BlockBet AI staging chat">
+<header class="top"><div><strong>✦ BlockBet Chat</strong><small>AI Owner · Fictional staging</small></div><button id="close" aria-label="Close chat">×</button></header>
+<form id="connect" class="connect"><h3>Access private staging</h3><p>Use only the STAGING ACCESS token. Never paste the NanoGPT API key into a browser.</p><label>Access token<input type="password" id="access" autocomplete="off" required></label><button>Connect</button><small>Credentials stay in browser memory and are never stored.</small></form>
+<section id="interior" style="display:none;flex:1;min-height:0;flex-direction:column">
+<div class="rain"><div><span class="icon">☂</span><span><b id="rainTitle">Rain</b><small id="rainTimer">Every 7 minutes</small></span><button id="join">Join rain</button></div><small>Imaginary coins · no cash value</small></div>
+<div class="controls"><label>Test player <select id="player"><option value="demo-alex">Player123</option><option value="demo-blair">LuckyBlair</option><option value="demo-cleo">CleoCoins</option><option value="demo-dex">DexTheAce</option><option value="demo-erin">ErinPlays</option><option value="demo-finn">FinnFlip</option><option value="demo-gabi">GabiGems</option><option value="demo-hugo">HugoRolls</option></select></label><span class="balance" id="balance">0 coins</span></div>
+<div class="tabs"><button type="button" id="chatTab" class="active">Community</button><button type="button" id="adminTab">Admin testing</button></div>
+<div id="thread" class="thread" role="log" aria-label="Staging messages"></div>
+<div id="admin" class="admin"><p>Management tools are restricted to an authenticated staging admin.</p><input id="adminToken" type="password" placeholder="Staging admin token" autocomplete="off"><p><button id="stats" type="button">Show database statistics</button></p><pre id="statsOutput">Stats are available after admin authentication.</pre></div>
+<div class="mentions" id="mentions"></div>
+<form id="compose" class="entry"><input id="message" placeholder="Message, @player or @ai…" maxlength="500" autocomplete="off" aria-label="Message"><button id="send">➤</button></form>
+</section><p id="error" class="error" hidden></p>
+<footer class="bottom"><span id="status">● Isolated preview</span><span>Not live BlockBet</span></footer></aside>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+let token="",data=null,locked=false,selected="chat";
+const drawer=$("drawer"),error=$("error");
+function warn(text){error.textContent=text;error.hidden=!text;}
+function headers(){return {"content-type":"application/json","x-staging-access":token,"x-demo-player":$("player").value,"x-staging-admin":$("adminToken").value};}
+async function call(path,payload){
+const response=await fetch(path,{method:payload?"POST":"GET",headers:headers(),...(payload?{body:JSON.stringify(payload)}:{})});
+const content=await response.json();
+if(!response.ok)throw Error(content.error||"Staging service unavailable.");
+return content;
+}
+function render(){
+if(!data)return;
+$("balance").textContent=data.me.balance+" coins";
+$("rainTitle").textContent=data.rain.amount+" Coin Rain";
+$("join").disabled=data.rain.joined;
+$("join").textContent=data.rain.joined?"Joined ✓":"Join Rain";
+const box=$("thread");box.replaceChildren();
+for(const m of data.messages){
+const article=document.createElement("article");article.className="message"+(m.role==="assistant"?" ai":"");
+const name=document.createElement("strong");name.textContent=(m.role==="assistant"?"✦ ":"")+m.handle;
+const time=document.createElement("time");time.textContent=new Date(m.at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+const p=document.createElement("p");p.textContent=m.body;
+article.append(name,time,p);box.append(article);
+}
+box.scrollTop=box.scrollHeight;
+$("status").textContent="● Connected · imaginary players";
+}
+async function refresh(){if(!token||locked)return;try{data=await call("/api/feed");render();warn("");}catch(e){warn(e.message);}}
+$("launch").onclick=()=>{drawer.classList.add("open");$("launch").hidden=true;};
+$("close").onclick=()=>{drawer.classList.remove("open");$("launch").hidden=false;};
+$("connect").onsubmit=async e=>{e.preventDefault();token=$("access").value.trim();if(!token)return;
+$("connect").style.display="none";$("interior").style.display="flex";await refresh();};
+$("player").onchange=()=>{data=null;refresh();};
+$("join").onclick=async()=>{if(!data)return;locked=true;try{const result=await call("/api/rain/join",{round:data.rain.round});data=result.feed;render();warn("");}catch(e){warn(e.message);}finally{locked=false;}};
+$("chatTab").onclick=()=>{selected="chat";$("chatTab").classList.add("active");$("adminTab").classList.remove("active");$("thread").style.display="flex";$("compose").style.display="flex";$("admin").style.display="none";};
+$("adminTab").onclick=()=>{selected="admin";$("adminTab").classList.add("active");$("chatTab").classList.remove("active");$("thread").style.display="none";$("compose").style.display="none";$("admin").style.display="block";};
+$("stats").onclick=async()=>{try{const details=await call("/api/stats");$("statsOutput").textContent=JSON.stringify(details,null,2);warn("");}catch(e){warn(e.message);}};
+$("compose").onsubmit=async e=>{e.preventDefault();const input=$("message"),body=input.value.trim();if(!body||locked)return;locked=true;
+try{const result=await call("/api/message",{body});data=result.feed;render();input.value="";$("mentions").style.display="none";warn("");}
+catch(e){warn(e.message);}finally{locked=false;}};
+$("message").oninput=()=>{const match=$("message").value.match(/(?:^|\s)@([\w]*)$/),box=$("mentions");box.replaceChildren();
+if(!match||!data){box.style.display="none";return;}
+const fragment=[{handle:"ai"},...data.people].filter(p=>p.handle.toLowerCase().startsWith(match[1].toLowerCase())).slice(0,6);
+for(const p of fragment){const btn=document.createElement("button");btn.type="button";btn.textContent="@"+p.handle;btn.onclick=()=>{
+$("message").value=$("message").value.replace(/(?:^|\s)@[\w]*$/,s=>(s.startsWith(" ")?" ":"")+"@"+p.handle+" ");
+box.style.display="none";$("message").focus();};box.append(btn);}
+box.style.display=fragment.length?"flex":"none";
+};
+setInterval(()=>{if(data){const seconds=Math.max(0,Math.ceil((data.rain.endsAt-Date.now())/1000));
+$("rainTimer").textContent=Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")+" · "+data.rain.count+" joined";}},500);
+setInterval(()=>{if(token&&!document.hidden&&drawer.classList.contains("open"))refresh();},3500);
+})();
+</script></body></html>

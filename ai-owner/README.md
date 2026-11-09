@@ -51,3 +51,5 @@ No production Worker routes, database tables or site balances are modified by th
 - `@ai Who won the most this week?` (public)
 - `@ai Reward five active players 75 coins each.` (test admin)
 - `@ai Announce today's leaderboard to Discord.` (test admin; queues if Discord token not configured)
+
+The staging Worker also serves `/preview`, a browser-only isolated chat drawer preview. The rotated NanoGPT key must be bound as a Worker secret before real AI inference works. Cloudflare's Free cron quota may prevent activating schedules; do not delete existing production schedules. Verified test bug events are automatically compensated on a scheduler run within the reward budget.

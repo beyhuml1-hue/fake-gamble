@@ -178,12 +178,44 @@ test("server cron autonomously rewards eligible players but cannot double grant"
   await owner.scheduled({cron:"0 * * * *",scheduledTime:now},s.env,{waitUntil(p){wait.push(p);}});
   await Promise.all(wait);
   const awarded=s.sqlite.prepare("SELECT COUNT(*) AS n FROM ao_ledger WHERE kind='surprise'").get().n;
+  assert.equal(s.sqlite.prepare("SELECT status FROM ao_bug_events WHERE id='BUG-1001'").get().status,"paid");
+  assert.equal(s.sqlite.prepare("SELECT COUNT(*) AS n FROM ao_ledger WHERE kind='compensation'").get().n,1);
   assert.equal(awarded,1);
   const again=[];
   await owner.scheduled({cron:"0 * * * *",scheduledTime:now},s.env,{waitUntil(p){again.push(p);}});
   await Promise.all(again);
   assert.equal(s.sqlite.prepare("SELECT COUNT(*) AS n FROM ao_ledger WHERE kind='surprise'").get().n,1);
+  assert.equal(s.sqlite.prepare("SELECT COUNT(*) AS n FROM ao_ledger WHERE kind='compensation'").get().n,1);
   const logs=s.sqlite.prepare("SELECT COUNT(*) AS n FROM ao_audit").get().n;
   assert.ok(logs>=0);
+ }finally{s.sqlite.close();}
+});
+
+
+test("preview is served separately, no secrets embedded, and accepts only staging auth",async()=>{
+ const s=setup();
+ try{
+  const response=await owner.fetch(new Request("https://ai-owner-staging.example/preview"),s.env);
+  assert.equal(response.status,200);
+  assert.match(response.headers.get("content-type"),/text\/html/);
+  const html=await response.text();
+  assert.match(html,/Coin Rain/);
+  assert.match(html,/@ai/);
+  assert.match(html,/Open Chat/);
+  assert.doesNotMatch(html,/sk-nano-[0-9]/);
+  assert.doesNotMatch(html,/test-admin-gate|mock-not-real|test-staging-gate/);
+  const request=owner.fetch(new Request("https://ai-owner-staging.example/api/feed",{headers:{"origin":"https://ai-owner-staging.example","x-staging-access":"test-staging-gate"}}),s.env);
+  assert.equal((await request).status,200);
+ }finally{s.sqlite.close();}
+});
+test("AI cannot issue bug compensation without a verified matching ticket",async()=>{
+ const s=setup();
+ try{
+  await assert.rejects(()=>executeTool(s.env,s.adminActor,"compensate_bug",{player:"LuckyBlair",amount:35,ticket:"BUG-1001"},"invalid-ticket"),/Ticket/);
+  await assert.rejects(()=>executeTool(s.env,s.adminActor,"compensate_bug",{player:"CleoCoins",amount:90,ticket:"BUG-1001"},"invalid-amount"),/Ticket/);
+  const paid=await executeTool(s.env,s.adminActor,"compensate_bug",{player:"CleoCoins",amount:35,ticket:"BUG-1001"},"valid-ticket");
+  assert.equal(paid.applied,true);
+  assert.equal(s.sqlite.prepare("SELECT status FROM ao_bug_events WHERE id='BUG-1001'").get().status,"paid");
+  await assert.rejects(()=>executeTool(s.env,s.adminActor,"compensate_bug",{player:"CleoCoins",amount:35,ticket:"BUG-1001"},"replay-ticket"),/Ticket/);
  }finally{s.sqlite.close();}
 });
