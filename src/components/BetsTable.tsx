@@ -25,7 +25,7 @@ export function BetsTable() {
             {history.length === 0 ? (
               <tr>
                 <td colSpan={5} className="empty-row">
-                  Your settled bets show up here.
+                  No settled bets yet.
                 </td>
               </tr>
             ) : (

@@ -277,18 +277,19 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .empty-row { color: var(--muted); text-align: center; }
 .site-foot { margin-top: 18px; font-size: 12px; line-height: 1.5; }
 
-.game-page { max-width: 1180px; }
+.game-page { max-width: 1180px; margin-inline: auto; }
 .game-card {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: minmax(235px, 28%) minmax(0, 1fr);
   background: var(--panel);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: var(--shadow);
   animation: rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.game-panel { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-.panel-head { align-items: center; }
+.game-panel { min-width: 0; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.panel-head { align-items: center; flex-wrap: wrap; row-gap: 4px; }
+.panel-head > span { color: var(--muted); font-size: 12px; }
 .game-stage {
   background: var(--bg);
   min-height: 560px;
@@ -647,6 +648,7 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
   z-index: 40;
 }
 .modal-back { animation: fade 0.2s ease; }
+.age-screen { overflow-y: auto; place-items: safe center; }
 .age-card, .modal {
   width: min(460px, 100%);
   background: var(--panel);
@@ -935,7 +937,7 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
   }
   .menu-btn { display: flex; flex-direction: column; justify-content: center; }
   .game-card { grid-template-columns: 1fr; }
-  .game-stage { order: -1; min-height: 420px; }
+  .game-stage { order: -1; min-height: 360px; padding: 14px; }
   .content { padding: 8px 12px 40px; }
   .readout { font-size: 56px; }
   .header { padding-inline: 12px; }
@@ -1369,7 +1371,18 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .pay-card small { opacity: 0.8; }
 .pay-form { margin-top: 16px; }
 .pay-actions { display: flex; flex-direction: column; gap: 8px; }
-.lobby-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.lobby-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+.lobby-tools .search { background: var(--bg-2); }
+.lobby-tools .chip-row button { min-height: 42px; }
 .lobby-search { flex: 1 1 240px; max-width: 360px; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip-row button {
@@ -1392,11 +1405,12 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 @media (max-width: 900px) {
   .head-links { display: none; }
   .mobile-brand { display: block; font-weight: 800; letter-spacing: -0.035em; }
-  .wallet-layout, .stat-grid { grid-template-columns: 1fr; }
+  .wallet-layout { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 680px) {
-  .lobby-search { max-width: none; }
+  .lobby-search { flex-basis: 100%; max-width: none; }
   .feature-grid {
     grid-template-columns: none;
     grid-auto-flow: column;
@@ -1412,6 +1426,10 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 }
 
 @media (max-width: 420px) {
+  .game-stage { min-height: 300px; padding: 10px; }
+  .stat-grid { gap: 8px; }
+  .stat-grid article { padding: 12px; }
+  .stat-grid strong { font-size: 20px; overflow-wrap: anywhere; }
   .header { gap: 6px; padding-inline: 8px; }
   .header .menu-btn, .header .avatar { width: 34px; height: 36px; flex: none; }
   .wallet-pill { min-width: 0; height: 40px; padding-left: 0; }
@@ -1432,66 +1450,182 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 }
 
 
-/* Real email-code sign-in, styled to match BlockBet. */
 .auth-screen {
   position: fixed;
   inset: 0;
   z-index: 100;
   display: grid;
-  place-items: center;
+  place-items: safe center;
   overflow-y: auto;
-  padding: 16px;
+  padding: clamp(12px, 4vw, 32px);
   background: radial-gradient(ellipse at top, #203b3e, var(--bg) 65%);
 }
+.auth-layout {
+  display: grid;
+  width: min(440px, 100%);
+}
+.auth-preview { display: none; }
 .auth-card {
-  width: min(470px, 100%);
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
-  scrollbar-width: thin;
+  width: min(440px, 100%);
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--bg-2);
   box-shadow: var(--shadow);
-  padding: clamp(16px, 5vw, 28px);
+  padding: clamp(18px, 4vw, 30px);
 }
-.auth-heading{display:flex;align-items:center;gap:11px;margin-bottom:20px}
-.auth-heading strong{display:block;font-size:19px}
-.auth-heading small{display:block;color:#b1bad3;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
-.auth-logo{display:grid;place-items:center;width:45px;height:45px;border-radius:11px;background:var(--green);color:var(--green-ink);font-size:27px;font-weight:900;flex:none}
-.auth-card h1{font-size:26px;letter-spacing:-.04em;margin:0 0 12px}
-.auth-card p{color:#b1bad3;line-height:1.6;font-size:13px}
-.auth-card p strong{color:white;overflow-wrap:anywhere}
-.auth-form{margin-top:24px;display:flex;flex-direction:column;gap:10px}
-.auth-form label{font-size:12px;font-weight:700;color:#b1bad3}
-.auth-form input{height:47px;border-radius:8px;background:#0f212e;border:2px solid #2f4553;padding:0 13px;font:600 16px Inter,Arial,sans-serif;color:white;outline:none}
-.auth-form input:focus{border-color:var(--green)}
-.auth-form input::placeholder{color:#9aabba}
-.auth-form .otp-input{letter-spacing:7px;font-size:25px;font-variant-numeric:tabular-nums;text-align:center;height:62px}
-.auth-submit{width:100%;margin-top:9px}
-.auth-back{background:transparent;border:0;color:#b1bad3;padding:10px;font-size:12px;font-weight:700}
-.auth-back:hover{color:white}
-.auth-card .auth-error{color:#ff8e9a;background:#512a37;border-radius:7px;padding:11px}
-.auth-card .auth-notice{color:#adf2ae;background:#1e4536;border-radius:7px;padding:11px}
-.auth-card .auth-fineprint{margin:25px 0 0;border-top:1px solid #2f4553;padding-top:17px;color:#9ba8ba;font-size:11px}
-.account-menu .account-menu-note{font-size:11px;line-height:1.5;color:#b1bad3;margin:0 0 12px}
-.account-trigger{cursor:pointer}
+.auth-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.auth-heading strong { display: block; font-size: 18px; letter-spacing: -0.025em; }
+.auth-heading small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.auth-logo {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--green);
+  color: var(--green-ink);
+  font-size: 22px;
+  font-weight: 850;
+}
+.auth-card h1 { margin: 0; font-size: clamp(24px, 5vw, 30px); letter-spacing: -0.045em; }
+.auth-card p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; font-size: 14px; }
+.auth-card p strong { color: var(--text); overflow-wrap: anywhere; }
+.auth-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 18px;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.auth-switch button {
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+.auth-switch button.selected { border-color: #4a8766; background: #203b35; color: var(--green); }
+.auth-form { display: grid; gap: 7px; margin-top: 18px; }
+.auth-form label { color: var(--text); font-size: 13px; font-weight: 650; }
+.auth-form label:not(:first-child) { margin-top: 5px; }
+.auth-form input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 16px;
+}
+.auth-form input::placeholder { color: var(--muted); }
+.auth-form .otp-input {
+  height: 54px;
+  text-align: center;
+  letter-spacing: 0.28em;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.auth-password-wrap { position: relative; }
+.auth-password-wrap input { padding-inline-end: 68px; }
+.auth-password-wrap button {
+  position: absolute;
+  inset: 4px 4px 4px auto;
+  padding-inline: 10px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 750;
+}
+.auth-password-hint { color: var(--muted); font-size: 12px; }
+.auth-submit { width: 100%; margin-top: 6px; }
+.auth-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+.auth-back {
+  min-height: 42px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+}
+.auth-card .auth-error, .auth-card .auth-notice {
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+}
+.auth-card .auth-error { color: #ffb6c0; background: #512a37; }
+.auth-card .auth-notice { color: #bff8c2; background: #1e4536; }
+.auth-guest-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+.auth-guest-link:hover, .auth-password-wrap button:hover { border-color: var(--green); color: var(--green); }
+.auth-verify-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: #203b35;
+  color: var(--green);
+  font-size: 22px;
+}
+.auth-card button:disabled { opacity: 0.65; }
+.auth-card .auth-fineprint { margin-top: 16px; color: var(--muted); font-size: 12px; }
+.account-menu .account-menu-note { margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 
-
-/* BlockBet password account screens */
-.auth-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:22px;padding:5px;background:#0f212e;border:1px solid #2f4553;border-radius:10px}
-.auth-switch button{border:0;border-radius:7px;background:transparent;color:#b1bad3;padding:12px;font-size:14px;font-weight:800;cursor:pointer}
-.auth-switch button.selected{background:#213743;color:white;box-shadow:inset 0 -3px 0 var(--green)}
-.auth-form{margin-top:18px}
-.auth-password-wrap{position:relative}
-.auth-password-wrap input{display:block;width:100%;padding-right:65px}
-.auth-password-wrap>button{position:absolute;right:5px;top:5px;bottom:5px;border:0;background:transparent;color:#aebdd0;padding:0 12px;cursor:pointer;font-weight:800;font-size:12px}
-.auth-password-wrap>button:hover{color:#fff}
-.auth-password-hint{color:#9badbb;font-size:11px;line-height:1.5}
-.auth-guest-link{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;background:transparent;border:1px solid #435969;color:#c3d2dc;font-size:12px;font-weight:800;border-radius:8px;cursor:pointer;margin-top:17px}
-.auth-guest-link:hover{background:#213743;color:white}
-.auth-verify-icon{width:53px;height:53px;background:#214c35;color:var(--green);border-radius:13px;display:grid;place-items:center;font-size:29px;margin-bottom:21px}
-.auth-submit:disabled{opacity:.65;cursor:not-allowed}
-.auth-back:disabled{opacity:.6}
+@media (min-width: 880px) {
+  .auth-layout {
+    width: min(940px, 100%);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--bg-2);
+    box-shadow: var(--shadow);
+  }
+  .auth-layout .auth-card { width: 100%; border: 0; box-shadow: none; }
+  .auth-preview {
+    display: grid;
+    align-content: center;
+    padding: clamp(24px, 4vw, 44px);
+    border-inline-end: 1px solid var(--line);
+    border-radius: 18px 0 0 18px;
+    background: linear-gradient(155deg, #203b3e, var(--bg) 75%);
+  }
+  .auth-preview-label { color: var(--green); font-size: 13px; font-weight: 750; }
+  .auth-preview strong { margin-top: 6px; font-size: clamp(42px, 5vw, 68px); line-height: 1; letter-spacing: -0.06em; }
+  .auth-preview p { margin: 12px 0 22px; color: var(--muted); }
+  .auth-preview-covers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .auth-preview-covers img { display: block; width: 100%; border: 1px solid var(--line); border-radius: 10px; }
+}
 
 .account-menu a {
   display: block;

@@ -62,7 +62,7 @@ export function Lobby() {
         <div>
           <p className="kicker">Play money</p>
           <h1>Casino lobby</h1>
-          <p>Play with demo credits. No deposits or withdrawals.</p>
+          <p>Play with demo credits. No real money is used.</p>
         </div>
         <Link to="/stats" className="hero-metrics" aria-label="View play stats">
           <span>
@@ -103,7 +103,7 @@ export function Lobby() {
         </label>
       </div>
       {games.length === 0 ? (
-        <p className="empty-row">No games match that search.</p>
+        <p className="empty-row">No matching games. Try another search or category.</p>
       ) : (
         <>
           {featured.length > 0 ? (

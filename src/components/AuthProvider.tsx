@@ -204,81 +204,95 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
 
   return (
     <div className="auth-screen">
-      <section className="auth-card" aria-label="BlockBet player account">
-        <div className="auth-heading">
-          <span className="auth-logo">B</span>
-          <div><strong>BlockBet</strong><small>Player account</small></div>
-        </div>
-        {phase === "unavailable" ? (
-          <>
-            <h1>Accounts are temporarily unavailable</h1>
-            <p>You can still play as a guest. Your balance stays on this device.</p>
-            <button type="button" className="auth-back" onClick={() => window.location.reload()}>Try again</button>
-          </>
-        ) : phase === "verify" ? (
-          <>
-            <div className="auth-verify-icon" aria-hidden="true">✉</div>
-            <h1>Verify your email</h1>
-            <p>Enter the six-digit code sent to <strong>{email}</strong>. Your code expires in 10 minutes.</p>
-            <form className="auth-form" onSubmit={submitVerify}>
-              <label htmlFor="account-code">Verification code</label>
-              <input id="account-code" className="otp-input" type="text" name="code"
-                autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
-                placeholder="000000" required disabled={busy} value={code}
-                onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}/>
-              <button type="submit" className="bet-btn auth-submit" disabled={busy || code.length !== 6}>
-                {busy ? "Verifying…" : "Verify & create account"}
-              </button>
-            </form>
-            <button className="auth-back" type="button" disabled={busy} onClick={() => void resendCode()}>Resend code</button>
-            <button className="auth-back" type="button" disabled={busy} onClick={() => switchTo("signup")}>← Back to sign up</button>
-          </>
-        ) : (
-          <>
-            <h1>{phase === "signup" ? "Create an account" : "Log in"}</h1>
-            <p>{phase === "signup" ? "We'll email you a six-digit code to confirm your address." : "Enter your email and password to access your account."}</p>
-            <div className="auth-switch" role="group" aria-label="Account access">
-              <button type="button" className={phase === "login" ? "selected" : ""} onClick={() => switchTo("login")} aria-pressed={phase === "login"}>Log in</button>
-              <button type="button" className={phase === "signup" ? "selected" : ""} onClick={() => switchTo("signup")} aria-pressed={phase === "signup"}>Sign up</button>
-            </div>
-            <form className="auth-form" onSubmit={phase === "signup" ? submitSignup : submitLogin}>
-              <label htmlFor="account-email">Email address</label>
-              <input id="account-email" type="email" name="email" placeholder="you@example.com"
-                autoComplete="email" inputMode="email" maxLength={254}
-                required value={email} onChange={e => setEmail(e.target.value)} disabled={busy} />
-              <label htmlFor="account-password">Password</label>
-              <div className="auth-password-wrap">
-                <input id="account-password" name="password" type={visible ? "text" : "password"}
-                  placeholder={phase === "signup" ? "At least 6 characters" : "Enter your password"}
-                  autoComplete={phase === "signup" ? "new-password" : "current-password"}
-                  minLength={phase === "signup" ? 6 : 1} maxLength={128}
-                  required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} />
-                <button type="button" aria-label={visible ? "Hide password" : "Show password"}
-                  onClick={() => setVisible(v => !v)}>{visible ? "Hide" : "Show"}</button>
+      <div className="auth-layout">
+        <aside className="auth-preview" aria-hidden="true">
+          <span className="auth-preview-label">Play money</span>
+          <strong>BlockBet</strong>
+          <p>Casino games with demo credits.</p>
+          <div className="auth-preview-covers">
+            <img src="/covers/cover-blackjack.jpg" alt="" />
+            <img src="/covers/cover-plinko.jpg" alt="" />
+            <img src="/covers/cover-dice.jpg" alt="" />
+          </div>
+        </aside>
+        <section className="auth-card" aria-label="BlockBet player account">
+          <div className="auth-heading">
+            <span className="auth-logo">B</span>
+            <div><strong>BlockBet</strong><small>Play money</small></div>
+          </div>
+          {phase === "unavailable" ? (
+            <>
+              <h1>Log in is unavailable</h1>
+              <p>Try again or continue as a guest.</p>
+              <button type="button" className="auth-back" onClick={() => window.location.reload()}>Try again</button>
+            </>
+          ) : phase === "verify" ? (
+            <>
+              <div className="auth-verify-icon" aria-hidden="true">✉</div>
+              <h1>Verify your email</h1>
+              <p>We sent a six-digit code to <strong>{email}</strong>. It expires in 10 minutes.</p>
+              <form className="auth-form" onSubmit={submitVerify}>
+                <label htmlFor="account-code">Verification code</label>
+                <input id="account-code" className="otp-input" type="text" name="code"
+                  autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
+                  placeholder="000000" required disabled={busy} value={code}
+                  onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}/>
+                <button type="submit" className="bet-btn auth-submit" disabled={busy || code.length !== 6}>
+                  {busy ? "Verifying…" : "Verify & create account"}
+                </button>
+              </form>
+              <div className="auth-links">
+                <button className="auth-back" type="button" disabled={busy} onClick={() => switchTo("signup")}>Back to sign-up</button>
+                <button className="auth-back" type="button" disabled={busy} onClick={() => void resendCode()}>Resend code</button>
               </div>
-              {phase === "signup" && (
-                <>
-                  <label htmlFor="account-confirm">Confirm password</label>
-                  <input id="account-confirm" name="confirm" type={visible ? "text" : "password"}
-                    autoComplete="new-password" placeholder="Repeat your password"
-                    minLength={6} maxLength={128} required value={confirm}
-                    onChange={e => setConfirm(e.target.value)} disabled={busy} />
-                  <small className="auth-password-hint">Use at least 6 characters. Longer passwords are safer.</small>
-                </>
-              )}
-              <button className="bet-btn auth-submit" type="submit" disabled={busy}>
-                {busy ? "Please wait…" : phase === "signup" ? "Create account" : "Log in"}
-              </button>
-            </form>
-          </>
-        )}
-        {notice && <p className="auth-notice" role="status">{notice}</p>}
-        {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="auth-guest-link" type="button" onClick={() => setPhase("guest")}>
-          Continue as guest <span aria-hidden="true">→</span>
-        </button>
-        <p className="auth-fineprint">18+ · Demo credits and game history stay on this device.</p>
-      </section>
+            </>
+          ) : (
+            <>
+              <h1>{phase === "signup" ? "Create an account" : "Log in"}</h1>
+              {phase === "signup" && <p>We’ll email you a six-digit verification code.</p>}
+              <div className="auth-switch" role="group" aria-label="Account access">
+                <button type="button" className={phase === "login" ? "selected" : ""} onClick={() => switchTo("login")} disabled={busy} aria-pressed={phase === "login"}>Log in</button>
+                <button type="button" className={phase === "signup" ? "selected" : ""} onClick={() => switchTo("signup")} disabled={busy} aria-pressed={phase === "signup"}>Sign up</button>
+              </div>
+              <form className="auth-form" onSubmit={phase === "signup" ? submitSignup : submitLogin}>
+                <label htmlFor="account-email">Email address</label>
+                <input id="account-email" type="email" name="email" placeholder="you@example.com"
+                  autoComplete="email" inputMode="email" maxLength={254}
+                  required value={email} onChange={e => setEmail(e.target.value)} disabled={busy} />
+                <label htmlFor="account-password">Password</label>
+                <div className="auth-password-wrap">
+                  <input id="account-password" name="password" type={visible ? "text" : "password"}
+                    aria-describedby={phase === "signup" ? "password-hint" : undefined}
+                    autoComplete={phase === "signup" ? "new-password" : "current-password"}
+                    minLength={phase === "signup" ? 6 : 1} maxLength={128}
+                    required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} />
+                  <button type="button" aria-label={visible ? "Hide password" : "Show password"}
+                    onClick={() => setVisible(v => !v)}>{visible ? "Hide" : "Show"}</button>
+                </div>
+                {phase === "signup" && (
+                  <>
+                    <small id="password-hint" className="auth-password-hint">Use at least 6 characters.</small>
+                    <label htmlFor="account-confirm">Confirm password</label>
+                    <input id="account-confirm" name="confirm" type={visible ? "text" : "password"}
+                      autoComplete="new-password" placeholder="Repeat your password"
+                      minLength={6} maxLength={128} required value={confirm}
+                      onChange={e => setConfirm(e.target.value)} disabled={busy} />
+                  </>
+                )}
+                <button className="bet-btn auth-submit" type="submit" disabled={busy}>
+                  {busy ? "Please wait…" : phase === "signup" ? "Send verification code" : "Log in"}
+                </button>
+              </form>
+            </>
+          )}
+          {notice && <p className="auth-notice" role="status">{notice}</p>}
+          {error && <p className="auth-error" role="alert">{error}</p>}
+          <button className="auth-guest-link" type="button" disabled={busy} onClick={() => setPhase("guest")}>
+            Continue as guest <span aria-hidden="true">→</span>
+          </button>
+          <p className="auth-fineprint">18+ · Demo credits and game history stay on this device.</p>
+        </section>
+      </div>
     </div>
   );
 }
