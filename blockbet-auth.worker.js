@@ -11,6 +11,7 @@ import { onRequestPost as verifyCode } from "./functions/api/auth/verify.js";
 import { onRequestGet as sessionInfo } from "./functions/api/auth/me.js";
 import { onRequestPost as logout } from "./functions/api/auth/logout.js";
 import { onRequestGet as status } from "./functions/api/auth/status.js";
+import { onRequestGet as liveBets, onRequestPost as postLiveBet } from "./functions/api/auth/live-bets.js";
 
 import { onRequestGet as getAccount, onRequestPost as updateAccount } from "./functions/api/auth/admin.js";
 
@@ -24,6 +25,8 @@ const routes = {
   "GET /api/auth/me": sessionInfo,
   "POST /api/auth/logout": logout,
   "GET /api/auth/status": status,
+  "GET /api/auth/live-bets": liveBets,
+  "POST /api/auth/live-bets": postLiveBet,
 };
 
 export default {

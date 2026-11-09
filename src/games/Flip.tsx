@@ -118,18 +118,20 @@ export function Flip() {
       }
     >
       <div className="center-stage">
-        <div className="coin-scene">
-          <div className={busy ? "coin flipping" : "coin"} style={{ transform: `rotateY(${deg}deg)` }}>
-            <div className="face heads">
-              <b>$</b>
-              <small>HEADS</small>
+        <div className="flip-coin-scene" role="img" aria-label={busy ? "Coin spinning" : `3D coin displaying ${landed ?? "heads"}`}>
+          <div className={busy ? "flip-coin-3d is-flipping" : "flip-coin-3d"} style={{ transform: `rotateY(${deg}deg)` }}>
+            <div className="flip-coin-edge" aria-hidden="true" />
+            <div className="flip-coin-face front" aria-hidden="true">
+              <img src="/coin/heads.svg" alt="" draggable={false}/>
             </div>
-            <div className="face tails">
-              <b>★</b>
-              <small>TAILS</small>
+            <div className="flip-coin-face back" aria-hidden="true">
+              <img src="/coin/tails.svg" alt="" draggable={false}/>
             </div>
           </div>
+          <span className="flip-coin-particle" aria-hidden="true"/>
         </div>
+        <div className="flip-coin-legend" aria-hidden="true"><span>◉ <strong>HEADS</strong></span><span>◉ <strong>TAILS</strong></span></div>
+        <p className="flip-coin-caption">Silver-rimmed 3D BlockBet coin · 50/50 landing odds</p>
         <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>{line}</p>
       </div>
     </GameLayout>

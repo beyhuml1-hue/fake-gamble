@@ -80,6 +80,10 @@ export function AppShell() {
           <Icon name="stats" />
           Stats
         </NavLink>
+        <a className="nav-item" href="/#live-bets">
+          <span className="live-nav-dot" aria-hidden="true" />
+          Live Bets
+        </a>
 
         <p className="nav-label">Originals</p>
         <nav className="game-nav">
@@ -114,6 +118,7 @@ export function AppShell() {
             <NavLink to="/stats" className={({ isActive }) => (isActive ? "on" : "")}>
               Stats
             </NavLink>
+            <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
           <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
             <span className="usd-mark">$</span>

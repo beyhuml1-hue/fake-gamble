@@ -1545,3 +1545,30 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 }
 .lobby[data-cover-style="arcade"] .tile-art img[src*="/arcade/"] { object-fit: contain; background: #101626; }
 .lobby[data-cover-style="arcade"] .tile:hover { border-color: #d0b982; }
+
+
+/* Community Live Bets — factual player-submitted demo data, updated every 5s. */
+.live-bets {border:1px solid #2e4856;box-shadow:0 16px 42px #0002}
+.live-bets-heading {display:flex;justify-content:space-between;gap:14px;align-items:center;padding:22px 19px 10px}
+.live-bets-heading h2 {font-size:19px;display:flex;align-items:center;gap:12px}
+.live-bets-heading p {color:#b1bad3;margin:8px 0 0;font-size:12px}
+.live-feed-dot,.head-live-dot,.live-nav-dot {width:8px;height:8px;display:inline-block;border-radius:100%;background:#657a85;box-shadow:0 0 0 3px #213743}
+.live-feed-dot.online,.head-live-dot,.live-nav-dot {background:#00e701;box-shadow:0 0 0 3px #00e70121}
+.live-bets-tabs {display:flex;gap:5px;padding:4px;border-radius:10px;background:#1a2c38;white-space:nowrap}
+.live-bets-tabs button {font-weight:800;font-size:12px;padding:10px 14px;background:transparent;border:0;color:#b1bad3;border-radius:7px}
+.live-bets-tabs button.selected {background:#2a4452;color:#fff;box-shadow:inset 0 -2px #00e701}
+.live-feed-meta {padding:7px 20px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;color:#91a9b5;font-size:10px;font-weight:800;letter-spacing:.08em}
+.live-feed-meta span:first-child{color:#00e701}
+.live-bet-player {font-weight:700;color:#d8e8e8}
+.player-dot {display:inline-block;width:7px;height:7px;border-radius:50%;background:#00e701;margin-right:9px}
+.live-bets-disclaimer {font-size:11px;line-height:1.5;padding:12px 18px 18px;margin:0;color:#91a9b5;border-top:1px solid #2e4856}
+.live-nav-dot {margin:0 7px 0 1px}
+.head-live-dot {vertical-align:middle;margin-left:4px}
+@media(max-width:680px){.live-bets-heading{align-items:stretch;flex-direction:column}.live-bets-tabs{align-self:start}.live-feed-meta{flex-direction:column;align-items:flex-start;gap:5px}}
+
+
+.live-bets-opt-in{margin:1px 18px 16px;padding:12px 14px;border:1px solid #3a5562;border-radius:9px;display:flex;align-items:center;gap:11px;background:#1a2c38;cursor:pointer}
+.live-bets-opt-in input{width:19px;height:19px;flex:none;accent-color:#00e701}
+.live-bets-opt-in strong,.live-bets-opt-in small{display:block}
+.live-bets-opt-in strong{font-size:12px}
+.live-bets-opt-in small{color:#b1bad3;line-height:1.45;margin-top:4px;font-size:11px;font-weight:400}
