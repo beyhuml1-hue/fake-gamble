@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AgeGate } from "./components/AgeGate";
+import { AuthProvider } from "./components/AuthProvider";
 import { AppShell } from "./components/AppShell";
 import { LuckHotkey } from "./components/LuckHotkey";
 import { Lobby } from "./pages/Lobby";
@@ -11,17 +12,21 @@ export default function App() {
   return (
     <AgeGate>
       <LuckHotkey />
-      <WalletProvider email="phone">
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppShell />}>
-              <Route index element={<Lobby />} />
-              <Route path="stats" element={<Stats />} />
-              <Route path="game/:id" element={<Play />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </WalletProvider>
+      <AuthProvider>
+        {(walletIdentity) => (
+          <WalletProvider key={walletIdentity} email={walletIdentity}>
+            <BrowserRouter>
+              <Routes>
+                <Route element={<AppShell />}>
+                  <Route index element={<Lobby />} />
+                  <Route path="stats" element={<Stats />} />
+                  <Route path="game/:id" element={<Play />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </WalletProvider>
+        )}
+      </AuthProvider>
     </AgeGate>
   );
 }

@@ -1429,3 +1429,29 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
     transition: none !important;
   }
 }
+
+
+/* Real email-code sign-in, styled to match BlockBet. */
+.auth-screen{position:fixed;inset:0;background:radial-gradient(circle at 50% -10%,#254459,#0f212e 62%);z-index:100;display:grid;place-items:center;overflow-y:auto;padding:18px}
+.auth-card{width:min(430px,100%);border:1px solid #2f4553;border-radius:16px;background:#1a2c38;box-shadow:0 24px 70px #0005;padding:27px}
+.auth-heading{display:flex;align-items:center;gap:11px;margin-bottom:28px}
+.auth-heading strong{display:block;font-size:19px}
+.auth-heading small{display:block;color:#b1bad3;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.auth-logo{display:grid;place-items:center;width:45px;height:45px;border-radius:11px;background:#00e701;color:#04140a;font-size:27px;font-weight:900;flex:none}
+.auth-card h1{font-size:26px;letter-spacing:-.04em;margin:0 0 12px}
+.auth-card p{color:#b1bad3;line-height:1.6;font-size:13px}
+.auth-card p strong{color:white;overflow-wrap:anywhere}
+.auth-form{margin-top:24px;display:flex;flex-direction:column;gap:10px}
+.auth-form label{font-size:12px;font-weight:700;color:#b1bad3}
+.auth-form input{height:47px;border-radius:8px;background:#0f212e;border:2px solid #2f4553;padding:0 13px;font:600 15px Inter,Arial,sans-serif;color:white;outline:none}
+.auth-form input:focus{border-color:#00e701}
+.auth-form input::placeholder{color:#657e8d}
+.auth-form .otp-input{letter-spacing:7px;font-size:25px;font-variant-numeric:tabular-nums;text-align:center;height:62px}
+.auth-submit{width:100%;margin-top:9px}
+.auth-back{background:transparent;border:0;color:#b1bad3;padding:10px;font-size:12px;font-weight:700}
+.auth-back:hover{color:white}
+.auth-card .auth-error{color:#ff8e9a;background:#512a37;border-radius:7px;padding:11px}
+.auth-card .auth-notice{color:#adf2ae;background:#1e4536;border-radius:7px;padding:11px}
+.auth-card .auth-fineprint{margin:25px 0 0;border-top:1px solid #2f4553;padding-top:17px;color:#9ba8ba;font-size:11px}
+.account-menu .account-menu-note{font-size:11px;line-height:1.5;color:#b1bad3;margin:0 0 12px}
+.account-trigger{cursor:pointer}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { GAMES } from "../data/games";
+import { useAuth } from "./AuthProvider";
 import { formatAmount } from "../lib/money";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
@@ -41,6 +42,8 @@ function useRollingBalance(cents: number) {
 }
 
 export function AppShell() {
+  const { email: accountEmail, isGuest, canSignIn, logout, showSignIn } = useAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
   const { balance, cashierNonce, openCashier } = useWallet();
   const rolling = useRollingBalance(balance);
   const [query, setQuery] = useState("");
@@ -145,9 +148,23 @@ export function AppShell() {
               </svg>
             )}
           </button>
-          <span className="avatar" aria-hidden="true">
-            B
-          </span>
+          <div className="account">
+            <button type="button" className="avatar account-trigger" aria-label="Account menu"
+              aria-expanded={accountOpen} onClick={() => setAccountOpen((v) => !v)}>
+              {accountEmail ? accountEmail.charAt(0).toUpperCase() : "B"}
+            </button>
+            {accountOpen && (
+              <div className="account-menu">
+                <strong>{accountEmail || "Guest profile"}</strong>
+                <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Email verified • wallet stored on this device"}</p>
+                {isGuest
+                  ? (canSignIn
+                      ? <button type="button" onClick={showSignIn}>Sign in with email</button>
+                      : <p className="account-menu-note">Email sign-in is not configured yet.</p>)
+                  : <button type="button" onClick={() => { setAccountOpen(false); void logout(); }}>Sign out</button>}
+              </div>
+            )}
+          </div>
         </header>
 
         <div className="content">

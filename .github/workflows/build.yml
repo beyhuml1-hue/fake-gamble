@@ -1,0 +1,20 @@
+name: Build and test BlockBet
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Run authentication tests
+        run: npm test
+      - name: Build casino and standalone LARP assets
+        run: npm run build

@@ -3,3 +3,8 @@ dist
 .DS_Store
 *.local
 .vite
+
+.dev.vars
+.dev.vars.*
+.env
+.env.*
