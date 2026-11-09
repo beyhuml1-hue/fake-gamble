@@ -27,24 +27,24 @@ export function AgeGate({ children }: { children: ReactNode }) {
   return (
     <div className="age-screen">
       <div className="age-card">
+        <div className="auth-heading"><span className="auth-logo">B</span><strong>BlockBet</strong></div>
         {state === "no" ? (
           <>
             <h1>Adults only</h1>
-            <p>Blockbet is for people 18 and older.</p>
+            <p>You must be 18 or older to play.</p>
           </>
         ) : (
           <>
             <h1>Are you 18 or older?</h1>
-            <p>Blockbet is an adults-only casino. You need to be 18 or older to enter.</p>
+            <p>BlockBet uses play money and is for adults only.</p>
             <div className="age-actions">
               <button className="bet-btn" type="button" onClick={enter}>
-                I’m 18 or older — enter
+                Yes, enter BlockBet
               </button>
               <button className="ghost-btn" type="button" onClick={() => setState("no")}>
-                I’m under 18
+                No, I’m under 18
               </button>
             </div>
-            <p className="fineprint">18+ · Play responsibly</p>
           </>
         )}
       </div>

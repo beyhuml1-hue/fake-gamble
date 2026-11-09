@@ -51,14 +51,8 @@ export function BetPanel({
 
   return (
     <form className="panel-form" onSubmit={submit}>
-      <div className="tabs" role="tablist">
-        <button className="tab active" type="button" role="tab" aria-selected="true">
-          Manual
-        </button>
-      </div>
-
       <label className="field">
-        <span className="field-label">Bet Amount</span>
+        <span className="field-label">Bet amount</span>
         <span className="amount">
           <span className="amount-prefix">$</span>
           <input
@@ -93,7 +87,7 @@ export function BetPanel({
       {children}
 
       <div className="field">
-        <span className="field-label">Profit on Win</span>
+        <span className="field-label">Profit on a win</span>
         <div className="profit-box">
           <span>$</span>
           <strong>{formatUSD(profitCents).replace("$", "")}</strong>
@@ -104,7 +98,7 @@ export function BetPanel({
 
       {broke ? (
         <button className="bet-btn" type="button" onClick={openCashier}>
-          Deposit
+          Open demo wallet
         </button>
       ) : (
         <button className={cashout ? "bet-btn cashout" : "bet-btn"} type="submit" disabled={disabled}>

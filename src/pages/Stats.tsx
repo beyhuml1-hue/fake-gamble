@@ -25,7 +25,7 @@ export function Stats() {
       <div className="lobby-head">
         <div>
           <h1>Stats</h1>
-          <p>Every settled bet on this account.</p>
+          <p>Results from bets saved on this device.</p>
         </div>
       </div>
       <div className="stat-grid">
@@ -72,7 +72,7 @@ export function Stats() {
               {rows.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="empty-row">
-                    Stats show up after the first settled bet.
+                    No settled bets yet.
                   </td>
                 </tr>
               ) : (
