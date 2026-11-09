@@ -79,6 +79,11 @@ export function Lobby() {
           </span>
         </Link>
       </div>
+      <Link to="/mines-battles" className="mines-battle-lobby">
+        <span className="mines-battle-lobby-icon">◆</span>
+        <span><small>LIVE MULTIPLAYER</small><strong>Mines Battles</strong><em>Challenge real players on separate 5×5 minefields</em></span>
+        <b>Create or join ↗</b>
+      </Link>
       <div className="lobby-tools">
         <label className="search lobby-search">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
