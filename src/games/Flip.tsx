@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GoldCoin3D } from "../components/GoldCoin3D";
+import { ReferenceGoldCoin } from "../components/ReferenceGoldCoin";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatUSD, payout } from "../lib/money";
@@ -119,7 +119,7 @@ export function Flip() {
       }
     >
       <div className="center-stage">
-        <GoldCoin3D degrees={deg} spinning={busy} />
+        <ReferenceGoldCoin degrees={deg} spinning={busy} />
         <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>{line}</p>
       </div>
     </GameLayout>

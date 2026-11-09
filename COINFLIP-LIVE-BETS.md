@@ -2,15 +2,7 @@
 
 ## Coinflip
 
-`src/games/Flip.tsx` now uses a CSS-perspective **3D coin object** with separate, handcrafted vector face textures:
-
-- `public/coin/heads.svg`: dark gunmetal, chrome rim, green glow, laurel crown, BlockBet B and **HEADS**
-- `public/coin/tails.svg`: matching same coin, dice emblem and **TAILS**
-- `src/styles.css`: extruded-looking milled edge, face depth, GPU-accelerated rotation with six or seven full turns and a final heads/tails orientation
-
-All existing Flip wagers, payouts, and odds are preserved. The coin animation is a visualisation of the previously selected demo result, not a new randomness mechanism.
-
-The coin is rendered with **CSS 3D and SVG**, not a downloadable GLB/FBX mesh; it is designed to work directly in mobile browsers without a Three.js/WebGL dependency.
+Coinflip uses the **existing gold coin artwork** `public/covers/cover-flip.jpg` from the site's original Flip cover. The spinning coin crops that exact artwork onto both faces and overlays simple gold embossed **HEADS** and **TAILS** labels. The animation uses a lightweight 3D CSS rotation and works on phones without a WebGL renderer or external CDN. The game's wagering and result logic are unchanged.
 
 ## Live Bets
 

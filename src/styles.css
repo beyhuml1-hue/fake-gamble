@@ -1600,21 +1600,56 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .community-form button { align-self: start; }
 
 
-/* Real gold 3D GLB coin model, matching the original coinflip game artwork. */
-.real-coin-stage{position:relative;width:min(350px,100%);height:350px;margin:0 auto;display:grid;place-items:center;isolation:isolate}
-.real-coin-model{width:100%;height:100%;opacity:0;position:absolute;inset:0;z-index:3;pointer-events:none;transition:opacity .18s ease}
-.real-coin-model.loaded{opacity:1}
-.blockbet-coin-viewer{background:transparent;--poster-color:transparent}
-.real-coin-shadow{position:absolute;bottom:28px;left:50%;width:220px;height:28px;transform:translateX(-50%);background:radial-gradient(ellipse,#000a,#0003 48%,transparent 75%);filter:blur(8px);z-index:0;pointer-events:none}
-.real-coin-fallback{width:230px;height:230px;position:relative;transform-style:preserve-3d;z-index:1;transition:opacity .18s ease;filter:drop-shadow(0 14px 10px #0007)}
-.real-coin-fallback.hidden{opacity:0}
-.gold-fallback-face{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;color:#9a6422;font-size:24px;letter-spacing:.18em;font-weight:900;text-shadow:0 1px 0 #ffde94,1px 2px 2px #a76920;background:radial-gradient(ellipse at 65% 28%,#ffe8a3 0%,#f4cd72 30%,#d8a144 60%,#a56b1b 100%);border:10px ridge #ffd681;box-shadow:inset 0 0 0 3px #98601b,inset 0 0 0 8px #f1c067,inset 0 1px 15px #a46b25}
-.gold-fallback-face.front{transform:translateZ(9px)}
-.gold-fallback-face.back{transform:rotateY(180deg) translateZ(9px)}
-.gold-fallback-face span{transform:translateZ(1px)}
-.gold-fallback-edge{position:absolute;inset:0;border-radius:50%;background:#c39136;transform:translateZ(0)}
-.real-coin-stage.spinning .real-coin-shadow{animation:gold-shadow-pulse 1.7s ease-in-out}
-.model-fallback-note{position:absolute;bottom:7px;left:0;right:0;text-align:center;color:#a9b7c5;font-size:11px;z-index:4}
-@keyframes gold-shadow-pulse{0%,100%{opacity:1;scale:1}45%{opacity:.5;scale:.7}}
-@media(max-width:600px){.real-coin-stage{width:min(285px,100%);height:285px}.real-coin-fallback{width:200px;height:200px}.real-coin-shadow{bottom:14px;width:160px}}
-@media(prefers-reduced-motion:reduce){.real-coin-stage.spinning .real-coin-shadow{animation:none}}
+/* Coinflip: use the exact gold coin from BlockBet's existing Flip cover art.
+   No downloaded renderer, invented chrome/green art or extra labels. */
+.reference-coin-scene {
+  --coin-diameter: clamp(205px, 47vw, 272px);
+  display: grid;
+  place-items: center;
+  perspective: 1100px;
+  width: min(100%, 340px);
+  height: 320px;
+  margin: 0 auto;
+}
+.reference-coin-body {
+  width: var(--coin-diameter);
+  height: var(--coin-diameter);
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 1.7s cubic-bezier(.15,.52,.12,1);
+  filter: drop-shadow(0 17px 17px rgba(0,0,0,.34));
+}
+.reference-coin-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: grid;
+  place-items: center;
+  background-image: url("/covers/cover-flip.jpg");
+  background-repeat: no-repeat;
+  /* Crop the existing 864x1152 artwork to its central 418x438 gold coin. */
+  background-size: 207% 262%;
+  background-position: 52% 50%;
+  overflow: hidden;
+}
+.reference-coin-heads { transform: rotateY(0deg) translateZ(5px); }
+.reference-coin-tails { transform: rotateY(180deg) translateZ(5px); }
+.reference-coin-face span {
+  position: relative;
+  top: 1px;
+  color: #af7d2b;
+  text-shadow: -1px -1px 1px rgba(91,54,7,.65), 1px 1px 1px rgba(255,233,167,.85);
+  font-size: clamp(23px, 5.3vw, 31px);
+  font-weight: 900;
+  letter-spacing: .14em;
+  line-height: 1;
+  user-select: none;
+}
+@media (max-width: 600px) {
+  .reference-coin-scene { height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reference-coin-body { transition-duration: .01ms; }
+}
