@@ -7,7 +7,50 @@ export const json = (body, status = 200, headers = {}) =>
   });
 
 export function configured(env) {
-  return Boolean(env?.DB && env?.AUTH_PEPPER && env?.AUTH_FROM_EMAIL && (env?.EMAIL || env?.RESEND_API_KEY));
+  return Boolean(env?.DB && env?.AUTH_PEPPER);
+}
+
+export function validPassword(password) {
+  return typeof password === "string" && password.length >= 12 &&
+    password.length <= 128 && password.trim().length > 0 &&
+    new TextEncoder().encode(password).length <= 512;
+}
+
+export function emailReady(env) {
+  return Boolean(env?.AUTH_FROM_EMAIL && (env?.EMAIL || env?.RESEND_API_KEY));
+}
+
+// Workers WebCrypto limits PBKDF2 to 100,000 iterations. Each account gets
+// a 128-bit random salt. The password is HMAC-prehashed using a server-only
+// pepper before PBKDF2, making a stolen D1 database insufficient to crack.
+export const PASSWORD_ITERATIONS = 100000;
+export function randomSalt() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, x => x.toString(16).padStart(2,"0")).join("");
+}
+export async function passwordHash(password, salt, pepper, iterations = PASSWORD_ITERATIONS) {
+  if (!/^[a-f0-9]{32}$/.test(salt) || iterations !== PASSWORD_ITERATIONS)
+    throw new Error("Invalid password hash configuration");
+  const prehash = await digest("password:" + password, pepper);
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(prehash), "PBKDF2", false, ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", iterations, salt: new TextEncoder().encode(salt) },
+    key,
+    256
+  );
+  return Array.from(new Uint8Array(bits), v => v.toString(16).padStart(2,"0")).join("");
+}
+
+export async function issueSession(env, user, now = Date.now()) {
+  const token = randomSecret();
+  const tokenHash = await digest("session:" + token, env.AUTH_PEPPER);
+  await env.DB.prepare(
+    "INSERT INTO auth_sessions (digest,user_id,expires_ms,created_ms) VALUES (?1,?2,?3,?4)"
+  ).bind(tokenHash, user.id, now + 7 * 24 * 3600000, now).run();
+  return json({ok:true,user:{email:user.email}},200,{"Set-Cookie":sessionCookie(token)});
 }
 
 export function validEmail(input) {
@@ -92,14 +135,15 @@ export async function currentUser(request, env) {
   const tokenHash = await digest("session:" + token, env.AUTH_PEPPER);
   return env.DB.prepare(
     "SELECT u.id, u.email FROM auth_sessions s INNER JOIN auth_users u ON u.id = s.user_id " +
-    "WHERE s.digest = ?1 AND s.expires_ms > ?2"
+    "WHERE s.digest = ?1 AND s.expires_ms > ?2 AND u.password_hash IS NOT NULL"
   ).bind(tokenHash, Date.now()).first();
 }
 
 export async function dbReady(env) {
   if (!configured(env)) return false;
   try {
-    await env.DB.prepare("SELECT email FROM auth_users LIMIT 1").first();
+    await env.DB.prepare("SELECT email, password_hash FROM auth_users LIMIT 1").first();
+    await env.DB.prepare("SELECT email FROM auth_pending LIMIT 1").first();
     await env.DB.prepare("SELECT email FROM auth_otp LIMIT 1").first();
     await env.DB.prepare("SELECT key FROM auth_rate LIMIT 1").first();
     await env.DB.prepare("SELECT digest FROM auth_sessions LIMIT 1").first();

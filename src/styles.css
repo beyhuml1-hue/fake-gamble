@@ -1455,3 +1455,21 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .auth-card .auth-fineprint{margin:25px 0 0;border-top:1px solid #2f4553;padding-top:17px;color:#9ba8ba;font-size:11px}
 .account-menu .account-menu-note{font-size:11px;line-height:1.5;color:#b1bad3;margin:0 0 12px}
 .account-trigger{cursor:pointer}
+
+
+/* BlockBet password account screens */
+.auth-card{width:min(470px,100%);max-height:calc(100dvh - 34px);overflow:auto;scrollbar-width:thin}
+.auth-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:22px;padding:5px;background:#0f212e;border:1px solid #2f4553;border-radius:10px}
+.auth-switch button{border:0;border-radius:7px;background:transparent;color:#b1bad3;padding:12px;font-size:14px;font-weight:800;cursor:pointer}
+.auth-switch button.selected{background:#213743;color:white;box-shadow:inset 0 -3px 0 #00e701}
+.auth-form{margin-top:18px}
+.auth-password-wrap{position:relative}
+.auth-password-wrap input{display:block;width:100%;padding-right:65px}
+.auth-password-wrap>button{position:absolute;right:5px;top:5px;bottom:5px;border:0;background:transparent;color:#aebdd0;padding:0 12px;cursor:pointer;font-weight:800;font-size:12px}
+.auth-password-wrap>button:hover{color:#fff}
+.auth-password-hint{color:#9badbb;font-size:11px;line-height:1.5}
+.auth-guest-link{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;background:transparent;border:1px solid #435969;color:#c3d2dc;font-size:12px;font-weight:800;border-radius:8px;cursor:pointer;margin-top:17px}
+.auth-guest-link:hover{background:#213743;color:white}
+.auth-verify-icon{width:53px;height:53px;background:#214c35;color:#00e701;border-radius:13px;display:grid;place-items:center;font-size:29px;margin-bottom:21px}
+.auth-submit:disabled{opacity:.65;cursor:not-allowed}
+.auth-back:disabled{opacity:.6}

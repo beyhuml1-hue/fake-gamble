@@ -11,7 +11,7 @@ Cloudflare Workers, rather than Pages, serve the live `playblockbet.com` domain.
 - `AUTH_FROM_EMAIL`: verified sender e.g. `login@playblockbet.com`.
 - `EMAIL`: Cloudflare Email Sending binding **after the sending domain is onboarded**. Or `RESEND_API_KEY` as an alternative email provider.
 
-Until a working email binding or Resend secret is configured, `GET /api/auth/status` returns `{"enabled":false}` and the existing BlockBet guest experience remains available.
+`GET /api/auth/status` reports database and password-login readiness. Email delivery is separately required for new sign-ups and needs a verified sender domain and a working Resend key.
 
 The Worker can be deployed as an ES module with `blockbet-auth.worker.js` as the main module and the existing six handler files plus `functions/_shared/auth.js` as dependent modules. Add a Workers **Route**, not a Custom Domain, to the existing `playblockbet.com` DNS zone. Cloudflare Workers Routes take precedence over Workers Custom Domains for more specific paths. See [routing documentation](https://developers.cloudflare.com/workers/configuration/routing/routes/).
 

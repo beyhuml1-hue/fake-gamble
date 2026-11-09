@@ -1,13 +1,7 @@
-import { json, dbReady, validEmail, sameOrigin, readBody, digest, randomCode, hitRateLimit } from "../../_shared/auth.js";
+import { json, dbReady, emailReady, validEmail, sameOrigin, readBody, digest, randomCode, hitRateLimit } from "../../_shared/auth.js";
 
-export async function onRequestPost({ request, env }) {
-  if (!sameOrigin(request)) return json({ error: "Invalid request origin." }, 403);
-  if (!(await dbReady(env))) return json({ error: "Email sign-in is not configured yet." }, 503);
-
-  const input = await readBody(request);
-  const email = validEmail(input?.email);
-  if (!email) return json({ error: "Enter a valid email address." }, 400);
-
+export async function sendCode(email, request, env) {
+  if (!emailReady(env)) return json({error:"Email delivery is not configured."},503);
   const now = Date.now();
   try {
     // Limit both address and network requests. Raw IPs are never saved.
@@ -30,7 +24,8 @@ export async function onRequestPost({ request, env }) {
     ).bind(email, codeHash, now + 10 * 60_000, now).run();
 
     let sentSuccessfully = false;
-    const subject = "Your BlockBet sign-in code";
+    let providerCode = null;
+    const subject = "Verify your BlockBet account";
     const textMessage = "Your BlockBet verification code is " + code + ". It expires in 10 minutes. If you did not request it, ignore this email.";
     const htmlMessage = '<div style="font-family:Arial,sans-serif;background:#0f212e;color:white;padding:30px;border-radius:12px"><h1 style="color:#00e701">BlockBet</h1><p>Your one-time verification code is:</p><p style="font-size:38px;letter-spacing:10px;font-weight:bold">' + code + '</p><p>This code expires in 10 minutes. Do not share it with anyone.</p><small>If you did not request this code, ignore this email.</small></div>';
     try {
@@ -57,6 +52,7 @@ export async function onRequestPost({ request, env }) {
           }),
         });
         sentSuccessfully = sent.ok;
+        providerCode = sent.status;
       }
     } catch { /* Delivery failed. */ }
     if (!sentSuccessfully) {
@@ -67,4 +63,18 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return json({ error: "Email service unavailable. Please try again later." }, 503);
   }
+}
+
+export async function onRequestPost({request,env}) {
+  if (!sameOrigin(request)) return json({error:"Invalid request origin."},403);
+  if (!(await dbReady(env))) return json({error:"Account service unavailable."},503);
+  const input=await readBody(request);
+  const email=validEmail(input?.email);
+  if(!email) return json({error:"Enter a valid email."},400);
+  const pending=await env.DB.prepare(
+    "SELECT expires_ms FROM auth_pending WHERE email=?1"
+  ).bind(email).first();
+  if(!pending || pending.expires_ms < Date.now())
+    return json({error:"Start sign-up again to get a code."},400);
+  return sendCode(email,request,env);
 }

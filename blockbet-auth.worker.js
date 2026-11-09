@@ -5,6 +5,8 @@
  * Reuses the same handlers as Pages Functions, preserving one source of truth.
  */
 import { onRequestPost as requestCode } from "./functions/api/auth/request.js";
+import { onRequestPost as signup } from "./functions/api/auth/signup.js";
+import { onRequestPost as login } from "./functions/api/auth/login.js";
 import { onRequestPost as verifyCode } from "./functions/api/auth/verify.js";
 import { onRequestGet as sessionInfo } from "./functions/api/auth/me.js";
 import { onRequestPost as logout } from "./functions/api/auth/logout.js";
@@ -12,6 +14,8 @@ import { onRequestGet as status } from "./functions/api/auth/status.js";
 
 const routes = {
   "POST /api/auth/request": requestCode,
+  "POST /api/auth/signup": signup,
+  "POST /api/auth/login": login,
   "POST /api/auth/verify": verifyCode,
   "GET /api/auth/me": sessionInfo,
   "POST /api/auth/logout": logout,

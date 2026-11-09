@@ -3,7 +3,7 @@ import {
   type FormEvent, type ReactNode,
 } from "react";
 
-type Phase = "loading" | "unavailable" | "email" | "code" | "authenticated" | "guest";
+type Phase = "loading" | "unavailable" | "login" | "signup" | "verify" | "authenticated" | "guest";
 type AuthValue = {
   email: string | null;
   isGuest: boolean;
@@ -29,22 +29,25 @@ async function api(path: string, data?: object): Promise<AuthResponse> {
     ...(data ? { body: JSON.stringify(data) } : {}),
   });
   const payload = (await response.json().catch(() => ({}))) as AuthResponse;
-  if (!response.ok) throw new Error(payload.error || "Authentication service unavailable.");
+  if (!response.ok) throw new Error(payload.error || "Account service unavailable. Please try again.");
   return payload;
 }
 
 export function AuthProvider({ children }: { children: (key: string) => ReactNode }) {
   const [phase, setPhase] = useState<Phase>("loading");
+  const [enabled, setEnabled] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [code, setCode] = useState("");
+  const [visible, setVisible] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    const initialize = async () => {
+    async function init() {
       try {
         const status = await api("status");
         if (!status.enabled) {
@@ -59,56 +62,83 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
             setPhase("authenticated");
             return;
           }
-        } catch { /* An expired session should show the sign-in form. */ }
-        if (alive) setPhase("email");
+        } catch { /* No active session. */ }
+        if (alive) setPhase("login");
       } catch {
         if (alive) setPhase("unavailable");
       }
-    };
-    void initialize();
+    }
+    void init();
     return () => { alive = false; };
   }, []);
 
-  const requestCode = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  function switchTo(next: "login" | "signup") {
+    setPhase(next);
+    setError(""); setNotice(""); setPassword(""); setConfirm(""); setCode(""); setVisible(false);
+  }
+
+  async function submitLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setError(""); setNotice("");
+    try {
+      const result = await api("login", { email: email.trim(), password });
+      if (!result.user?.email) throw new Error("Couldn't log in.");
+      setEmail(result.user.email);
+      setPassword(""); setConfirm(""); setPhase("authenticated");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't log in.");
+    } finally { setBusy(false); }
+  }
+
+  async function submitSignup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setError(""); setNotice("");
+    if (password.length < 12 || password.length > 128) {
+      setError("Choose a password with at least 12 characters."); return;
+    }
+    if (password !== confirm) { setError("Your passwords don't match."); return; }
+    setBusy(true);
+    try {
+      const result = await api("signup", { email: email.trim(), password });
+      setNotice(result.message || "We've sent your six-digit verification code.");
+      setCode(""); setPassword(""); setConfirm(""); setPhase("verify");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't start sign-up.");
+    } finally { setBusy(false); }
+  }
+
+  async function submitVerify(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setError("");
+    try {
+      const result = await api("verify", { email: email.trim(), code });
+      if (!result.user?.email) throw new Error("Could not verify your account.");
+      setEmail(result.user.email);
+      setCode(""); setPhase("authenticated");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Incorrect or expired code.");
+    } finally { setBusy(false); }
+  }
+
+  async function resendCode() {
     setBusy(true); setError(""); setNotice("");
     try {
       const result = await api("request", { email: email.trim() });
-      setNotice(result.message || "Check your email for a six-digit code.");
-      setCode("");
-      setPhase("code");
-    } catch (err) { setError(err instanceof Error ? err.message : "Could not send a code."); }
-    finally { setBusy(false); }
-  };
-
-  const verifyCode = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setBusy(true); setError("");
-    try {
-      const result = await api("verify", { email: email.trim(), code });
-      if (!result.user?.email) throw new Error("Could not finish signing in.");
-      setEmail(result.user.email);
-      setPhase("authenticated");
-    } catch (err) { setError(err instanceof Error ? err.message : "That code did not work."); }
-    finally { setBusy(false); }
-  };
+      setNotice(result.message || "Another code has been sent.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't resend the code.");
+    } finally { setBusy(false); }
+  }
 
   const logout = async () => {
     if (phase === "authenticated") {
       try { await api("logout", {}); }
       catch {
-        setError("Could not sign out on the server. Please retry.");
+        setError("Couldn't sign out on the server. Please retry.");
         return;
       }
     }
-    setEmail(""); setCode(""); setError(""); setNotice(""); setPhase("email");
+    setEmail(""); switchTo("login");
   };
 
-  const showSignIn = () => {
-    setError(""); setNotice("");
-    setPhase("email");
-  };
-
+  const showSignIn = () => switchTo("login");
   const ready = phase === "authenticated" || phase === "guest";
   const context: AuthValue = {
     email: phase === "authenticated" ? email : null,
@@ -118,57 +148,95 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
     showSignIn,
   };
   if (ready) {
-    // The existing wallet is browser-local; the verified email only selects
-    // which local profile belongs to the account on this device.
-    return <AuthContext.Provider value={context}>{children(phase === "guest" ? "phone" : email)}</AuthContext.Provider>;
+    // Wallet state remains browser-local, namespaced to verified accounts on this device.
+    return <AuthContext.Provider value={context}>
+      {children(phase === "guest" ? "phone" : email)}
+    </AuthContext.Provider>;
   }
+
   if (phase === "loading") {
-    return <div className="auth-screen"><div className="auth-card"><div className="auth-logo">B</div><h1>BlockBet</h1><p>Checking your session…</p></div></div>;
+    return <div className="auth-screen"><div className="auth-card">
+      <div className="auth-logo">B</div><h1>BlockBet</h1><p>Checking your session…</p>
+    </div></div>;
   }
+
   return (
     <div className="auth-screen">
-      <section className="auth-card">
+      <section className="auth-card" aria-label="BlockBet player account">
         <div className="auth-heading">
           <span className="auth-logo">B</span>
           <div><strong>BlockBet</strong><small>Player account</small></div>
         </div>
         {phase === "unavailable" ? (
           <>
-            <h1>Email sign-in is being set up</h1>
-            <p>The email service isn't ready on this server yet. You can still use your existing browser-only guest profile.</p>
+            <h1>Accounts are temporarily unavailable</h1>
+            <p>You can continue playing with browser-local guest credits while the account service is being fixed.</p>
             <button className="bet-btn auth-submit" type="button" onClick={() => setPhase("guest")}>Continue as guest</button>
-            <p className="auth-fineprint">The site owner must connect a Cloudflare D1 database and an email provider.</p>
+            <button type="button" className="auth-back" onClick={() => window.location.reload()}>Try again</button>
+          </>
+        ) : phase === "verify" ? (
+          <>
+            <div className="auth-verify-icon" aria-hidden="true">✉</div>
+            <h1>Verify your email</h1>
+            <p>Enter the six-digit code sent to <strong>{email}</strong>. Your code expires in 10 minutes.</p>
+            <form className="auth-form" onSubmit={submitVerify}>
+              <label htmlFor="account-code">Verification code</label>
+              <input id="account-code" className="otp-input" type="text" name="code"
+                autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
+                placeholder="000000" required disabled={busy} value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}/>
+              <button type="submit" className="bet-btn auth-submit" disabled={busy || code.length !== 6}>
+                {busy ? "Verifying…" : "Verify & create account"}
+              </button>
+            </form>
+            <button className="auth-back" type="button" disabled={busy} onClick={() => void resendCode()}>Resend code</button>
+            <button className="auth-back" type="button" disabled={busy} onClick={() => switchTo("signup")}>← Back to sign up</button>
           </>
         ) : (
           <>
-            <h1>{phase === "email" ? "Welcome to BlockBet" : "Check your email"}</h1>
-            <p>{phase === "email" ? "Create an account or sign in using your email. No password needed." : <>We sent a six-digit code to <strong>{email}</strong>. The code expires in 10 minutes.</>}</p>
-            {phase === "email" ? (
-              <form onSubmit={requestCode} className="auth-form">
-                <label htmlFor="account-email">Email address</label>
-                <input id="account-email" type="email" name="email" placeholder="you@example.com"
-                  autoComplete="email" inputMode="email" maxLength={254} required value={email}
-                  onChange={(e) => setEmail(e.target.value)} disabled={busy} />
-                <button className="bet-btn auth-submit" type="submit" disabled={busy}>{busy ? "Sending…" : "Send 6-digit code"}</button>
-              </form>
-            ) : (
-              <form onSubmit={verifyCode} className="auth-form">
-                <label htmlFor="account-code">Your verification code</label>
-                <input id="account-code" type="text" name="code" placeholder="000000" required
-                  autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
-                  value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="otp-input" disabled={busy} />
-                <button className="bet-btn auth-submit" type="submit" disabled={busy || code.length !== 6}>
-                  {busy ? "Checking…" : "Verify & sign in"}
-                </button>
-                <button className="auth-back" type="button" onClick={() => { setPhase("email"); setError(""); setNotice(""); }}>← Change email / resend code</button>
-              </form>
-            )}
-            {notice && <p className="auth-notice" role="status">{notice}</p>}
-            {error && <p className="auth-error" role="alert">{error}</p>}
-            <p className="auth-fineprint">18+ only. Do not share verification codes. Account verification does not make browser-local balances transferable between devices.</p>
+            <h1>{phase === "signup" ? "Create an account" : "Welcome back"}</h1>
+            <p>{phase === "signup" ? "Sign up with your email and password. We'll send a code to verify your email." : "Log in to your BlockBet account with your email and password."}</p>
+            <div className="auth-switch" role="group" aria-label="Account access">
+              <button type="button" className={phase === "login" ? "selected" : ""} onClick={() => switchTo("login")} aria-pressed={phase === "login"}>Log in</button>
+              <button type="button" className={phase === "signup" ? "selected" : ""} onClick={() => switchTo("signup")} aria-pressed={phase === "signup"}>Sign up</button>
+            </div>
+            <form className="auth-form" onSubmit={phase === "signup" ? submitSignup : submitLogin}>
+              <label htmlFor="account-email">Email address</label>
+              <input id="account-email" type="email" name="email" placeholder="you@example.com"
+                autoComplete="email" inputMode="email" maxLength={254}
+                required value={email} onChange={e => setEmail(e.target.value)} disabled={busy} />
+              <label htmlFor="account-password">Password</label>
+              <div className="auth-password-wrap">
+                <input id="account-password" name="password" type={visible ? "text" : "password"}
+                  placeholder={phase === "signup" ? "At least 12 characters" : "Enter your password"}
+                  autoComplete={phase === "signup" ? "new-password" : "current-password"}
+                  minLength={phase === "signup" ? 12 : 1} maxLength={128}
+                  required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} />
+                <button type="button" aria-label={visible ? "Hide password" : "Show password"}
+                  onClick={() => setVisible(v => !v)}>{visible ? "Hide" : "Show"}</button>
+              </div>
+              {phase === "signup" && (
+                <>
+                  <label htmlFor="account-confirm">Confirm password</label>
+                  <input id="account-confirm" name="confirm" type={visible ? "text" : "password"}
+                    autoComplete="new-password" placeholder="Repeat your password"
+                    minLength={12} maxLength={128} required value={confirm}
+                    onChange={e => setConfirm(e.target.value)} disabled={busy} />
+                  <small className="auth-password-hint">Use 12 or more characters. Don't reuse an important password.</small>
+                </>
+              )}
+              <button className="bet-btn auth-submit" type="submit" disabled={busy}>
+                {busy ? "Please wait…" : phase === "signup" ? "Create account" : "Log in"}
+              </button>
+            </form>
           </>
         )}
+        {notice && <p className="auth-notice" role="status">{notice}</p>}
+        {error && <p className="auth-error" role="alert">{error}</p>}
+        <button className="auth-guest-link" type="button" onClick={() => setPhase("guest")}>
+          Continue as guest <span aria-hidden="true">→</span>
+        </button>
+        <p className="auth-fineprint">18+ only. Your email is verified during sign-up. Demo credits and game history are still saved locally on this device, not in an online wallet.</p>
       </section>
     </div>
   );
