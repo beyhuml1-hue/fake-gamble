@@ -23,6 +23,8 @@ export function Flip() {
   const [win, setWin] = useState<boolean | null>(null);
   const [landed, setLanded] = useState<"heads" | "tails" | null>(null);
   const [paid, setPaid] = useState(0);
+  const [lastStake, setLastStake] = useState(0);
+  const [resultId, setResultId] = useState(0);
   const [error, setError] = useState("");
   const pending = useRef<Pending | null>(null);
   const timer = useRef(0);
@@ -40,6 +42,8 @@ export function Flip() {
     setWin(job.win);
     setLanded(job.heads ? "heads" : "tails");
     setPaid(job.pay);
+    setLastStake(job.stake);
+    setResultId((value) => value + 1);
     setBusy(false);
   };
 
@@ -56,6 +60,17 @@ export function Flip() {
 
   const cents = Math.round(amount * 100);
   const profit = Math.max(0, payout(Math.max(cents, 0), MULT) - Math.max(cents, 0));
+
+  // Choosing TAILS shows the back of the original gold coin immediately.
+  // Idle face changes are instant; only an actual bet triggers a spin.
+  const chooseSide = (next: "heads" | "tails") => {
+    if (busy) return;
+    setSide(next);
+    setWin(null);
+    setLanded(null);
+    setPaid(0);
+    setDeg((previous) => Math.floor(previous / 360) * 360 + (next === "tails" ? 180 : 0));
+  };
 
   const play = () => {
     const stake = betCents(amount, balance);
@@ -107,10 +122,10 @@ export function Flip() {
           <div className="field">
             <span className="field-label">Pick a side</span>
             <div className="select">
-              <button type="button" className={side === "heads" ? "on" : ""} disabled={busy} onClick={() => setSide("heads")}>
+              <button type="button" className={side === "heads" ? "on" : ""} disabled={busy} onClick={() => chooseSide("heads")}>
                 Heads
               </button>
-              <button type="button" className={side === "tails" ? "on" : ""} disabled={busy} onClick={() => setSide("tails")}>
+              <button type="button" className={side === "tails" ? "on" : ""} disabled={busy} onClick={() => chooseSide("tails")}>
                 Tails
               </button>
             </div>
@@ -119,7 +134,23 @@ export function Flip() {
       }
     >
       <div className="center-stage">
-        <ReferenceGoldCoin degrees={deg} spinning={busy} />
+        <div className="flip-coin-display">
+          <ReferenceGoldCoin degrees={deg} spinning={busy} />
+          <div className="flip-feedback-slot" aria-live="polite" aria-atomic="true">
+            {win !== null && landed !== null && !busy && (
+              <div key={resultId} className={win ? "flip-outcome flip-win" : "flip-outcome flip-loss"}>
+                {win && (
+                  <div className="flip-sparks" aria-hidden="true">
+                    {Array.from({ length: 9 }, (_, i) => <i key={i} />)}
+                  </div>
+                )}
+                <span className="flip-outcome-emblem" aria-hidden="true">{win ? "✦" : "×"}</span>
+                <strong className="flip-outcome-mult">{win ? `${(paid / lastStake).toFixed(2)}×` : "0.00×"}</strong>
+                <span className="flip-outcome-details">{win ? `WIN · ${formatUSD(paid)} payout` : `LOSS · ${formatUSD(lastStake)} wager`}</span>
+              </div>
+            )}
+          </div>
+        </div>
         <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>{line}</p>
       </div>
     </GameLayout>

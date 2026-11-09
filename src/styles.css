@@ -1616,7 +1616,8 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
   height: var(--coin-diameter);
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 1.7s cubic-bezier(.15,.52,.12,1);
+  transition: none;
+  -webkit-transform-style: preserve-3d;
   filter: drop-shadow(0 17px 17px rgba(0,0,0,.34));
 }
 .reference-coin-face {
@@ -1625,8 +1626,7 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
   border-radius: 50%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  display: grid;
-  place-items: center;
+  display: block;
   background-image: url("/covers/cover-flip.jpg");
   background-repeat: no-repeat;
   /* Crop the existing 864x1152 artwork to its central 418x438 gold coin. */
@@ -1634,11 +1634,22 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
   background-position: 52% 50%;
   overflow: hidden;
 }
+.reference-coin-scene.is-flipping .reference-coin-body {
+  transition: transform 1.7s cubic-bezier(.15,.52,.12,1);
+  animation: reference-coin-float 1.7s ease-in-out;
+}
 .reference-coin-heads { transform: rotateY(0deg) translateZ(5px); }
 .reference-coin-tails { transform: rotateY(180deg) translateZ(5px); }
 .reference-coin-face span {
-  position: relative;
-  top: 1px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+  width: max-content;
+  max-width: 77%;
+  white-space: nowrap;
+  text-align: center;
   color: #af7d2b;
   text-shadow: -1px -1px 1px rgba(91,54,7,.65), 1px 1px 1px rgba(255,233,167,.85);
   font-size: clamp(23px, 5.3vw, 31px);
@@ -1652,4 +1663,60 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 }
 @media (prefers-reduced-motion: reduce) {
   .reference-coin-body { transition-duration: .01ms; }
+}
+
+
+/* Coinflip settlement animations: use the real payout, never a made-up 2×. */
+.flip-coin-display { width: min(340px, 100%); position: relative; }
+.flip-feedback-slot { display: grid; place-items: center; min-height: 102px; width: 100%; }
+.flip-outcome {
+  width: min(285px, 100%);
+  min-height: 81px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  padding: 11px 15px;
+  border-radius: 14px;
+  border: 1px solid;
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+  will-change: transform, opacity;
+}
+.flip-outcome.flip-win { color: #78f7a2; background: linear-gradient(130deg, #123d30, #132c29); border-color: #388b63; animation: flip-win-pop .65s cubic-bezier(.2,1.5,.3,1) both, flip-win-glow 2.1s ease-out 1; }
+.flip-outcome.flip-loss { color: #ff8997; background: linear-gradient(130deg, #42222c, #2e2630); border-color: #9b4955; animation: flip-loss-shake .62s ease-out both; }
+.flip-outcome-emblem { font-size: 23px; font-weight: 900; line-height: 1; }
+.flip-outcome-mult { font-size: clamp(27px, 6vw, 34px); font-weight: 900; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.flip-outcome-details { width: 100%; text-align: center; color: #f4f5f7; font-size: 11px; font-weight: 800; letter-spacing: .075em; }
+.flip-sparks { pointer-events: none; position: absolute; inset: 0; }
+.flip-sparks i:nth-child(1) { --spark: 0; }
+.flip-sparks i:nth-child(2) { --spark: 1; }
+.flip-sparks i:nth-child(3) { --spark: 2; }
+.flip-sparks i:nth-child(4) { --spark: 3; }
+.flip-sparks i:nth-child(5) { --spark: 4; }
+.flip-sparks i:nth-child(6) { --spark: 5; }
+.flip-sparks i:nth-child(7) { --spark: 6; }
+.flip-sparks i:nth-child(8) { --spark: 7; }
+.flip-sparks i:nth-child(9) { --spark: 8; }
+.flip-sparks i {
+  --ang: calc(var(--spark) * 40deg);
+  position: absolute;
+  left: 50%; top: 50%;
+  height: 7px; width: 7px;
+  border-radius: 2px;
+  background: #9dffab;
+  box-shadow: 0 0 8px rgba(157,255,171,.65);
+  animation: flip-spark 0.85s ease-out both;
+  animation-delay: calc(var(--spark) * 35ms);
+}
+@keyframes reference-coin-float { 0%,100% { translate: 0 0; } 28% { translate: 0 -25px; } 60% { translate: 0 -13px; } }
+@keyframes flip-win-pop { 0% { opacity: 0; transform: translateY(16px) scale(.66); } 65% { opacity: 1; transform: translateY(-3px) scale(1.08); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes flip-win-glow { 0%,100% { box-shadow: 0 10px 30px rgba(0,0,0,.22); } 40% { box-shadow: 0 0 22px rgba(90,237,133,.5); } }
+@keyframes flip-loss-shake { 0% { opacity:0; transform: translateY(12px); } 25% { opacity:1; transform: translateX(-7px); } 45% { transform: translateX(6px); } 65% { transform: translateX(-3px); } 100% { transform: none; } }
+@keyframes flip-spark { 0% { opacity: 1; transform: rotate(var(--ang)) translateX(15px) scale(1); } 100% { opacity: 0; transform: rotate(var(--ang)) translateX(140px) scale(.1); } }
+@media (prefers-reduced-motion: reduce) {
+ .reference-coin-scene.is-flipping .reference-coin-body { transition-duration: .01ms; animation: none; }
+ .flip-outcome.flip-win, .flip-outcome.flip-loss, .flip-sparks i { animation: none; }
 }
