@@ -1,0 +1,22 @@
+name: Test AI Owner staging (never deploys)
+on:
+  push:
+    branches: [ai-owner-staging]
+  workflow_dispatch:
+jobs:
+  staging-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install existing casino dependencies
+        run: npm ci
+      - name: Test AI Owner security, budgets, chat, Discord and scheduler
+        run: node --test ai-owner/tests/*.test.mjs
+      - name: Test existing BlockBet features
+        run: npm test
+      - name: Typecheck and build staging frontend
+        run: npm run build

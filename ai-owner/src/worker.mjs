@@ -130,6 +130,7 @@ const DEFS=[
  {name:"reward_loyal",description:"Admin-only reward players active and loyal.",properties:{count:{type:"integer"},amount:{type:"integer"}},required:["count","amount"],admin:true},
  {name:"compensate_bug",description:"Admin-only compensation for identified bug ticket.",properties:{player:{type:"string"},amount:{type:"integer"},ticket:{type:"string"}},required:["player","amount","ticket"],admin:true},
  {name:"send_announcement",description:"Admin-only Discord announcement; never mass-ping.",properties:{content:{type:"string"}},required:["content"],admin:true},
+ {name:"link_discord_player",description:"Admin-only link an imaginary test player to a Discord user ID for shared memory and personal stats.",properties:{player:{type:"string"},discordId:{type:"string"}},required:["player","discordId"],admin:true},
  {name:"remember_fact",description:"Save an explicitly requested safe personal preference, not a secret/instruction.",properties:{fact:{type:"string"}},required:["fact"]}
 ];
 const TOOLS=DEFS.map(x=>({type:"function",function:{name:x.name,description:x.description,parameters:{type:"object",properties:x.properties,required:x.required,additionalProperties:false}}}));
@@ -161,6 +162,12 @@ export async function executeTool(env,actor,name,args,ref,now=Date.now()){
  }else if(name==="reward_random"||name==="reward_loyal"){
   result=await rewards(env,args.count,args.amount,name==="reward_loyal"?"loyalty":"surprise",actor,now);
  }else if(name==="send_announcement")result=await announcement(env,args.content,actor);
+ else if(name==="link_discord_player"){
+  const p=await lookup(env,args.player);
+  if(!p||!/^[0-9]{15,22}$/.test(String(args.discordId)))throw Error("Invalid test player or Discord user ID.");
+  await run(env,"UPDATE ao_players SET discord_id=?1 WHERE id=?2",args.discordId,p.id);
+  result={linked:true,player:p.handle};
+ }
  else if(name==="remember_fact"){
   const fact=clean(args.fact,350);
   if(!fact||/password|token|api.?key|system instruction|ignore previous/i.test(fact))throw Error("Unsafe memory.");
@@ -181,9 +188,14 @@ async function completion(env,messages,available){
  return data.choices[0].message;
 }
 async function ask(env,actor,userInput,now=Date.now()){
+ // The model is pay-per-request. Rate limits are atomic and server-enforced.
+ const windowStart=Math.floor(now/60000)*60000,key=actor.surface+":"+actor.id+":ai";
+ await run(env,"INSERT INTO ao_rate(key,window_start_ms,count) VALUES(?1,?2,1) ON CONFLICT(key) DO UPDATE SET count=CASE WHEN window_start_ms<>excluded.window_start_ms THEN 1 ELSE count+1 END,window_start_ms=excluded.window_start_ms",key,windowStart);
+ const rate=await first(env,"SELECT count FROM ao_rate WHERE key=?1",key);
+ if(rate.count>10)throw Error("Too many AI requests. Try again in a minute.");
  const input=clean(userInput,800);
  if(!input)throw Error("Please type a question.");
- const conversation=actor.surface+":"+actor.id;
+ const conversation="player:"+actor.id;
  await run(env,"INSERT OR IGNORE INTO ao_conversations(id,surface,actor_id,created_ms,updated_ms) VALUES(?1,?2,?3,?4,?4)",conversation,actor.surface,actor.id,now);
  const history=await all(env,"SELECT role,body FROM ao_messages WHERE conversation_id=?1 ORDER BY at_ms DESC LIMIT 14",conversation);
  const memory=await all(env,"SELECT fact FROM ao_memory WHERE actor_id=?1 ORDER BY updated_ms DESC LIMIT 8",actor.id);
@@ -268,7 +280,10 @@ async function discord(request,env){
  if(!env.DISCORD_BRIDGE_SECRET||request.headers.get("x-discord-bridge")!==env.DISCORD_BRIDGE_SECRET)return bad("Forbidden.",403);
  let data;try{data=await request.json();}catch{return bad("Bad JSON.");}
  if(data.guildId!==env.DISCORD_GUILD_ID||!/^\d{15,22}$/.test(String(data.userId)))return bad("Invalid Discord actor.",403);
- const actor={id:"discord:"+data.userId,handle:clean(data.handle,70),surface:"discord",role:data.userId===env.DISCORD_OWNER_ID?"admin":"player"};
+ const owner=data.userId===env.DISCORD_OWNER_ID;
+ const associated=await first(env,"SELECT id,handle FROM ao_players WHERE discord_id=?1",data.userId);
+ const id=owner&&DEMOS.has(env.DISCORD_OWNER_PLAYER_ID)?env.DISCORD_OWNER_PLAYER_ID:associated?.id||"discord:"+data.userId;
+ const actor={id,handle:associated?.handle||clean(data.handle,70)||"Discord member",surface:"discord",role:owner?"admin":"player"};
  try{return json(await ask(env,actor,data.message));}
  catch(e){return bad(e instanceof Error?e.message:"AI unavailable.",503);}
 }
@@ -295,6 +310,9 @@ async function site(request,env,path){
  if(path==="/api/message"){
   const body=clean(data.body,500);
   if(!body)return bad("Enter a message.");
+  const key=actor.surface+":"+actor.id+":messages",windowStart=Math.floor(now/60000)*60000;
+  await run(env,"INSERT INTO ao_rate(key,window_start_ms,count) VALUES(?1,?2,1) ON CONFLICT(key) DO UPDATE SET count=CASE WHEN window_start_ms<>excluded.window_start_ms THEN 1 ELSE count+1 END,window_start_ms=excluded.window_start_ms",key,windowStart);
+  if((await first(env,"SELECT count FROM ao_rate WHERE key=?1",key)).count>30)return bad("Chat rate limit exceeded.",429);
   await touch(env,actor.id,"message",now);
   await run(env,"INSERT INTO ao_chat(id,platform,user_id,handle,role,body,at_ms) VALUES(?1,'web',?2,?3,'user',?4,?5)",uid(),actor.id,actor.handle,body,now);
   if(/(^|\s)@ai\b/i.test(body)){

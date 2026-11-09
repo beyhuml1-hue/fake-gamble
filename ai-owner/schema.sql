@@ -103,6 +103,11 @@ CREATE TABLE IF NOT EXISTS ao_reports (
  content TEXT,
  at_ms INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ao_rate (
+ key TEXT PRIMARY KEY,
+ window_start_ms INTEGER NOT NULL,
+ count INTEGER NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS ao_rain (
  round INTEGER NOT NULL,
  player_id TEXT NOT NULL REFERENCES ao_players(id),

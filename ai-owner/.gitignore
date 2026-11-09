@@ -1,0 +1,10 @@
+# Real secrets, auth tokens and local staging state.
+.env
+.env.local
+.env.*.local
+.dev.vars
+.dev.vars.*
+ai-owner/.env
+ai-owner/discord/.env
+ai-owner/node_modules/
+ai-owner/discord/node_modules/

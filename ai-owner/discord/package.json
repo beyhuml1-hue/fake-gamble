@@ -1,0 +1,12 @@
+{
+  "name": "blockbet-ai-owner-discord",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node bot.mjs"
+  },
+  "dependencies": {
+    "discord.js": "^14.22.1",
+    "dotenv": "^16.6.1"
+  }
+}

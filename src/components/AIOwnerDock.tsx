@@ -10,6 +10,7 @@ function inText(value:string){return value.replace(/[<>&]/g,"").trim().slice(0,5
 export function AIOwnerDock(){
  const [open,setOpen]=useState(false);
  const [access,setAccess]=useState("");
+ const [accessDraft,setAccessDraft]=useState("");
  const [adminKey,setAdminKey]=useState("");
  const [demoPlayer,setDemoPlayer]=useState("demo-alex");
  const [feed,setFeed]=useState<Feed|null>(null);
@@ -82,10 +83,11 @@ export function AIOwnerDock(){
       <header className="ao-dock-head"><div><span className="ao-avatar">B</span><span><strong>BlockBet Chat</strong><small>✦ AI Owner · Staging</small></span></div>
         <button type="button" aria-label="Close chat panel" title="Close chat" onClick={()=>setOpen(false)}>×</button>
       </header>
-      {!access?<section className="ao-dock-access"><span>🔐</span><h3>Private staging</h3><p>This is isolated from real BlockBet players and balances. Enter the test access token to try it.</p>
-        <label>Staging access token<input type="password" autoComplete="off" value={access} onChange={e=>setAccess(e.target.value)} placeholder="Paste access token" /></label>
+      {!access?<form className="ao-dock-access" onSubmit={e=>{e.preventDefault();setAccess(accessDraft.trim());}}><span>🔐</span><h3>Private staging</h3><p>This is isolated from real BlockBet players and balances. Enter the test access token to try it.</p>
+        <label>Staging access token<input type="password" autoComplete="off" value={accessDraft} onChange={e=>setAccessDraft(e.target.value)} placeholder="Paste access token" /></label>
+        <button type="submit" className="ao-dock-access-connect" disabled={!accessDraft.trim()}>Connect to staging</button>
         <small>Never paste the NanoGPT API key here; that key belongs only on the server.</small>
-      </section>:<>
+      </form>:<>
         <section className="ao-rain" aria-label="Rain giveaway">
           <div className="ao-rain-banner"><span className="ao-rain-emoji">☂</span><div><b>{feed?.rain.amount??100} Coin Rain</b>
             <small>{feed?duration(feed.rain.endsAt,now):"—"} left · {feed?.rain.count||0} joined</small></div>
@@ -94,7 +96,7 @@ export function AIOwnerDock(){
           <small>Every 7 minutes · imaginary staging coins only</small>
         </section>
         <div className="ao-dock-controls"><label>Test as <select value={demoPlayer} onChange={e=>{setDemoPlayer(e.target.value);setFeed(null);}}>{["demo-alex","demo-blair","demo-cleo","demo-dex","demo-erin","demo-finn","demo-gabi","demo-hugo"].map((id,i)=><option value={id} key={id}>{["Player123","LuckyBlair","CleoCoins","DexTheAce","ErinPlays","FinnFlip","GabiGems","HugoRolls"][i]}</option>)}</select></label>
-         <span>{feed?.me.balance??0} <small>coins</small></span></div>
+         <span>{feed?.me.balance??0} <small>coins</small></span><button type="button" className="ao-reset-access" onClick={()=>{setAccess("");setFeed(null);setConnected(false);}}>Access</button></div>
         <div className="ao-dock-tabs"><button type="button" className={tab==="chat"?"active":""} onClick={()=>setTab("chat")}>Community</button><button type="button" className={tab==="owner"?"active":""} onClick={()=>setTab("owner")}>✦ Ask AI Owner</button></div>
         {tab==="chat"?<>
           <div className="ao-message-stream" role="log" aria-live="polite">

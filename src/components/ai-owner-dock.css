@@ -35,3 +35,5 @@
 .ao-admin{border-top:1px solid #344d5d;padding:7px 12px;color:#b5cad3}.ao-admin summary{cursor:pointer}.ao-admin label{margin-top:8px}.ao-admin p{font-size:10px}
 @media(max-width:650px){.ao-dock{top:63px;right:0;bottom:0;border-radius:0;width:min(100%,420px)}.ao-dock-launch{right:10px;bottom:12px}}
 @media(prefers-reduced-motion:reduce){.ao-dock *{scroll-behavior:auto!important;animation:none!important}}
+
+.ao-dock-access-connect{border:0;border-radius:8px;background:#00e701;color:#08240e;padding:11px 16px;font-size:12px;font-weight:900}.ao-reset-access{font-size:10px;background:transparent;border:1px solid #587484;color:#b7d1d8;border-radius:6px;padding:6px}
