@@ -79,10 +79,6 @@ export function Lobby() {
           </span>
         </Link>
       </div>
-      <Link to="/club" className="club-lobby-teaser">
-        <div><small>NEW · MULTIPLAYER</small><h2>BlockBet Club</h2><p>Compete in demo jackpot rounds, challenge friends, earn XP and unlock skins.</p></div>
-        <span>Explore Club ✦</span>
-      </Link>
       <div className="lobby-tools">
         <label className="search lobby-search">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
