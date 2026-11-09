@@ -7,6 +7,8 @@ import { Lobby } from "./pages/Lobby";
 import { Play } from "./pages/Play";
 import { Admin } from "./pages/Admin";
 import { Community } from "./pages/Community";
+import { Club } from "./pages/Club";
+import { HighlightPage } from "./components/Highlights";
 import { Stats } from "./pages/Stats";
 import { WalletProvider } from "./state/wallet";
 
@@ -23,6 +25,8 @@ export default function App() {
                   <Route index element={<Lobby />} />
                   <Route path="admin" element={<Admin />} />
                   <Route path="chat" element={<Community />} />
+                  <Route path="club" element={<Club />} />
+                  <Route path="highlight" element={<HighlightPage />} />
                   <Route path="stats" element={<Stats />} />
                   <Route path="game/:id" element={<Play />} />
                 </Route>

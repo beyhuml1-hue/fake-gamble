@@ -1752,3 +1752,26 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 @keyframes highlight-confetti{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(650deg)}}
 @media(prefers-reduced-motion:reduce){.highlight-recap,.highlight-recap>strong,.highlight-toast,.highlight-confetti i{animation:none}}
 @media(max-width:600px){.highlight-toast{right:12px;bottom:12px}}
+
+/* Club discovery tile on the casino lobby */
+.club-lobby-teaser{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:2px 0 20px;padding:21px 25px;background:radial-gradient(ellipse at 90% 20%,#215b49 0%,transparent 50%),linear-gradient(115deg,#16333a,#1d3644);border:1px solid #3b7660;border-radius:13px;transition:transform .15s,border-color .15s}
+.club-lobby-teaser:hover{border-color:#00e701;transform:translateY(-2px)}
+.club-lobby-teaser small{color:#86fa9f;letter-spacing:.18em;font-weight:900;font-size:10px}
+.club-lobby-teaser h2{font-size:23px;letter-spacing:-.04em;margin:8px 0 5px;color:white}
+.club-lobby-teaser p{font-size:12px;color:#b7cbd2;line-height:1.5;margin:0}
+.club-lobby-teaser>span{white-space:nowrap;color:#061e0b;background:#00e701;padding:12px 17px;border-radius:8px;font-size:12px;font-weight:900}
+@media(max-width:600px){.club-lobby-teaser{flex-direction:column;align-items:stretch;padding:18px;gap:15px}.club-lobby-teaser>span{text-align:center}}
+
+/* Case opening: honest weighted reel and celebratory reveal. */
+.case-odds-label{font-size:11px;font-weight:800;letter-spacing:.08em;text-align:center;color:#aabfce;margin-top:8px}
+.case-reveal{margin:13px auto;display:flex;align-items:center;justify-content:center;gap:6px;flex-direction:column;background:radial-gradient(ellipse at 50% 20%,#1d5e48,#193342 75%);border:1px solid #428968;border-radius:13px;padding:16px 22px;text-align:center;position:relative;overflow:hidden;max-width:380px;animation:case-reveal-enter .7s cubic-bezier(.2,1.4,.3,1) both}
+.case-reveal.rare{border-color:#d5b56c;background:radial-gradient(ellipse at 50% 20%,#68532e,#202d36 76%);box-shadow:0 0 45px #ffc25250}
+.case-reveal-shine{font-size:26px;color:#8dffb4;animation:case-spark-spin 1.2s ease-out both}
+.case-reveal.rare .case-reveal-shine{color:#ffe387}
+.case-reveal b{font-size:10px;letter-spacing:.2em;color:#99f6b6}
+.case-reveal.rare b{color:#ffdb88}
+.case-reveal strong{font-size:20px;color:white}
+.case-reveal>span:last-child{font-size:12px;color:#c3d8dc}
+@keyframes case-reveal-enter{0%{opacity:0;transform:translateY(24px) scale(.78)}65%{opacity:1;transform:translateY(-4px) scale(1.05)}100%{transform:none}}
+@keyframes case-spark-spin{0%{opacity:0;transform:scale(.1) rotate(-60deg)}65%{opacity:1;transform:scale(1.4) rotate(25deg)}100%{transform:scale(1) rotate(0)}}
+@media(prefers-reduced-motion:reduce){.case-reveal,.case-reveal-shine{animation:none}}
