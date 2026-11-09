@@ -127,7 +127,7 @@ test("Mines Battles stays separate from Club and Play USD wallet",()=>{
  assert.match(src,/currentUser\(request,env\)/);
  assert.match(src,/sameOrigin\(request\)/);
  assert.match(src,/hitRateLimit/);
- assert.doesNotMatch(src,/club_|community_transfers|balance_cents|Play USD/);
+ assert.doesNotMatch(src,/club_|community_transfers|balance_cents|credit\(|debit\(/);
  assert.match(app,/path="mines-battles" element=\{<MinesBattles \/>/);
  assert.match(game,/to="\/mines-battles"/);
  assert.doesNotMatch(app,/path="club"/);
