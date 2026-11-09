@@ -7,7 +7,7 @@ import { useWallet } from "../state/wallet";
 
 const FEATURED = ["plinko", "crash", "cases", "chicken", "darts"];
 const GROUPS = [
-  { id: "all", label: "For you" },
+  { id: "all", label: "All games" },
   { id: "instant", label: "Instant" },
   { id: "table", label: "Tables" },
   { id: "climb", label: "Climb" },
@@ -20,7 +20,7 @@ const GROUP_IDS: Record<string, string[] | null> = {
 };
 
 export function Lobby() {
-  const { query } = useOutletContext<ShellContext>();
+  const { query, setQuery } = useOutletContext<ShellContext>();
   const { history } = useWallet();
   const [group, setGroup] = useState<(typeof GROUPS)[number]["id"]>("all");
   const q = query.trim().toLowerCase();
@@ -39,13 +39,13 @@ export function Lobby() {
     <section className="lobby">
       <div className="home-hero">
         <div>
-          <p className="kicker">Originals</p>
-          <h1>Blockbet</h1>
-          <p>Instant games. Wins land on your balance the moment they settle.</p>
+          <p className="kicker">Play money</p>
+          <h1>Casino lobby</h1>
+          <p>Play with demo credits. No deposits or withdrawals.</p>
         </div>
-        <Link to="/stats" className="hero-metrics">
+        <Link to="/stats" className="hero-metrics" aria-label="View play stats">
           <span>
-            <small>Net</small>
+            <small>Net result</small>
             <b className={profit > 0 ? "pos" : profit < 0 ? "neg" : ""}>{formatUSD(profit)}</b>
           </span>
           <span>
@@ -58,50 +58,55 @@ export function Lobby() {
           </span>
         </Link>
       </div>
-      <div className="reward-banner">
-        <div>
-          <p>Blockbet Rewards</p>
-          <strong>Play the originals. Wins land on your balance.</strong>
-          <Link to="/stats">View stats</Link>
+      <div className="lobby-tools">
+        <label className="search lobby-search">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="5.5" />
+            <path d="m15 15 4 4" />
+          </svg>
+          <input type="search" aria-label="Search games" placeholder="Search games" value={query} onChange={(event) => setQuery(event.target.value)} />
+        </label>
+        <div className="chip-row" role="group" aria-label="Game categories">
+          {GROUPS.map((item) => (
+            <button key={item.id} type="button" aria-pressed={group === item.id} onClick={() => setGroup(item.id)}>
+              {item.label}
+            </button>
+          ))}
         </div>
-      </div>
-      <div className="chip-row">
-        {GROUPS.map((item) => (
-          <button key={item.id} type="button" className={group === item.id ? "on" : ""} onClick={() => setGroup(item.id)}>
-            {item.label}
-          </button>
-        ))}
       </div>
       {games.length === 0 ? (
         <p className="empty-row">No games match that search.</p>
       ) : (
         <>
           {featured.length > 0 ? (
-            <div className="feature-grid">
-              {featured.map((game) => (
-                <Link key={game.id} to={`/game/${game.id}`} className="tile feature">
-                  <span className="tile-art">
-                    <img src={`/covers/cover-${game.id}.jpg`} alt="" />
-                    <span className="tile-name">
-                      <b>{game.name}</b>
-                      <small>{game.blurb}</small>
+            <>
+              <div className="section-label"><h2>Featured games</h2></div>
+              <div className="feature-grid">
+                {featured.map((game) => (
+                  <Link key={game.id} to={`/game/${game.id}`} className="tile feature">
+                    <span className="tile-art">
+                      <img src={`/covers/cover-${game.id}.jpg`} alt="" />
+                      <span className="tile-name">
+                        <b>{game.name}</b>
+                        <small>{game.blurb}</small>
+                      </span>
                     </span>
-                  </span>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            </>
           ) : null}
           <div className="section-label">
-            <h2>{group === "all" ? "All games" : GROUPS.find((item) => item.id === group)?.label}</h2>
+            <h2>{q ? "Search results" : featured.length ? "More games" : GROUPS.find((item) => item.id === group)?.label}</h2>
             <span>
               {rest.length} {rest.length === 1 ? "game" : "games"}
             </span>
           </div>
           <div className="tile-grid">
-            {rest.map((game, index) => (
-              <Link key={game.id} to={`/game/${game.id}`} className="tile" style={{ animationDelay: `${index * 30}ms` }}>
+            {rest.map((game) => (
+              <Link key={game.id} to={`/game/${game.id}`} className="tile">
                 <span className="tile-art">
-                  <img src={`/covers/cover-${game.id}.jpg`} alt="" />
+                  <img src={`/covers/cover-${game.id}.jpg`} alt="" loading="lazy" />
                   <span className="tile-name">{game.name}</span>
                 </span>
               </Link>
