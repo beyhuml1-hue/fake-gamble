@@ -169,7 +169,7 @@ export function MinesBattles(){
              <button className="mb-secondary" onClick={()=>openRoom(r.id)}>View</button></article>):
              <div className="mb-empty">No completed matches yet.</div>}
          </section>
-       </div>)}
+       </div>}
     </>}
    <footer className="mb-footer">Mines Battles are free fictional-credit-free games. No bots, deposits, withdrawals or real-world prizes. All opponents are signed-in players.</footer>
  </main>;
