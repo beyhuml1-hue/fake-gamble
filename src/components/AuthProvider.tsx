@@ -130,8 +130,8 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
 
   async function submitSignup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(""); setNotice("");
-    if (password.length < 12 || password.length > 128) {
-      setError("Choose a password with at least 12 characters."); return;
+    if (password.length < 6 || password.length > 128) {
+      setError("Choose a password with at least 6 characters."); return;
     }
     if (password !== confirm) { setError("Your passwords don't match."); return; }
     setBusy(true);
@@ -249,9 +249,9 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
               <label htmlFor="account-password">Password</label>
               <div className="auth-password-wrap">
                 <input id="account-password" name="password" type={visible ? "text" : "password"}
-                  placeholder={phase === "signup" ? "At least 12 characters" : "Enter your password"}
+                  placeholder={phase === "signup" ? "At least 6 characters" : "Enter your password"}
                   autoComplete={phase === "signup" ? "new-password" : "current-password"}
-                  minLength={phase === "signup" ? 12 : 1} maxLength={128}
+                  minLength={phase === "signup" ? 6 : 1} maxLength={128}
                   required value={password} onChange={e => setPassword(e.target.value)} disabled={busy} />
                 <button type="button" aria-label={visible ? "Hide password" : "Show password"}
                   onClick={() => setVisible(v => !v)}>{visible ? "Hide" : "Show"}</button>
@@ -261,9 +261,9 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
                   <label htmlFor="account-confirm">Confirm password</label>
                   <input id="account-confirm" name="confirm" type={visible ? "text" : "password"}
                     autoComplete="new-password" placeholder="Repeat your password"
-                    minLength={12} maxLength={128} required value={confirm}
+                    minLength={6} maxLength={128} required value={confirm}
                     onChange={e => setConfirm(e.target.value)} disabled={busy} />
-                  <small className="auth-password-hint">Use 12 or more characters.</small>
+                  <small className="auth-password-hint">Use at least 6 characters. Longer passwords are safer.</small>
                 </>
               )}
               <button className="bet-btn auth-submit" type="submit" disabled={busy}>

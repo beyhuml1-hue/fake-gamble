@@ -11,7 +11,7 @@ export function configured(env) {
 }
 
 export function validPassword(password) {
-  return typeof password === "string" && password.length >= 12 &&
+  return typeof password === "string" && password.length >= 6 &&
     password.length <= 128 && password.trim().length > 0 &&
     new TextEncoder().encode(password).length <= 512;
 }

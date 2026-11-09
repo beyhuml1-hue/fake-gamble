@@ -6,7 +6,10 @@ import {
 
 test("password rules accept passphrases and block very short or huge inputs", () => {
   assert.equal(validPassword("a secure passphrase here"), true);
-  assert.equal(validPassword("short123"), false);
+  assert.equal(validPassword("123456"), true);
+  assert.equal(validPassword("short123"), true);
+  assert.equal(validPassword("12345"), false);
+  assert.equal(validPassword("a".repeat(6)), true);
   assert.equal(validPassword(" ".repeat(20)), false);
   assert.equal(validPassword("a".repeat(129)), false);
   assert.equal(PASSWORD_ITERATIONS, 100000);

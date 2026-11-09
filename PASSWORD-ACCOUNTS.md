@@ -2,7 +2,7 @@
 
 The casino at `playblockbet.com` is hosted on the `fake-gamble` Cloudflare Worker; the separate `blockbet-auth` Worker handles `playblockbet.com/api/auth/*`.
 
-**Sign up:** email + password (12–128 characters) → a six-digit one-time code is emailed → enter code within 10 minutes → account created and session issued.
+**Sign up:** email + password (6–128 characters) → a six-digit one-time code is emailed → enter code within 10 minutes → account created and session issued.
 
 **Log in:** email + password → seven-day HttpOnly Secure SameSite cookie. No OTP is required for ordinary logins.
 

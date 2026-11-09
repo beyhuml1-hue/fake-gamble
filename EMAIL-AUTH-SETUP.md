@@ -2,7 +2,7 @@
 
 BlockBet now offers separate **Sign up** and **Log in** forms with passwords.
 
-- **Sign up**: email + a password of at least 12 characters, then verify ownership using the six-digit code sent by Resend.
+- **Sign up**: email + a password of at least 6 characters, then verify ownership using the six-digit code sent by Resend.
 - **Log in**: email + password. Email is not sent for routine logins.
 - **Guest**: play locally without an online account.
 

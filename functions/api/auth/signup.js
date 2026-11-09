@@ -13,7 +13,7 @@ export async function onRequestPost({ request, env }) {
   const input = await readBody(request);
   const email = validEmail(input?.email);
   if (!email || !validPassword(input?.password))
-    return json({error:"Enter a valid email and a password of 12–128 characters."},400);
+    return json({error:"Enter a valid email and a password of 6–128 characters."},400);
   const now=Date.now();
   try {
     const ip=request.headers.get("CF-Connecting-IP") || "unknown";
