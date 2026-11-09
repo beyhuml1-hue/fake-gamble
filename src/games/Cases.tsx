@@ -23,8 +23,18 @@ function pickDrop(drops: CaseDrop[]) {
   return drops[0]!;
 }
 
+function weightedDrop(drops: CaseDrop[]) {
+  const total = drops.reduce((sum, drop) => sum + drop.weight, 0);
+  let roll = random() * total;
+  for (const drop of drops) {
+    roll -= drop.weight;
+    if (roll < 0) return drop;
+  }
+  return drops[drops.length - 1]!;
+}
 function fill(drops: CaseDrop[], count: number) {
-  return Array.from({ length: count }, () => drops[Math.floor(random() * drops.length)]!);
+  // Visual reel uses the same item odds as the actual drop, not uniform odds.
+  return Array.from({ length: count }, () => weightedDrop(drops));
 }
 
 export function Cases() {
@@ -168,6 +178,15 @@ export function Cases() {
               </div>
             ))}
           </div>
+          <div className="case-odds-label">Published item chances · {box.drops.reduce((sum, drop) => sum + drop.weight, 0)}% total</div>
+          {result && (
+            <div key={result.item.id} className={result.weight <= 5 ? "case-reveal rare" : "case-reveal"} role="status">
+              <span className="case-reveal-shine" aria-hidden="true">✦</span>
+              <b>{result.weight <= 5 ? "RARE DROP!" : "CASE OPENED"}</b>
+              <strong>{result.item.name}</strong>
+              <span>{formatUSD(Math.round(result.item.worth * 100))} · {((result.item.worth / box.price) || 0).toFixed(2)}× value</span>
+            </div>
+          )}
           <p className={result == null ? "result-line" : result.item.worth > box.price ? "result-line win" : "result-line lose"}>
             {result == null ? "Open the case" : `${result.item.name} · ${formatUSD(Math.round(result.item.worth * 100))}`}
           </p>

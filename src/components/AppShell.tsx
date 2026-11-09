@@ -8,6 +8,7 @@ import { useWallet } from "../state/wallet";
 import { BetsTable } from "./BetsTable";
 import { Cashier } from "./Cashier";
 import { Icon } from "./Icons";
+import { HighlightToast } from "./Highlights";
 
 export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>> };
 
@@ -180,6 +181,7 @@ export function AppShell() {
       </div>
 
       <Cashier open={walletOpen} onClose={() => setWalletOpen(false)} />
+      <HighlightToast />
     </div>
   );
 }

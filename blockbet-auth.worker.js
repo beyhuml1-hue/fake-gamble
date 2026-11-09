@@ -16,8 +16,11 @@ import { onRequestGet as liveBets, onRequestPost as postLiveBet } from "./functi
 import { onRequestGet as getAccount, onRequestPost as updateAccount } from "./functions/api/auth/admin.js";
 
 import { onRequestGet as community, onRequestPost as postCommunity } from "./functions/api/auth/community.js";
+import { onRequestGet as club, onRequestPost as postClub } from "./functions/api/auth/club.js";
 
 const routes = {
+  "GET /api/auth/club": club,
+  "POST /api/auth/club": postClub,
   "GET /api/auth/community": community,
   "POST /api/auth/community": postCommunity,
   "GET /api/auth/admin": getAccount,

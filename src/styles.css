@@ -1733,3 +1733,22 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
  .reference-coin-scene.is-flipping .reference-coin-body { transition-duration: .01ms; animation: none; }
  .flip-outcome.flip-win, .flip-outcome.flip-loss, .flip-sparks i { animation: none; }
 }
+
+
+/* Shareable fictional-result highlight + celebration. */
+.highlight-toast{position:fixed;bottom:24px;right:22px;z-index:600;width:min(360px,calc(100vw - 40px));display:flex;flex-direction:column;gap:8px;padding:20px;border:1px solid #69dc80;border-radius:14px;background:linear-gradient(125deg,#184c35,#133038);color:white;box-shadow:0 0 44px #00e70145;animation:highlight-enter .45s cubic-bezier(.2,1.4,.3,1)}
+.highlight-toast>strong{color:#a2ffab;font-size:18px}.highlight-toast>span{font-size:12px;color:#d2e3e5}
+.highlight-toast>div:last-child{display:flex;gap:8px}.highlight-toast>div:last-child>*{border:1px solid #668f78;background:#2a5842;color:white;border-radius:7px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer}
+.highlight-toast .highlight-close{align-self:flex-end;position:absolute;top:7px;right:11px;color:white;border:0;background:none;font-size:24px}
+.highlight-page{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:25px 15px}
+.highlight-frame{width:min(450px,100%);margin:0 auto}
+.highlight-recap{min-height:370px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:1px solid #396477;border-radius:18px;background:radial-gradient(circle at 50% 45%,#21576e,#132633 70%);position:relative;overflow:hidden;text-align:center;box-shadow:0 20px 50px #0004;animation:highlight-enter .75s cubic-bezier(.2,1.4,.3,1) both}
+.highlight-recap.won{border-color:#74da8a;background:radial-gradient(circle at 50% 45%,#226848,#122a35 70%);box-shadow:0 0 60px #00e70138}
+.highlight-recap>small{z-index:1;color:#a7bac9;font-size:10px;letter-spacing:.13em;font-weight:850}.highlight-recap .highlight-game{z-index:1;font-size:24px;font-weight:800}.highlight-recap>strong{z-index:1;font-size:85px;line-height:1;color:#fff;text-shadow:0 0 26px #00e70185;animation:highlight-mult .8s both}.highlight-recap>p{z-index:1;color:#d4e3e9;font-size:14px;margin:0}.highlight-win{z-index:1;color:#9efca8;font-weight:900;letter-spacing:.1em}.highlight-loss{z-index:1;color:#ffb2ba;font-weight:900}
+.highlight-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;justify-content:center;align-items:center}.highlight-buttons a{font-size:12px;color:#b3d9be;padding:10px}
+.highlight-confetti{position:absolute;inset:0;pointer-events:none}.highlight-confetti i{position:absolute;top:45%;left:50%;width:7px;height:13px;background:#68e48a;animation:highlight-confetti 1.3s ease-out both;transform-origin:center}.highlight-confetti i:nth-child(2n){background:#ffdd7e}.highlight-confetti i:nth-child(3n){background:#8eceff}.highlight-confetti i:nth-child(n+9){animation-delay:.12s}.highlight-confetti i:nth-child(1){--x:120px;--y:-140px}.highlight-confetti i:nth-child(2){--x:-115px;--y:-180px}.highlight-confetti i:nth-child(3){--x:170px;--y:-55px}.highlight-confetti i:nth-child(4){--x:-165px;--y:70px}.highlight-confetti i:nth-child(5){--x:55px;--y:140px}.highlight-confetti i:nth-child(6){--x:-65px;--y:140px}.highlight-confetti i:nth-child(7){--x:160px;--y:125px}.highlight-confetti i:nth-child(8){--x:-150px;--y:-120px}.highlight-confetti i:nth-child(n+9){--x:90px;--y:-100px}.highlight-confetti.muted{display:none}
+@keyframes highlight-enter{0%{opacity:0;transform:translateY(30px) scale(.75)}75%{opacity:1;transform:translateY(-4px) scale(1.05)}100%{opacity:1;transform:none}}
+@keyframes highlight-mult{0%{transform:scale(.3);filter:blur(12px)}75%{transform:scale(1.15)}100%{transform:scale(1);filter:none}}
+@keyframes highlight-confetti{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(650deg)}}
+@media(prefers-reduced-motion:reduce){.highlight-recap,.highlight-recap>strong,.highlight-toast,.highlight-confetti i{animation:none}}
+@media(max-width:600px){.highlight-toast{right:12px;bottom:12px}}

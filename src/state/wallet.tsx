@@ -181,6 +181,7 @@ export function WalletProvider({ email, children, adjustment }: {
       if (payout <= 0) sound.lose();
       const row: BetRecord = { id: crypto.randomUUID(), game, wager, payout, at: Date.now() };
       setSaved((prev) => ({ ...prev, history: [row, ...prev.history].slice(0, 250) }));
+      window.dispatchEvent(new CustomEvent("blockbet:settled", { detail: row }));
       // Share settled bets from signed-in players only.
       // Publishing is best-effort and never changes the wallet outcome.
       if (email !== "phone") {
