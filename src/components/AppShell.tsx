@@ -85,6 +85,10 @@ export function AppShell() {
           Live Bets
         </a>
 
+        <NavLink to="/chat" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+          <span className="live-nav-dot" aria-hidden="true" /> Chat
+        </NavLink>
+
         <p className="nav-label">Originals</p>
         <nav className="game-nav">
           {GAMES.map((game) => (
@@ -168,7 +172,7 @@ export function AppShell() {
 
         <div className="content">
           <Outlet context={{ query, setQuery } satisfies ShellContext} />
-          <BetsTable />
+          {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
             <p>18+ · If gambling is a problem, visit ncpgambling.org or call 1-800-GAMBLER.</p>
           </footer>

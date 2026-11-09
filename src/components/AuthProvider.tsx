@@ -277,7 +277,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
         <button className="auth-guest-link" type="button" onClick={() => setPhase("guest")}>
           Continue as guest <span aria-hidden="true">→</span>
         </button>
-        <p className="auth-fineprint">18+ · Demo credits and game history stay on this device.</p>
+        <p className="auth-fineprint">18+ · Your game wallet and bet history stay on this device.</p>
       </section>
     </div>
   );

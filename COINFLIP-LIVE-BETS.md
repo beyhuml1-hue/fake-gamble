@@ -16,7 +16,7 @@ The coin is rendered with **CSS 3D and SVG**, not a downloadable GLB/FBX mesh; i
 
 The **Live Bets** table displays community-reported settled **fictional-credit** bets from real signed-in BlockBet sessions, rather than fabricated accounts. It polls the endpoint every five seconds, with a separate **Your bets** view. A new navigation link scrolls to the section.
 
-**Opt-in privacy**: `Share my demo bets` is off by default, and is saved on the player's browser only for that signed-in account. Changing it does not erase already-shared rows. Player labels are pseudonymous server-generated HMAC aliases, not email addresses.
+Settled bets from signed-in accounts publish automatically under pseudonymous player labels. Guest bets stay on the device.
 
 **Backend**: `GET /api/auth/live-bets` reads the latest 30 rows from the D1 `auth_live_bets` table (most recent 24 hours). `POST /api/auth/live-bets` requires an authenticated, non-banned account and an origin-valid JSON request, validates bet data and applies rate limiting. The Worker uses `blockbet-auth` D1 and does not rely on the casino's static Worker.
 
@@ -29,3 +29,9 @@ Apply `migrations/0004_live_bets.sql` to D1 database `blockbet-auth` (creates a 
 Deploy `main` to the existing `fake-gamble` Worker to publish the coin assets and new React UI. The independent LARP site is unchanged.
 
 The casino uses simulated play credits only. **No real money, deposits, real-world wagers, or cash prizes** are introduced by this feature.
+
+## Community chat and Rain
+
+Apply `migrations/0005_community.sql` after migration 0004. Deploy the auth Worker with `functions/api/auth/community.js` and the updated route table, preserving the existing secrets and bindings.
+
+Signed-in players can post messages, view pseudonymous profiles, and send Play USD from their chat balance. Chat balances start at $0 and are separate from browser game wallets. Rain opens a round every seven minutes. Players must join each round, and their shares are credited when they next open or refresh chat after the round ends.
