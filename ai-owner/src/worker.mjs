@@ -266,12 +266,16 @@ async function report(env,now=Date.now()){
  const result=await announcement(env,content,{id:"report-daemon",surface:"cron"});
  await run(env,"INSERT INTO ao_reports(day,status,content,at_ms) VALUES(?1,?2,?3,?4) ON CONFLICT(day) DO UPDATE SET status=excluded.status,content=excluded.content,at_ms=excluded.at_ms",reportDay,result.status==="sent"?"sent":"pending",content,now);
 }
+async function claimSchedule(env,job,now){
+ const result=await run(env,"INSERT OR IGNORE INTO ao_cron_runs(job,day,started_ms) VALUES(?1,?2,?3)",job,stamp(now),now);
+ return result.meta.changes===1;
+}
 async function automatic(env,now=Date.now()){
  await rain(env,now);
  const hour=new Date(now).getUTCHours(),actor={id:"auto-rewards",surface:"cron"};
- if(hour===12)await rewards(env,1,50+random(80),"surprise",actor,now);
- if(hour===18)await rewards(env,2,40+random(60),"loyalty",actor,now);
- if(hour===20){
+ if(hour===12&&await claimSchedule(env,"surprise",now))await rewards(env,1,50+random(80),"surprise",actor,now);
+ if(hour===18&&await claimSchedule(env,"loyalty",now))await rewards(env,2,40+random(60),"loyalty",actor,now);
+ if(hour===20&&await claimSchedule(env,"giveaway",now)){
   const result=await rewards(env,3,25+random(80),"giveaway",actor,now);
   if(result.rewards.length)await announcement(env,"🎁 STAGING giveaway: "+result.rewards.length+" imaginary players received demo coins.",actor);
  }

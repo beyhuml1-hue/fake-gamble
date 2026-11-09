@@ -103,6 +103,12 @@ CREATE TABLE IF NOT EXISTS ao_reports (
  content TEXT,
  at_ms INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ao_cron_runs (
+ job TEXT NOT NULL,
+ day TEXT NOT NULL,
+ started_ms INTEGER NOT NULL,
+ PRIMARY KEY(job,day)
+);
 CREATE TABLE IF NOT EXISTS ao_rate (
  key TEXT PRIMARY KEY,
  window_start_ms INTEGER NOT NULL,
