@@ -120,7 +120,6 @@ export function Flip() {
     >
       <div className="center-stage">
         <GoldCoin3D degrees={deg} spinning={busy} />
-        <p className="gold-model-caption">Real 3D gold coin · HEADS / TAILS</p>
         <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>{line}</p>
       </div>
     </GameLayout>
