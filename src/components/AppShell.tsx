@@ -6,23 +6,8 @@ import { formatAmount } from "../lib/money";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 import { BetsTable } from "./BetsTable";
-import { Community } from "../pages/Community";
 import { Cashier } from "./Cashier";
 import { Icon } from "./Icons";
-
-const CHAT_LAYOUT = "(min-width: 1280px)";
-const CHAT_PREFERENCE = "blockbet.chat-open";
-
-function desktopChat() {
-  return window.matchMedia(CHAT_LAYOUT).matches;
-}
-
-function initialChatOpen() {
-  if (window.location.pathname === "/chat") return true;
-  if (!desktopChat()) return false;
-  try { return localStorage.getItem(CHAT_PREFERENCE) !== "closed"; }
-  catch { return true; }
-}
 
 export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>> };
 
@@ -66,37 +51,6 @@ export function AppShell() {
   const [walletOpen, setWalletOpen] = useState(false);
   const [muted, setMuted] = useState(false);
   const location = useLocation();
-  const [chatOpen, setChatOpen] = useState(initialChatOpen);
-  const [chatDocked, setChatDocked] = useState(desktopChat);
-  const chatToggle = useRef<HTMLButtonElement>(null);
-  const chatClose = useRef<HTMLButtonElement>(null);
-  const chatOverlay = chatOpen && !chatDocked;
-
-  useEffect(() => {
-    const media = window.matchMedia(CHAT_LAYOUT);
-    const update = () => setChatDocked(media.matches);
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-
-  useEffect(() => {
-    if (location.pathname === "/chat") setChatOpen(true);
-  }, [location.pathname]);
-
-  function updateChat(next: boolean) {
-    setChatOpen(next);
-    if (chatDocked) {
-      try { localStorage.setItem(CHAT_PREFERENCE, next ? "open" : "closed"); }
-      catch { /* Storage unavailable. */ }
-    }
-    if (!next) requestAnimationFrame(() => chatToggle.current?.focus());
-  }
-
-  useEffect(() => {
-    if (chatOverlay) chatClose.current?.focus();
-  }, [chatOverlay]);
-
-
 
   useEffect(() => {
     setOpen(false);
@@ -108,7 +62,7 @@ export function AppShell() {
 
   return (
     <div className="app">
-      <aside className={open ? "sidebar open" : "sidebar"} inert={chatOverlay}>
+      <aside className={open ? "sidebar open" : "sidebar"}>
         <NavLink to="/" className="brand" end>
           <span className="brand-mark">B</span>
           <span>
@@ -131,6 +85,9 @@ export function AppShell() {
           Live Bets
         </a>
 
+        <NavLink to="/chat" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+          <span className="live-nav-dot" aria-hidden="true" /> Chat
+        </NavLink>
 
         <p className="nav-label">Originals</p>
         <nav className="game-nav">
@@ -150,7 +107,7 @@ export function AppShell() {
       </aside>
       {open ? <button className="scrim" type="button" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
 
-      <div className="main" inert={chatOverlay}>
+      <div className="main">
         <header className="header">
           <button className="menu-btn" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
             <span />
@@ -215,52 +172,13 @@ export function AppShell() {
 
         <div className="content">
           <Outlet context={{ query, setQuery } satisfies ShellContext} />
-          <BetsTable />
+          {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
             <p>18+ · If gambling is a problem, visit ncpgambling.org or call 1-800-GAMBLER.</p>
           </footer>
         </div>
       </div>
 
-      <button
-        ref={chatToggle}
-        type="button"
-        className="chat-toggle"
-        aria-controls={chatOpen ? "blockbet-chat" : undefined}
-        aria-expanded={chatOpen}
-        hidden={chatOverlay}
-        onClick={() => {
-          updateChat(!chatOpen);
-          if (!chatOpen) requestAnimationFrame(() => chatClose.current?.focus());
-        }}
-      >
-        {chatOpen ? "Hide chat" : "Open chat"}
-      </button>
-      {chatOverlay && <div className="chat-backdrop" aria-hidden="true" onClick={() => updateChat(false)} />}
-      {chatOpen && (
-        <aside
-          id="blockbet-chat"
-          className="chat-sidebar"
-          aria-labelledby="chat-title"
-          role={chatOverlay ? "dialog" : undefined}
-          aria-modal={chatOverlay || undefined}
-          onKeyDown={event => {
-            if (event.key === "Escape") updateChat(false);
-            if (event.key !== "Tab" || !chatOverlay) return;
-            const targets = event.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), [tabindex='0']");
-            const first = targets[0];
-            const last = targets[targets.length - 1];
-            if (event.shiftKey && event.target === first) { event.preventDefault(); last?.focus(); }
-            else if (!event.shiftKey && event.target === last) { event.preventDefault(); first?.focus(); }
-          }}
-        >
-          <header className="chat-sidebar-heading">
-            <h2 id="chat-title">Chat</h2>
-            <button ref={chatClose} type="button" className="chat-close" onClick={() => updateChat(false)}>Close chat</button>
-          </header>
-          <Community />
-        </aside>
-      )}
       <Cashier open={walletOpen} onClose={() => setWalletOpen(false)} />
     </div>
   );

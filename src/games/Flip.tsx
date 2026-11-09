@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { GoldCoin3D } from "../components/GoldCoin3D";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatUSD, payout } from "../lib/money";
@@ -118,20 +119,8 @@ export function Flip() {
       }
     >
       <div className="center-stage">
-        <div className="flip-coin-scene" role="img" aria-label={busy ? "Coin spinning" : `3D coin displaying ${landed ?? "heads"}`}>
-          <div className={busy ? "flip-coin-3d is-flipping" : "flip-coin-3d"} style={{ transform: `rotateY(${deg}deg)` }}>
-            <div className="flip-coin-edge" aria-hidden="true" />
-            <div className="flip-coin-face front" aria-hidden="true">
-              <img src="/coin/heads.svg" alt="" draggable={false}/>
-            </div>
-            <div className="flip-coin-face back" aria-hidden="true">
-              <img src="/coin/tails.svg" alt="" draggable={false}/>
-            </div>
-          </div>
-          <span className="flip-coin-particle" aria-hidden="true"/>
-        </div>
-        <div className="flip-coin-legend" aria-hidden="true"><span>◉ <strong>HEADS</strong></span><span>◉ <strong>TAILS</strong></span></div>
-        <p className="flip-coin-caption">Silver-rimmed 3D BlockBet coin · 50/50 landing odds</p>
+        <GoldCoin3D degrees={deg} spinning={busy} />
+        <p className="gold-model-caption">Real 3D gold coin · HEADS / TAILS</p>
         <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>{line}</p>
       </div>
     </GameLayout>
