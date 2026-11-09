@@ -170,8 +170,7 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
         {phase === "unavailable" ? (
           <>
             <h1>Accounts are temporarily unavailable</h1>
-            <p>You can continue playing with browser-local guest credits while the account service is being fixed.</p>
-            <button className="bet-btn auth-submit" type="button" onClick={() => setPhase("guest")}>Continue as guest</button>
+            <p>You can still play as a guest. Your balance stays on this device.</p>
             <button type="button" className="auth-back" onClick={() => window.location.reload()}>Try again</button>
           </>
         ) : phase === "verify" ? (
@@ -194,8 +193,8 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
           </>
         ) : (
           <>
-            <h1>{phase === "signup" ? "Create an account" : "Welcome back"}</h1>
-            <p>{phase === "signup" ? "Sign up with your email and password. We'll send a code to verify your email." : "Log in to your BlockBet account with your email and password."}</p>
+            <h1>{phase === "signup" ? "Create an account" : "Log in"}</h1>
+            <p>{phase === "signup" ? "We'll email you a six-digit code to confirm your address." : "Enter your email and password to access your account."}</p>
             <div className="auth-switch" role="group" aria-label="Account access">
               <button type="button" className={phase === "login" ? "selected" : ""} onClick={() => switchTo("login")} aria-pressed={phase === "login"}>Log in</button>
               <button type="button" className={phase === "signup" ? "selected" : ""} onClick={() => switchTo("signup")} aria-pressed={phase === "signup"}>Sign up</button>
@@ -222,7 +221,7 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
                     autoComplete="new-password" placeholder="Repeat your password"
                     minLength={12} maxLength={128} required value={confirm}
                     onChange={e => setConfirm(e.target.value)} disabled={busy} />
-                  <small className="auth-password-hint">Use 12 or more characters. Don't reuse an important password.</small>
+                  <small className="auth-password-hint">Use 12 or more characters.</small>
                 </>
               )}
               <button className="bet-btn auth-submit" type="submit" disabled={busy}>
@@ -236,7 +235,7 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
         <button className="auth-guest-link" type="button" onClick={() => setPhase("guest")}>
           Continue as guest <span aria-hidden="true">→</span>
         </button>
-        <p className="auth-fineprint">18+ only. Your email is verified during sign-up. Demo credits and game history are still saved locally on this device, not in an online wallet.</p>
+        <p className="auth-fineprint">18+ · Demo credits and game history stay on this device.</p>
       </section>
     </div>
   );

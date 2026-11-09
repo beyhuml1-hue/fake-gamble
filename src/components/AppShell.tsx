@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { GAMES } from "../data/games";
 import { useAuth } from "./AuthProvider";
@@ -9,7 +9,7 @@ import { BetsTable } from "./BetsTable";
 import { Cashier } from "./Cashier";
 import { Icon } from "./Icons";
 
-export type ShellContext = { query: string };
+export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>> };
 
 function useRollingBalance(cents: number) {
   const [shown, setShown] = useState(cents);
@@ -66,8 +66,8 @@ export function AppShell() {
         <NavLink to="/" className="brand" end>
           <span className="brand-mark">B</span>
           <span>
-            <strong>Blockbet</strong>
-            <small>USD</small>
+            <strong>BlockBet</strong>
+            <small>Play USD</small>
           </span>
         </NavLink>
 
@@ -101,19 +101,12 @@ export function AppShell() {
 
       <div className="main">
         <header className="header">
-          <button className="menu-btn" type="button" aria-label="Open menu" onClick={() => setOpen(true)}>
+          <button className="menu-btn" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
             <span />
             <span />
             <span />
           </button>
-          <label className="search">
-            <span aria-hidden="true">⌕</span>
-            <input
-              value={query}
-              placeholder="Search games"
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </label>
+          <NavLink to="/" className="mobile-brand" end>BlockBet</NavLink>
           <nav className="head-links">
             <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : "")}>
               Casino
@@ -126,7 +119,7 @@ export function AppShell() {
             <span className="usd-mark">$</span>
             <span className="bal">
               <strong>{formatAmount(rolling.shown)}</strong>
-              <small>USD</small>
+              <small>Play USD</small>
             </span>
             <button type="button" className="wallet-btn" onClick={openCashier}>
               Wallet
@@ -156,10 +149,10 @@ export function AppShell() {
             {accountOpen && (
               <div className="account-menu">
                 <strong>{accountEmail || "Guest profile"}</strong>
-                <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Email verified • wallet stored on this device"}</p>
+                <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · wallet saved on this device"}</p>
                 {isGuest
                   ? (canSignIn
-                      ? <button type="button" onClick={showSignIn}>Sign in with email</button>
+                      ? <button type="button" onClick={showSignIn}>Log in or sign up</button>
                       : <p className="account-menu-note">Email sign-in is not configured yet.</p>)
                   : <button type="button" onClick={() => { setAccountOpen(false); void logout(); }}>Sign out</button>}
               </div>
@@ -168,7 +161,7 @@ export function AppShell() {
         </header>
 
         <div className="content">
-          <Outlet context={{ query } satisfies ShellContext} />
+          <Outlet context={{ query, setQuery } satisfies ShellContext} />
           <BetsTable />
           <footer className="site-foot">
             <p>18+ · If gambling is a problem, visit ncpgambling.org or call 1-800-GAMBLER.</p>
