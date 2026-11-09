@@ -109,13 +109,11 @@ export function Community() {
   }
 
   if (isGuest) return <section className="community-page">
-    <h1>Chat</h1>
     <p>Log in to chat, send Play USD, and join Rain.</p>
     {canSignIn && <button type="button" className="bet-btn" onClick={showSignIn}>Log in</button>}
   </section>;
 
   if (!board) return <section className="community-page">
-    <h1>Chat</h1>
     <p role="status">{offline ? "Chat is unavailable. Trying again…" : "Opening chat…"}</p>
   </section>;
 
@@ -123,7 +121,6 @@ export function Community() {
   return (
     <section className="community-page">
       <header className="community-heading">
-        <h1>Chat</h1>
         <span>Chat balance <strong>{formatUSD(board.profile.cents)}</strong></span>
       </header>
       <section className="community-rain" aria-labelledby="rain-title">
