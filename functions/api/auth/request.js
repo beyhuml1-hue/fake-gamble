@@ -25,6 +25,7 @@ export async function sendCode(email, request, env) {
 
     let sentSuccessfully = false;
     let providerCode = null;
+    let providerMessage = "";
     const subject = "Verify your BlockBet account";
     const textMessage = "Your BlockBet verification code is " + code + ". It expires in 10 minutes. If you did not request it, ignore this email.";
     const htmlMessage = '<div style="font-family:Arial,sans-serif;background:#0f212e;color:white;padding:30px;border-radius:12px"><h1 style="color:#00e701">BlockBet</h1><p>Your one-time verification code is:</p><p style="font-size:38px;letter-spacing:10px;font-weight:bold">' + code + '</p><p>This code expires in 10 minutes. Do not share it with anyone.</p><small>If you did not request this code, ignore this email.</small></div>';
@@ -53,11 +54,26 @@ export async function sendCode(email, request, env) {
         });
         sentSuccessfully = sent.ok;
         providerCode = sent.status;
+        if (!sent.ok) {
+          const problem = await sent.json().catch(() => ({}));
+          const reason = typeof problem?.name === "string" &&
+            /^[a-zA-Z0-9_-]{1,60}$/.test(problem.name) ? problem.name : "unknown";
+          // Avoid writing the API key, email address, or raw provider message to logs.
+          console.warn("Resend rejected verification email", { status: sent.status, reason });
+          if (sent.status === 401) providerMessage = "Resend rejected the API key (HTTP 401). The key must be replaced.";
+          else if (sent.status === 403) providerMessage = "Resend blocked sending (HTTP 403). Confirm your sender domain is Verified and your account can email this address.";
+          else if (sent.status === 422) providerMessage = "Resend rejected the sender or recipient (HTTP 422). Check the sender domain in Resend.";
+          else if (sent.status === 429) providerMessage = "Resend email limit reached (HTTP 429). Try again later.";
+          else providerMessage = "Resend rejected the email (HTTP " + sent.status + "; " + reason + ").";
+        }
       }
-    } catch { /* Delivery failed. */ }
+    } catch {
+      providerMessage = "Could not connect to the email service. Please retry.";
+      console.warn("Email provider connection failed");
+    }
     if (!sentSuccessfully) {
       await env.DB.prepare("DELETE FROM auth_otp WHERE email = ?1 AND digest = ?2").bind(email, codeHash).run();
-      return json({ error: "We couldn't send the email. Please try again later." }, 502);
+      return json({ error: providerMessage || "Email sending failed. Please try again later." }, 502);
     }
     return json({ ok: true, message: "A six-digit code has been sent. Check your inbox and spam folder." });
   } catch {
