@@ -2,9 +2,9 @@ import { configured, currentUser, digest, hitRateLimit, json, readBody, sameOrig
 
 // BlockBet Club is a separate, server-managed, fictional-points game layer.
 // Club Points cannot be exchanged for casino Play USD or real-world value.
-const ROUND_MS = 120000;
+const CLUB_ROUND_MS = 120000;
 const PACK_COST = 80;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CLUB_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AVATARS = ["🪙","🦊","🐲","👑","💎","⚡","🐼","🚀","🎮","🌙","🔥","🦁"];
 const BANNERS = ["emerald","midnight","royal","sunset","ocean"];
 const PRIZES = [
@@ -91,7 +91,7 @@ async function awardChampion(env,now) {
  }
 }
 async function publicState(env,user,now) {
- const day=dayKey(now), week=monday(now), round=Math.floor(now/ROUND_MS);
+ const day=dayKey(now), week=monday(now), round=Math.floor(now/CLUB_ROUND_MS);
  await refundExpiredDuels(env,now);
  await settleJackpot(env,round-1,now);
  const [
@@ -119,7 +119,7 @@ async function publicState(env,user,now) {
  return json({
    profile, people, boardWeek, boardDay, inventory:inventory.map(x=>x.item),
    prizes:PRIZES.map(({weight,...r})=>({...r,chance:weight})),
-   duels, jackpot:{round,endsAt:(round+1)*ROUND_MS,entrants:jackpot,
+   duels, jackpot:{round,endsAt:(round+1)*CLUB_ROUND_MS,entrants:jackpot,
       pot:jackpot.reduce((sum,e)=>sum+e.stake,0),previous:prevJackpot},
    friends:friends.map(f=>({id:f.id,handle:f.handle,avatar:f.avatar,online:f.online,accepted:f.accepted,incoming:f.requester!==user.id && !f.accepted})),
    party:party?{...party,members:partyMembers.filter(x=>x.code===party.code)}:null,
@@ -167,7 +167,7 @@ export async function onRequestPost({request,env}){
     ]);
   }else if(action==="pack"){
     const id=input.id;
-    if(typeof id!=="string"||!UUID.test(id))return bad("Invalid pack request.");
+    if(typeof id!=="string"||!CLUB_UUID.test(id))return bad("Invalid pack request.");
     const previous=await first(env,"SELECT item,rarity FROM club_packs WHERE id=?1 AND user_id=?2",id,user.id);
     if(previous)return json({ok:true,drop:previous});
     const count=await first(env,"SELECT COUNT(*) AS n FROM club_packs WHERE user_id=?1 AND opened_ms>=?2",user.id,Date.parse(day+"T00:00:00Z"));
@@ -215,7 +215,7 @@ export async function onRequestPost({request,env}){
     await env.DB.prepare("DELETE FROM club_party_members WHERE user_id=?1").bind(user.id).run();
   }else if(action==="duel-create"){
     const stake=input.stake,side=input.side,id=input.id;
-    if(![20,50,100,200].includes(stake)||!["heads","tails"].includes(side)||typeof id!=="string"||!UUID.test(id))return bad("Choose a valid battle.");
+    if(![20,50,100,200].includes(stake)||!["heads","tails"].includes(side)||typeof id!=="string"||!CLUB_UUID.test(id))return bad("Choose a valid battle.");
     await env.DB.batch([
       env.DB.prepare("INSERT OR IGNORE INTO club_duels(id,maker,stake,maker_side,created_ms,expires_ms) SELECT ?1,user_id,?3,?4,?5,?6 FROM club_players WHERE user_id=?2 AND points>=?3 AND NOT EXISTS(SELECT 1 FROM club_duels WHERE maker=?2 AND joiner IS NULL)")
         .bind(id,user.id,stake,side,now,now+10*60000),
@@ -225,7 +225,7 @@ export async function onRequestPost({request,env}){
     if(!created)return bad("Not enough Club Points or you already have an open battle.",409);
   }else if(action==="duel-join"){
     const id=input.id;
-    if(typeof id!=="string"||!UUID.test(id))return bad("Invalid battle.");
+    if(typeof id!=="string"||!CLUB_UUID.test(id))return bad("Invalid battle.");
     const candidate=await first(env,"SELECT maker,stake,maker_side,joiner,expires_ms FROM club_duels WHERE id=?1",id);
     if(!candidate||candidate.maker===user.id||candidate.joiner||candidate.expires_ms<=now)return bad("Battle is unavailable.",409);
     const enough=await first(env,"SELECT points FROM club_players WHERE user_id=?1",user.id);
@@ -245,13 +245,13 @@ export async function onRequestPost({request,env}){
     return json({ok:true,outcome:finished.outcome,won:finished.winner_id===user.id});
   }else if(action==="duel-cancel"){
     const id=input.id;
-    if(typeof id!=="string"||!UUID.test(id))return bad("Invalid battle.");
+    if(typeof id!=="string"||!CLUB_UUID.test(id))return bad("Invalid battle.");
     await env.DB.batch([
       env.DB.prepare("INSERT OR IGNORE INTO club_points_ledger(ref,user_id,delta,created_ms) SELECT ?1,maker,stake,?3 FROM club_duels WHERE id=?2 AND maker=?4 AND joiner IS NULL").bind("duel:refund:"+id,id,now,user.id),
       env.DB.prepare("DELETE FROM club_duels WHERE id=?1 AND maker=?2 AND joiner IS NULL").bind(id,user.id),
     ]);
   }else if(action==="jackpot-join"){
-    const stake=input.stake,round=input.round,nowRound=Math.floor(now/ROUND_MS);
+    const stake=input.stake,round=input.round,nowRound=Math.floor(now/CLUB_ROUND_MS);
     if(![20,50,100,200].includes(stake)||round!==nowRound)return bad("Jackpot round has changed.",409);
     await env.DB.batch([
       env.DB.prepare("INSERT OR IGNORE INTO club_jackpot_entries(round,user_id,stake,joined_ms) SELECT ?1,user_id,?3,?4 FROM club_players WHERE user_id=?2 AND points>=?3 AND CAST(unixepoch()*1000 / 120000 AS INTEGER)=?1").bind(round,user.id,stake,now),
