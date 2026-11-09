@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { CARD_START_CENTS } from "../lib/card";
 import { MAX_BALANCE, START_CENTS } from "../lib/money";
+import type { BalanceAdjustment } from "../components/AuthProvider";
 import { sound } from "../lib/sound";
 
 const LEGACY_BALANCE = "fakegamble.playusd.v3";
@@ -25,6 +26,7 @@ export type LedgerRow = {
 };
 
 type Saved = {
+  balanceRevision?: string;
   balance: number;
   card: number;
   history: BetRecord[];
@@ -84,6 +86,7 @@ function load(email: string): Saved {
     try {
       const parsed = JSON.parse(raw) as Saved;
       return {
+        balanceRevision: typeof parsed.balanceRevision === "string" ? parsed.balanceRevision : undefined,
         balance: clamp(Number(parsed.balance) || 0),
         card: Math.max(0, Math.round(Number(parsed.card) || 0)),
         history: readHistory(JSON.stringify(parsed.history ?? [])),
@@ -122,8 +125,19 @@ function reference() {
   return `BB-${buf[0]!.toString(16).toUpperCase().padStart(8, "0")}`;
 }
 
-export function WalletProvider({ email, children }: { email: string; children: ReactNode }) {
-  const [saved, setSaved] = useState<Saved>(() => load(email));
+function applyAdjustment(saved: Saved, adjustment?: BalanceAdjustment | null): Saved {
+  if (!adjustment || adjustment.revision === saved.balanceRevision) return saved;
+  return { ...saved, balance: clamp(adjustment.cents), balanceRevision: adjustment.revision };
+}
+
+export function WalletProvider({ email, children, adjustment }: {
+  email: string;
+  children: ReactNode;
+  adjustment?: BalanceAdjustment | null;
+}) {
+  const [stored, setSaved] = useState<Saved>(() => applyAdjustment(load(email), adjustment));
+  const saved = applyAdjustment(stored, adjustment);
+  if (saved !== stored) setSaved(saved);
   const [cashierNonce, setCashierNonce] = useState(0);
   const balanceRef = useRef(saved.balance);
   const cardRef = useRef(saved.card);

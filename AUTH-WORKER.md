@@ -16,3 +16,9 @@ Cloudflare Workers, rather than Pages, serve the live `playblockbet.com` domain.
 The Worker can be deployed as an ES module with `blockbet-auth.worker.js` as the main module and the existing six handler files plus `functions/_shared/auth.js` as dependent modules. Add a Workers **Route**, not a Custom Domain, to the existing `playblockbet.com` DNS zone. Cloudflare Workers Routes take precedence over Workers Custom Domains for more specific paths. See [routing documentation](https://developers.cloudflare.com/workers/configuration/routing/routes/).
 
 Email Sending setup: in Cloudflare select **Compute → Email Service → Email Sending → Onboard Domain → playblockbet.com**. Cloudflare Email Sending may require a Workers Paid plan to send to arbitrary addresses. Do not enable a paid plan without explicit authorization.
+
+## Owner account controls
+
+Apply `migrations/0003_account_controls.sql` to the auth D1 database before deploying the updated auth Worker. Set its `ADMIN_EMAIL` binding to the owner's verified BlockBet account email. The owner can open `/admin` from the account menu.
+
+The admin page can set a player's next Play USD balance, ban an account, or lift a ban. A ban revokes that account's sessions and blocks future sign-ins. Guest mode remains separate. A balance adjustment applies once per browser at sign-in or session refresh. Gameplay and history still use browser storage, so the admin page shows the last adjustment.

@@ -12,7 +12,11 @@ import { onRequestGet as sessionInfo } from "./functions/api/auth/me.js";
 import { onRequestPost as logout } from "./functions/api/auth/logout.js";
 import { onRequestGet as status } from "./functions/api/auth/status.js";
 
+import { onRequestGet as getAccount, onRequestPost as updateAccount } from "./functions/api/auth/admin.js";
+
 const routes = {
+  "GET /api/auth/admin": getAccount,
+  "POST /api/auth/admin": updateAccount,
   "POST /api/auth/request": requestCode,
   "POST /api/auth/signup": signup,
   "POST /api/auth/login": login,

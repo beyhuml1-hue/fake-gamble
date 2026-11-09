@@ -4,7 +4,10 @@ import {
 } from "react";
 
 type Phase = "loading" | "unavailable" | "login" | "signup" | "verify" | "authenticated" | "guest";
+export type BalanceAdjustment = { cents: number; revision: string };
+type Account = { email: string; admin?: boolean; balanceAdjustment?: BalanceAdjustment | null };
 type AuthValue = {
+  isAdmin: boolean;
   email: string | null;
   isGuest: boolean;
   canSignIn: boolean;
@@ -17,7 +20,7 @@ type AuthResponse = {
   error?: string;
   message?: string;
   enabled?: boolean;
-  user?: { email: string };
+  user?: Account;
 };
 
 async function api(path: string, data?: object): Promise<AuthResponse> {
@@ -33,9 +36,10 @@ async function api(path: string, data?: object): Promise<AuthResponse> {
   return payload;
 }
 
-export function AuthProvider({ children }: { children: (key: string) => ReactNode }) {
+export function AuthProvider({ children }: { children: (key: string, adjustment?: BalanceAdjustment | null) => ReactNode }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [enabled, setEnabled] = useState(false);
+  const [account, setAccount] = useState<Account | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -58,6 +62,7 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
         try {
           const result = await api("me");
           if (alive && result.user?.email) {
+            setAccount(result.user);
             setEmail(result.user.email);
             setPhase("authenticated");
             return;
@@ -72,6 +77,39 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
     return () => { alive = false; };
   }, []);
 
+  useEffect(() => {
+    if (phase !== "authenticated") return;
+    const controller = new AbortController();
+    let pending = false;
+    async function refresh() {
+      if (document.hidden || pending) return;
+      pending = true;
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store", signal: controller.signal });
+        if (controller.signal.aborted) return;
+        if (response.status === 401) {
+          setAccount(null);
+          setPhase("login");
+          setError("Your session ended. Log in again to continue.");
+        } else if (response.ok) {
+          const result: AuthResponse = await response.json();
+          if (result.user && !controller.signal.aborted) setAccount(result.user);
+        }
+      } catch {
+        // Keep the current session during a temporary network failure.
+      } finally {
+        pending = false;
+      }
+    }
+    const interval = window.setInterval(() => void refresh(), 60_000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      controller.abort();
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [phase]);
+
   function switchTo(next: "login" | "signup") {
     setPhase(next);
     setError(""); setNotice(""); setPassword(""); setConfirm(""); setCode(""); setVisible(false);
@@ -82,6 +120,7 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
     try {
       const result = await api("login", { email: email.trim(), password });
       if (!result.user?.email) throw new Error("Couldn't log in.");
+      setAccount(result.user);
       setEmail(result.user.email);
       setPassword(""); setConfirm(""); setPhase("authenticated");
     } catch (err) {
@@ -110,6 +149,7 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
     try {
       const result = await api("verify", { email: email.trim(), code });
       if (!result.user?.email) throw new Error("Could not verify your account.");
+      setAccount(result.user);
       setEmail(result.user.email);
       setCode(""); setPhase("authenticated");
     } catch (err) {
@@ -135,12 +175,14 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
         return;
       }
     }
+    setAccount(null);
     setEmail(""); switchTo("login");
   };
 
   const showSignIn = () => switchTo("login");
   const ready = phase === "authenticated" || phase === "guest";
   const context: AuthValue = {
+    isAdmin: phase === "authenticated" && account?.admin === true,
     email: phase === "authenticated" ? email : null,
     isGuest: phase === "guest",
     canSignIn: enabled,
@@ -150,7 +192,7 @@ export function AuthProvider({ children }: { children: (key: string) => ReactNod
   if (ready) {
     // Wallet state remains browser-local, namespaced to verified accounts on this device.
     return <AuthContext.Provider value={context}>
-      {children(phase === "guest" ? "phone" : email)}
+      {children(phase === "guest" ? "phone" : email, phase === "authenticated" ? account?.balanceAdjustment : null)}
     </AuthContext.Provider>;
   }
 
