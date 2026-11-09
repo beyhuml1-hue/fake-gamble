@@ -33,7 +33,11 @@ type Saved = {
   ledger: LedgerRow[];
 };
 
+type OpenFlip = { wager: number; side: "heads" | "tails"; at: number };
+
 type WalletValue = {
+  openFlip: OpenFlip | null;
+  setOpenFlip: (bet: OpenFlip | null) => void;
   balance: number;
   cardBalance: number;
   history: BetRecord[];
@@ -138,6 +142,7 @@ export function WalletProvider({ email, children, adjustment }: {
   const [stored, setSaved] = useState<Saved>(() => applyAdjustment(load(email), adjustment));
   const saved = applyAdjustment(stored, adjustment);
   if (saved !== stored) setSaved(saved);
+  const [openFlip, setOpenFlip] = useState<OpenFlip | null>(null);
   const [cashierNonce, setCashierNonce] = useState(0);
   const balanceRef = useRef(saved.balance);
   const cardRef = useRef(saved.card);
@@ -161,6 +166,8 @@ export function WalletProvider({ email, children, adjustment }: {
   };
 
   const value: WalletValue = {
+    openFlip,
+    setOpenFlip,
     balance: saved.balance,
     cardBalance: saved.card,
     history: saved.history,

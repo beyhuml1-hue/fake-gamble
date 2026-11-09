@@ -445,47 +445,82 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .limbo-field { width: min(320px, 100%); }
 .dice-layout .select, .dice-layout .range { width: 100%; }
 
-.coin-scene { perspective: 900px; height: 190px; position: relative; display: grid; place-items: center; }
+.coin-scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: clamp(184px, 27vw, 232px);
+  perspective: 900px;
+}
 .coin-scene::after {
   content: "";
   position: absolute;
-  left: 50%;
-  bottom: 8px;
-  width: 110px;
+  inset: auto 0 0;
   height: 18px;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.45), transparent 70%);
+  background: radial-gradient(ellipse, #0008, transparent 62%);
+  pointer-events: none;
 }
 .coin {
-  width: 148px;
-  height: 148px;
   position: relative;
+  width: clamp(144px, 23vw, 192px);
+  aspect-ratio: 1;
   transform-style: preserve-3d;
   transition: transform 1.7s cubic-bezier(0.14, 0.62, 0.1, 1);
 }
 .coin.flipping { animation: coin-hop 1.7s ease-in-out; }
-.face {
+.coin-face {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
   display: grid;
-  place-items: center;
-  align-content: center;
-  font-weight: 800;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  padding: 15%;
+  border: 3px solid var(--coin-edge);
+  border-radius: 50%;
+  color: var(--coin-ink);
+  background:
+    radial-gradient(circle at 35% 20%, var(--coin-light), transparent 58%),
+    repeating-conic-gradient(from 20deg, var(--coin-edge) 0deg 2deg, var(--coin-base) 2deg 5deg);
+  box-shadow: inset 0 0 0 5px var(--coin-base), inset 0 0 0 7px var(--coin-edge), 0 5px 14px #0005;
   backface-visibility: hidden;
-  box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.28), inset 0 0 0 12px rgba(0, 0, 0, 0.18);
 }
-.face b { font-size: 54px; line-height: 1; }
-.face small { font-size: 11px; letter-spacing: 0.18em; margin-top: 2px; }
-.heads {
-  background: radial-gradient(circle at 35% 30%, #ffe7a3, #e0b03a 46%, #8d6412);
-  color: #3a2806;
+.coin-face::before {
+  content: "";
+  position: absolute;
+  inset: 9%;
+  border: 1px solid var(--coin-edge);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 18%, var(--coin-light), var(--coin-base) 72%);
 }
-.tails {
-  background: radial-gradient(circle at 35% 30%, #f7f9fc, #c5ced8 52%, #7d8996);
-  color: #1c2833;
-  transform: rotateY(180deg);
+.coin-face > * { position: relative; }
+.coin-face span, .coin-face small { text-transform: uppercase; font-weight: 850; letter-spacing: 0.12em; }
+.coin-face span { font-size: clamp(12px, 1.65vw, 17px); }
+.coin-face small { font-size: 9px; }
+.coin-face svg { width: 50%; max-height: 100%; fill: currentColor; align-self: center; }
+.coin-heads {
+  --coin-light: #fff0b5;
+  --coin-base: #d6a546;
+  --coin-edge: #85591f;
+  --coin-ink: #5c3714;
+  transform: translateZ(2px);
 }
+.coin-tails {
+  --coin-light: #f4f8ff;
+  --coin-base: #aab7c6;
+  --coin-edge: #627389;
+  --coin-ink: #344559;
+  transform: rotateY(180deg) translateZ(2px);
+}
+.live-bets-label::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-inline-end: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.bet-pending td { color: var(--muted); }
 
 .mines-grid {
   display: grid;
