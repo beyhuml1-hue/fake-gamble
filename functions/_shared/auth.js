@@ -47,10 +47,12 @@ export async function passwordHash(password, salt, pepper, iterations = PASSWORD
 export async function issueSession(env, user, now = Date.now()) {
   const token = randomSecret();
   const tokenHash = await digest("session:" + token, env.AUTH_PEPPER);
-  await env.DB.prepare(
-    "INSERT INTO auth_sessions (digest,user_id,expires_ms,created_ms) VALUES (?1,?2,?3,?4)"
+  const created = await env.DB.prepare(
+    "INSERT INTO auth_sessions (digest,user_id,expires_ms,created_ms) SELECT ?1,?2,?3,?4 " +
+    "WHERE NOT EXISTS (SELECT 1 FROM auth_account_controls WHERE user_id = ?2 AND banned = 1)"
   ).bind(tokenHash, user.id, now + 7 * 24 * 3600000, now).run();
-  return json({ok:true,user:{email:user.email}},200,{"Set-Cookie":sessionCookie(token)});
+  if (created.meta?.changes !== 1) return json({ error: "This account is disabled." }, 403);
+  return json({ok:true,user:await sessionUser(env, user)},200,{"Set-Cookie":sessionCookie(token)});
 }
 
 export function validEmail(input) {
@@ -129,13 +131,31 @@ export function sessionCookie(token, maxAge = 60 * 60 * 24 * 7) {
   return COOKIE + "=" + token + "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=" + maxAge;
 }
 
+export function isAdmin(user, env) {
+  return Boolean(user && validEmail(env.ADMIN_EMAIL) === user.email);
+}
+
+export async function sessionUser(env, user) {
+  const control = await env.DB.prepare(
+    "SELECT balance_cents, balance_revision FROM auth_account_controls WHERE user_id = ?1"
+  ).bind(user.id).first();
+  return {
+    email: user.email,
+    admin: isAdmin(user, env),
+    balanceAdjustment: control?.balance_revision
+      ? { cents: control.balance_cents, revision: control.balance_revision }
+      : null,
+  };
+}
+
 export async function currentUser(request, env) {
   const token = sessionToken(request);
   if (!token) return null;
   const tokenHash = await digest("session:" + token, env.AUTH_PEPPER);
   return env.DB.prepare(
     "SELECT u.id, u.email FROM auth_sessions s INNER JOIN auth_users u ON u.id = s.user_id " +
-    "WHERE s.digest = ?1 AND s.expires_ms > ?2 AND u.password_hash IS NOT NULL"
+    "WHERE s.digest = ?1 AND s.expires_ms > ?2 AND u.password_hash IS NOT NULL " +
+    "AND NOT EXISTS (SELECT 1 FROM auth_account_controls c WHERE c.user_id = u.id AND c.banned = 1)"
   ).bind(tokenHash, Date.now()).first();
 }
 
@@ -147,6 +167,7 @@ export async function dbReady(env) {
     await env.DB.prepare("SELECT email FROM auth_otp LIMIT 1").first();
     await env.DB.prepare("SELECT key FROM auth_rate LIMIT 1").first();
     await env.DB.prepare("SELECT digest FROM auth_sessions LIMIT 1").first();
+    await env.DB.prepare("SELECT user_id FROM auth_account_controls LIMIT 1").first();
     return true;
   } catch {
     return false;

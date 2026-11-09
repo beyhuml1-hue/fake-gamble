@@ -42,7 +42,7 @@ function useRollingBalance(cents: number) {
 }
 
 export function AppShell() {
-  const { email: accountEmail, isGuest, canSignIn, logout, showSignIn } = useAuth();
+  const { email: accountEmail, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const { balance, cashierNonce, openCashier } = useWallet();
   const rolling = useRollingBalance(balance);
@@ -150,6 +150,7 @@ export function AppShell() {
               <div className="account-menu">
                 <strong>{accountEmail || "Guest profile"}</strong>
                 <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · wallet saved on this device"}</p>
+                {isAdmin && <NavLink to="/admin" onClick={() => setAccountOpen(false)}>Manage accounts</NavLink>}
                 {isGuest
                   ? (canSignIn
                       ? <button type="button" onClick={showSignIn}>Log in or sign up</button>

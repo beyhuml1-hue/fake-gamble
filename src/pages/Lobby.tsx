@@ -5,6 +5,17 @@ import { GAMES } from "../data/games";
 import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
+const ART_KEY = "blockbet.cover-style.v2";
+const ARCADE_COVERS = new Set(["plinko", "crash", "cases", "chicken", "darts", "blackjack"]);
+
+function savedArtStyle() {
+  try {
+    return localStorage.getItem(ART_KEY) === "arcade" ? "arcade" : "classic";
+  } catch {
+    return "classic";
+  }
+}
+
 const FEATURED = ["plinko", "crash", "cases", "chicken", "darts"];
 const GROUPS = [
   { id: "all", label: "All games" },
@@ -22,6 +33,16 @@ const GROUP_IDS: Record<string, string[] | null> = {
 export function Lobby() {
   const { query, setQuery } = useOutletContext<ShellContext>();
   const { history } = useWallet();
+  const [artStyle, setArtStyle] = useState(savedArtStyle);
+  const cover = (id: string) => artStyle === "arcade" && ARCADE_COVERS.has(id)
+    ? `/covers/arcade/${id}.webp`
+    : `/covers/cover-${id}.jpg`;
+
+  function changeArtStyle(style: "classic" | "arcade") {
+    setArtStyle(style);
+    try { localStorage.setItem(ART_KEY, style); } catch { /* Storage unavailable. */ }
+  }
+
   const [group, setGroup] = useState<(typeof GROUPS)[number]["id"]>("all");
   const q = query.trim().toLowerCase();
   const allowed = GROUP_IDS[group];
@@ -36,7 +57,7 @@ export function Lobby() {
   const profit = history.reduce((sum, row) => sum + row.payout - row.wager, 0);
 
   return (
-    <section className="lobby">
+    <section className="lobby" data-cover-style={artStyle}>
       <div className="home-hero">
         <div>
           <p className="kicker">Play money</p>
@@ -73,6 +94,13 @@ export function Lobby() {
             </button>
           ))}
         </div>
+        <label className="art-style">
+          Cover style
+          <select value={artStyle} onChange={event => changeArtStyle(event.target.value === "classic" ? "classic" : "arcade")}>
+            <option value="arcade">Arcade</option>
+            <option value="classic">Classic</option>
+          </select>
+        </label>
       </div>
       {games.length === 0 ? (
         <p className="empty-row">No games match that search.</p>
@@ -85,7 +113,7 @@ export function Lobby() {
                 {featured.map((game) => (
                   <Link key={game.id} to={`/game/${game.id}`} className="tile feature">
                     <span className="tile-art">
-                      <img src={`/covers/cover-${game.id}.jpg`} alt="" />
+                      <img src={cover(game.id)} alt="" />
                       <span className="tile-name">
                         <b>{game.name}</b>
                         <small>{game.blurb}</small>
@@ -106,7 +134,7 @@ export function Lobby() {
             {rest.map((game) => (
               <Link key={game.id} to={`/game/${game.id}`} className="tile">
                 <span className="tile-art">
-                  <img src={`/covers/cover-${game.id}.jpg`} alt="" loading="lazy" />
+                  <img src={cover(game.id)} alt="" loading="lazy" />
                   <span className="tile-name">{game.name}</span>
                 </span>
               </Link>
