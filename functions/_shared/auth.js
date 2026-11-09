@@ -7,7 +7,7 @@ export const json = (body, status = 200, headers = {}) =>
   });
 
 export function configured(env) {
-  return Boolean(env?.DB && env?.RESEND_API_KEY && env?.AUTH_PEPPER && env?.AUTH_FROM_EMAIL);
+  return Boolean(env?.DB && env?.AUTH_PEPPER && env?.AUTH_FROM_EMAIL && (env?.EMAIL || env?.RESEND_API_KEY));
 }
 
 export function validEmail(input) {
