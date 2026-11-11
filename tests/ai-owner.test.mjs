@@ -36,7 +36,7 @@ test("AI sandbox: owner authorization, mock NanoGPT, private memory and audited 
   globalThis.fetch=async(_url,options)=>{
    assert.equal(options.headers.Authorization,"Bearer only-test");
    const body=JSON.parse(options.body);
-   assert.equal(body.model,"Qwen3.7 Flash");
+   assert.equal(body.model,"qwen/qwen3.7-flash");
    const result=body.messages.findLast(x=>x.role==="tool");
    if(!result)return new Response(JSON.stringify({choices:[{message:{role:"assistant",content:null,tool_calls:[{
     id:"call1",type:"function",function:{name:"reward_demo_player",arguments:JSON.stringify({player:"player123",coins:3,reason:"test reward"})}
