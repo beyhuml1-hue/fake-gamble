@@ -112,6 +112,13 @@ export const GAMES = [
     gradient: "linear-gradient(180deg,#0f212e,#1a2c38)",
   },
   {
+    id: "packs",
+    name: "Packs",
+    blurb: "Spin colourful packs for up to 600× in Expert.",
+    note: "Weighted multiplier reel",
+    gradient: "linear-gradient(160deg,#d4d9e3,#344657)",
+  },
+  {
     id: "upgrader",
     name: "Upgrader",
     blurb: "Set a multiplier. Land in the green.",

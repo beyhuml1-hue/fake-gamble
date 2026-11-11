@@ -150,7 +150,7 @@ export function Dragon() {
                 const cls = showDragon ? "tile-btn dragon" : showSafe ? "tile-btn safe" : "tile-btn";
                 return (
                   <button key={tile} type="button" className={cls} disabled={!current} onClick={() => choose(tile)}>
-                    {showDragon ? "💣" : showSafe ? "●" : ""}
+                    {showDragon ? "💣" : showSafe ? <img className="blockbet-revealed-gem" src="/images/gem-green.webp" alt="Safe gem" draggable={false}/> : ""}
                   </button>
                 );
               })}

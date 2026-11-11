@@ -128,7 +128,7 @@ export function Mines() {
             const cls = open ? (bomb ? "mine bomb" : "mine gem") : "mine";
             return (
               <button key={index} type="button" className={cls} disabled={!active || open} onClick={() => reveal(index)}>
-                {open ? (bomb ? "💣" : "◆") : ""}
+                {open ? (bomb ? "💣" : <img className="blockbet-revealed-gem" src="/images/gem-green.webp" alt="Safe gem" draggable={false}/>) : ""}
               </button>
             );
           })}
