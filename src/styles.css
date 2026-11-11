@@ -1844,3 +1844,28 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .chat-bigwin{background:linear-gradient(115deg,#45340e,#1e2c21);border:1px solid #a17e26;border-radius:9px;padding:11px!important;box-shadow:0 0 15px #b68b241a}
 .chat-bigwin .chat-player{color:#ffe193!important}
 .chat-bigwin p{font-weight:780;color:#f9df9c;line-height:1.5}
+
+
+/* Opt-in cohesive dark studio skin. Classic CSS is kept intact for instant rollback. */
+.site-style-control{padding:12px 8px 0;display:grid;gap:7px}
+.site-style-control label{color:#93a8ae;font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:750}
+.site-style-control select{width:100%;padding:10px 8px;background:#20323c;border:1px solid #40525d;border-radius:8px;color:#e8f2f0;font-size:12px}
+.app.studio-style{--bg:#0e161b;--bg-2:#101b22;--panel:#1c2b33;--line:#2c4247;--muted:#a2b6ba;--green:#70e69a;--green-ink:#092317;background:#101b22}
+.app.studio-style .sidebar{background:#10191f;border-color:#24383d}
+.app.studio-style .header{background:#10191f;border-color:#283d42}
+.app.studio-style .content{background:#101b22}
+.app.studio-style .game-card{border:1px solid #2b4546;border-radius:14px;box-shadow:0 16px 44px #0003}
+.app.studio-style .game-stage{background:radial-gradient(ellipse at top,#1a3134,#101b22 70%)}
+.app.studio-style .game-panel{background:#1b2b34}
+.app.studio-style .tile{background:#142128;border-color:#2b4044}
+.app.studio-style .tile:hover{border-color:#71e6a2}
+.app.studio-style .brand-mark{border-radius:10px}
+.app.studio-style .nav-item{border-radius:8px}
+.app.studio-style .nav-item.active{background:#1b3c30;color:#9df0ae}
+.app.studio-style .bet-btn{border-radius:8px}
+.app.studio-style .chat-drawer{background:#122127;border-color:#35564b}
+.app.studio-style .chat-drawer-head{background:#19312f}
+.app.studio-style .chat-drawer-toggle{background:#70e69a}
+.app.studio-style .lobby{background:#101b22}
+.app.studio-style .lobby .tile{background:#16242a}
+@media(max-width:650px){.site-style-control{padding:10px 8px}}
