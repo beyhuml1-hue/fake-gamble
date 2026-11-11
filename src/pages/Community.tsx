@@ -185,7 +185,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
     <section className={compact ? "community-page community-compact" : "community-page"}>
       <header className="community-heading">
         <h1>Chat</h1>
-        <span>Available to send <strong>{formatUSD(board.profile.cents)}</strong></span>
+        
       </header>
       <section className="community-rain" aria-labelledby="rain-title">
         <div>
@@ -230,7 +230,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
               <button className="bet-btn" type="submit" disabled={busy || offline}>Send Play USD</button>
             </form>
           )}
-          <p className="chat-stats-note">Transfers debit your normal Play USD wallet when synced. The available-to-send limit is backed by Rain and previously received transfers.</p>
+          <p className="chat-stats-note">Transfers use your main Play USD wallet. Only Rain and received-transfer credits can currently be transferred.</p>
         </section>
       )}
 
