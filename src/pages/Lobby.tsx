@@ -16,7 +16,7 @@ function savedArtStyle() {
   }
 }
 
-const FEATURED = ["plinko", "crash", "packs", "cases", "chicken", "darts"];
+const FEATURED = ["plinko", "mines-battles", "crash", "packs", "cases", "chicken"];
 const GROUPS = [
   { id: "all", label: "All games" },
   { id: "instant", label: "Instant" },
@@ -25,16 +25,16 @@ const GROUPS = [
 ] as const;
 const GROUP_IDS: Record<string, string[] | null> = {
   all: null,
-  instant: ["dice", "plinko", "crash", "limbo", "keno", "wheel", "flip", "diamonds", "darts"],
+  instant: ["dice", "mines-battles", "plinko", "crash", "limbo", "keno", "wheel", "flip", "diamonds", "darts"],
   table: ["blackjack", "roulette", "baccarat", "hilo"],
-  climb: ["mines", "dragon", "pump", "cases", "packs", "upgrader", "chicken"],
+  climb: ["mines", "mines-battles", "dragon", "pump", "cases", "packs", "upgrader", "chicken"],
 };
 
 export function Lobby() {
   const { query, setQuery } = useOutletContext<ShellContext>();
   const { history } = useWallet();
   const [artStyle, setArtStyle] = useState(savedArtStyle);
-  const cover = (id: string) => id === "packs" ? "/covers/cover-packs.webp" : artStyle === "arcade" && ARCADE_COVERS.has(id)
+  const cover = (id: string) => id === "mines-battles" ? "/covers/cover-mines.jpg" : id === "packs" ? "/covers/cover-packs.webp" : artStyle === "arcade" && ARCADE_COVERS.has(id)
     ? `/covers/arcade/${id}.webp`
     : `/covers/cover-${id}.jpg`;
 
