@@ -113,5 +113,6 @@ test("UI pulls server credits into normal wallet and Mines Battles is fully unli
  assert.match(wallet,/socialCursor/);
  assert.match(shell,/notifications\.map/);
  assert.match(chat,/chat-profile-stats/);
- assert.match(chat,/Available to send/);
+ assert.doesNotMatch(chat,/Available to send <strong>|Chat balance/);
+ assert.match(chat,/Transfers use your main Play USD wallet/);
 });
