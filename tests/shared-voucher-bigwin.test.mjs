@@ -60,8 +60,8 @@ test("Shared BlockBet-only demo voucher decrements one $125 virtual balance, rej
   assert.equal((await post("owner",payload(100))).status,409);
   assert.equal(db.prepare("SELECT COALESCE(SUM(cents),0) AS total FROM demo_voucher_redemptions").get().total,12500);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM demo_voucher_redemptions").get().n,2);
-  assert.deepEqual(db.prepare("SELECT delta_cents,kind FROM community_wallet_events WHERE user_id='alice'").all(),[{delta_cents:5000,kind:"received"}]);
-  assert.deepEqual(db.prepare("SELECT delta_cents,kind FROM community_wallet_events WHERE user_id='bob'").all(),[{delta_cents:7500,kind:"received"}]);
+  assert.deepEqual(db.prepare("SELECT delta_cents,kind FROM community_wallet_events WHERE user_id='alice'").all().map(row=>({...row})),[{delta_cents:5000,kind:"received"}]);
+  assert.deepEqual(db.prepare("SELECT delta_cents,kind FROM community_wallet_events WHERE user_id='bob'").all().map(row=>({...row})),[{delta_cents:7500,kind:"received"}]);
   assert.doesNotMatch(JSON.stringify(await (await get("alice")).json()),/code_hash|PBDEMO-TST1/);
  }finally{db.close();}
 });
