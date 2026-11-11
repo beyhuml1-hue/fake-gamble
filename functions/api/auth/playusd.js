@@ -1,4 +1,5 @@
 import {configured,currentUser,json,readBody,sameOrigin,hitRateLimit} from "../../_shared/auth.js";
+import {preparePlayer} from "./community.js";
 
 // One canonical Play USD account per signed-in user. All currency is fictional;
 // game actions are reported by browser game engines, never audited real money.
@@ -12,6 +13,7 @@ export async function onRequestGet({request,env}){
  const user=await currentUser(request,env);
  if(!user)return json({error:"Log in to sync your Play USD wallet."},401);
  try{
+  await preparePlayer(env,user,Math.floor(Date.now()/420000));
   const row=await readBalance(env,user);
   return row?.initialized===1?json({balance:row.cents,ready:true,fictional:true}):
     json({ready:false,fictional:true},200);

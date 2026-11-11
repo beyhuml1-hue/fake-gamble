@@ -116,7 +116,7 @@ test("UI pulls server credits into normal wallet and Mines Battles is fully unli
  assert.doesNotMatch(app,/MinesBattles|path="mines-battles"/);
  assert.doesNotMatch(shell,/to="\/mines-battles"/);
  assert.match(wallet,/blockbet:wallet-sync/);
- assert.match(wallet,//api/auth/playusd/);
+ assert.match(wallet,new RegExp("/api/auth/playusd"));
  assert.match(wallet,/pendingOps/);
  assert.match(wallet,/prepareTransfer/);
  assert.match(shell,/notifications\.map/);
