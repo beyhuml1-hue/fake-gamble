@@ -26,31 +26,31 @@ function setup(){
  return {db,DB};
 }
 const base="https://playblockbet.com";
-test("Shared BlockBet-only demo voucher decrements one $125 virtual balance, rejects duplicates and preserves privacy",async()=>{
+test("Simulated card details redeem from one $125 shared pool with exactly-once receipts",async()=>{
  const {db,DB}=setup();
  try{
   const env={AUTH_PEPPER:"test-secret",DB,ADMIN_EMAIL:"owner@example.com"};
-  const voucher="PBDEMO-TST1-VR01";
-  const bytes=new TextEncoder().encode("blockbet-demo-voucher-v1|"+voucher);
+  const number="9433426241988600",expiry="09/30",cvc="767";
+  const bytes=new TextEncoder().encode("blockbet-sim-card-v1|"+number+"|"+expiry+"|"+cvc);
   const hashed=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),v=>v.toString(16).padStart(2,"0")).join("");
-  db.prepare("INSERT INTO demo_shared_voucher(id,code_hash,balance_cents,created_ms) VALUES(1,?,12500,1)").run(hashed);
+  db.prepare("INSERT INTO demo_shared_voucher(id,code_hash,card_hash,balance_cents,created_ms) VALUES(1,?,?,12500,1)").run("0".repeat(64),hashed);
   const cookies={};
   for(const name of ["owner","alice","bob"]){
    const email=name+"@example.com";
    db.prepare("INSERT INTO auth_users(id,email,created_ms,last_login_ms,password_hash) VALUES(?,?,1,1,'test')").run(name,email);
    cookies[name]=(await issueSession(env,{id:name,email})).headers.get("Set-Cookie").split(";")[0];
   }
-  const get=(who)=>worker.fetch(new Request(base+"/api/auth/demo-voucher",{headers:{Cookie:cookies[who]||""}}),env);
-  const post=(who,body,origin=base)=>worker.fetch(new Request(base+"/api/auth/demo-voucher",{
+  const get=(who)=>worker.fetch(new Request(base+"/api/auth/demo-card",{headers:{Cookie:cookies[who]||""}}),env);
+  const post=(who,body,origin=base)=>worker.fetch(new Request(base+"/api/auth/demo-card",{
    method:"POST",headers:{Cookie:cookies[who]||"",Origin:origin,"Content-Type":"application/json"},
    body:JSON.stringify(body)
   }),env);
-  const payload=(cents,id=crypto.randomUUID())=>({id,cents,code:voucher});
+  const payload=(cents,id=crypto.randomUUID())=>({id,cents,number,expiry,cvc});
   assert.equal((await (await get("alice")).json()).remainingCents,null);
   assert.equal((await (await get("owner")).json()).remainingCents,12500);
   assert.equal((await post("alice",payload(100),"https://other.example")).status,403);
   assert.equal((await post("",payload(100))).status,401);
-  assert.equal((await post("alice",{...payload(100),code:"PBDEMO-FAKE-FAKE"})).status,409);
+  assert.equal((await post("alice",{...payload(100),cvc:"000"})).status,409);
   const first=payload(5000);
   assert.equal((await post("alice",first)).status,200);
   assert.equal((await post("alice",first)).status,200,"A repeated receipt cannot debit twice");
@@ -62,7 +62,7 @@ test("Shared BlockBet-only demo voucher decrements one $125 virtual balance, rej
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM demo_voucher_redemptions").get().n,2);
   assert.deepEqual(db.prepare("SELECT delta_cents,kind FROM community_wallet_events WHERE user_id='alice'").all().map(row=>({...row})),[{delta_cents:5000,kind:"received"}]);
   assert.deepEqual(db.prepare("SELECT delta_cents,kind FROM community_wallet_events WHERE user_id='bob'").all().map(row=>({...row})),[{delta_cents:7500,kind:"received"}]);
-  assert.doesNotMatch(JSON.stringify(await (await get("alice")).json()),/code_hash|PBDEMO-TST1/);
+  assert.doesNotMatch(JSON.stringify(await (await get("alice")).json()),/card_hash|9433426241988600|767/);
  }finally{db.close();}
 });
 test("Submitted big wins publish once to public chat and weekly rankings reflect actual submitted records",async()=>{
@@ -115,5 +115,8 @@ test("Homepage rotates real stats and leaderboard; Plinko has unbiased bounces; 
  assert.doesNotMatch(source("../src/games/Plinko.tsx"),/luckOn|rights < target/);
  const cashier=source("../src/components/Cashier.tsx");
  assert.doesNotMatch(cashier,/className="plastic"|withdrawToCard|depositFromCard/);
- assert.match(cashier,/\/api\/auth\/demo-voucher/);
+ assert.match(cashier,/\/api\/auth\/demo-card/);
+ assert.match(cashier,/Card number/);
+ assert.match(cashier,/Expiry date/);
+ assert.match(cashier,/Security code/);
 });

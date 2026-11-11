@@ -13,6 +13,10 @@ export async function onRequestGet({request,env}){
  const after=Number(raw);
  try{
   await preparePlayer(env,user,Math.floor(Date.now()/420000));
+  if(new URL(request.url).searchParams.get("notices")==="1"){
+    const notices=await env.DB.prepare("SELECT n.id,p.label AS sender,n.cents,n.at_ms AS at FROM community_notifications n JOIN community_profiles p ON p.user_id=n.sender_id WHERE n.recipient_id=?1 AND n.seen_ms IS NULL ORDER BY n.at_ms DESC LIMIT 5").bind(user.id).all();
+    return json({notifications:notices.results||[]});
+  }
   const [rows,notices]=await Promise.all([
    env.DB.prepare("SELECT seq,delta_cents AS delta,kind,at_ms AS at FROM community_wallet_events WHERE user_id=?1 AND seq>?2 ORDER BY seq ASC LIMIT 101").bind(user.id,after).all(),
    env.DB.prepare("SELECT n.id,p.label AS sender,n.cents,n.at_ms AS at FROM community_notifications n JOIN community_profiles p ON p.user_id=n.sender_id WHERE n.recipient_id=?1 AND n.seen_ms IS NULL ORDER BY n.at_ms DESC LIMIT 5").bind(user.id).all(),

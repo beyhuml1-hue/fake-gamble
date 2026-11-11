@@ -35,10 +35,16 @@ export async function onRequestPost(context) {
     if (!Number.isInteger(cents) || cents < 0 || cents > 100_000_000) {
       return json({ error: "Enter an amount from $0.00 to $1,000,000.00." }, 400);
     }
-    await env.DB.prepare(
-      "INSERT INTO auth_account_controls (user_id, balance_cents, balance_revision, balance_mode) VALUES (?1, ?2, ?3, 'set') " +
-      "ON CONFLICT(user_id) DO UPDATE SET balance_cents = excluded.balance_cents, balance_revision = excluded.balance_revision, balance_mode = 'set'"
-    ).bind(target.id, cents, crypto.randomUUID()).run();
+    await env.DB.batch([
+      env.DB.prepare(
+        "INSERT INTO auth_account_controls (user_id, balance_cents, balance_revision, balance_mode) VALUES (?1, ?2, ?3, 'set') " +
+        "ON CONFLICT(user_id) DO UPDATE SET balance_cents = excluded.balance_cents, balance_revision = excluded.balance_revision, balance_mode = 'set'"
+      ).bind(target.id, cents, crypto.randomUUID()),
+      env.DB.prepare(
+        "INSERT INTO playusd_wallets(user_id,cents,initialized,updated_ms) VALUES(?1,?2,1,?3) " +
+        "ON CONFLICT(user_id) DO UPDATE SET cents=excluded.cents,initialized=1,updated_ms=excluded.updated_ms"
+      ).bind(target.id,cents,Date.now()),
+    ]);
   } else if (input.action === "ban" || input.action === "unban") {
     if (isAdmin(target, env)) return json({ error: "The owner account cannot be banned." }, 400);
     const banned = input.action === "ban";

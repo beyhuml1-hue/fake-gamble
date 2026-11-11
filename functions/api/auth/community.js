@@ -10,16 +10,6 @@ export async function preparePlayer(env, user, round) {
     env.DB.prepare(
       "INSERT OR IGNORE INTO community_profiles (user_id,public_id,label) VALUES (?1,?2,?3)"
     ).bind(user.id, crypto.randomUUID(), label),
-    // The participant list is fixed once a round closes. Split leftover cents in join order.
-    env.DB.prepare(
-      "UPDATE community_profiles SET cents = cents + COALESCE((" +
-      "SELECT SUM(CAST(?3 / total AS INTEGER) + (position <= ?3 % total)) FROM (" +
-      "SELECT (SELECT COUNT(*) FROM community_rain p WHERE p.round = r.round) AS total, " +
-      "(SELECT COUNT(*) FROM community_rain p WHERE p.round = r.round AND p.seq <= r.seq) AS position " +
-      "FROM community_rain r WHERE r.user_id = ?1 AND r.paid = 0 AND r.round < MIN(?2, CAST(unixepoch() / 420 AS INTEGER))" +
-      ")), 0) WHERE user_id = ?1 AND EXISTS (" +
-      "SELECT 1 FROM community_rain WHERE user_id = ?1 AND paid = 0 AND round < MIN(?2, CAST(unixepoch() / 420 AS INTEGER)))"
-    ).bind(user.id, round, RAIN_CENTS),
     env.DB.prepare("UPDATE community_rain SET paid = 1 WHERE user_id = ?1 AND paid = 0 AND round < MIN(?2, CAST(unixepoch() / 420 AS INTEGER))")
       .bind(user.id, round),
   ]);
@@ -50,7 +40,7 @@ export async function onRequestGet({ request, env }) {
     return json({player:{id:target.id,label:target.label},stats,source:"Reported community bets; records may be incomplete and are not server-audited."});
   }
   const [profile, rain, chat, players] = await env.DB.batch([
-    env.DB.prepare("SELECT public_id AS id, label, cents FROM community_profiles WHERE user_id = ?1").bind(user.id),
+    env.DB.prepare("SELECT public_id AS id, label FROM community_profiles WHERE user_id = ?1").bind(user.id),
     env.DB.prepare(
       "SELECT COUNT(*) AS count, COALESCE(MAX(user_id = ?2), 0) AS joined FROM community_rain WHERE round = ?1"
     ).bind(round, user.id),
@@ -113,19 +103,29 @@ export async function onRequestPost({ request, env }) {
       !UUID.test(recipient) || !Number.isInteger(cents) || cents < 1 || cents > 100_000_000) {
     return json({ error: "Enter a valid Play USD amount." }, 400);
   }
-  const [written, existing] = await env.DB.batch([
+  const [,written,existing] = await env.DB.batch([
+    // A recipient who hasn't opened the new wallet keeps incoming credits
+    // pending until their original local Play USD balance is imported.
     env.DB.prepare(
-      "INSERT OR IGNORE INTO community_transfers (id,sender,recipient,cents) " +
-      "SELECT ?1, s.user_id, r.user_id, ?4 FROM community_profiles s, community_profiles r " +
-      "WHERE s.user_id = ?2 AND r.public_id = ?3 AND s.user_id <> r.user_id AND s.cents >= ?4 " +
-      "AND NOT EXISTS (SELECT 1 FROM auth_account_controls c WHERE c.user_id = r.user_id AND c.banned = 1)"
-    ).bind(id, user.id, recipient, cents),
+      "INSERT OR IGNORE INTO playusd_wallets(user_id,cents,initialized,updated_ms) "+
+      "SELECT user_id,0,0,?2 FROM community_profiles WHERE public_id=?1"
+    ).bind(recipient,now),
     env.DB.prepare(
-      "SELECT 1 FROM community_transfers t JOIN community_profiles r ON r.user_id = t.recipient " +
-      "WHERE t.id = ?1 AND t.sender = ?2 AND r.public_id = ?3 AND t.cents = ?4"
-    ).bind(id, user.id, recipient, cents),
+      "INSERT OR IGNORE INTO community_transfers(id,sender,recipient,cents) "+
+      "SELECT ?1,s.user_id,r.user_id,?4 FROM community_profiles s "+
+      "JOIN community_profiles r ON r.public_id=?3 "+
+      "JOIN playusd_wallets w ON w.user_id=s.user_id "+
+      "JOIN playusd_wallets rw ON rw.user_id=r.user_id "+
+      "WHERE s.user_id=?2 AND r.public_id=?3 AND s.user_id<>r.user_id "+
+      "AND w.initialized=1 AND w.cents>=?4 AND rw.cents+?4<=100000000 "+
+      "AND NOT EXISTS (SELECT 1 FROM auth_account_controls c WHERE c.user_id=r.user_id AND c.banned=1)"
+    ).bind(id,user.id,recipient,cents),
+    env.DB.prepare(
+      "SELECT 1 FROM community_transfers t JOIN community_profiles r ON r.user_id=t.recipient "+
+      "WHERE t.id=?1 AND t.sender=?2 AND r.public_id=?3 AND t.cents=?4"
+    ).bind(id,user.id,recipient,cents),
   ]);
   return written.meta.changes || existing.results.length
     ? json({ ok: true })
-    : json({ error: "Insufficient chat balance or player unavailable." }, 409);
+    : json({ error: "Insufficient Play USD or player unavailable." }, 409);
 }

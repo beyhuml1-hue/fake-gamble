@@ -18,13 +18,16 @@ import { onRequestGet as getAccount, onRequestPost as updateAccount } from "./fu
 import { onRequestGet as community, onRequestPost as postCommunity } from "./functions/api/auth/community.js";
 import { onRequestGet as aiOwner, onRequestPost as postAiOwner } from "./functions/api/auth/ai-owner.js";
 import { onRequestGet as walletEvents, onRequestPost as acknowledgeWalletNotice } from "./functions/api/auth/wallet-events.js";
+import { onRequestGet as playUsdBalance, onRequestPost as postPlayUsd } from "./functions/api/auth/playusd.js";
 import { onRequestGet as weeklyLeaderboard } from "./functions/api/auth/leaderboard.js";
-import { onRequestGet as demoVoucherStatus, onRequestPost as redeemDemoVoucher } from "./functions/api/auth/demo-voucher.js";
+import { onRequestGet as demoCardStatus, onRequestPost as chargeDemoCard } from "./functions/api/auth/demo-card.js";
 
 const routes = {
+  "GET /api/auth/playusd": playUsdBalance,
+  "POST /api/auth/playusd": postPlayUsd,
   "GET /api/auth/leaderboard": weeklyLeaderboard,
-  "GET /api/auth/demo-voucher": demoVoucherStatus,
-  "POST /api/auth/demo-voucher": redeemDemoVoucher,
+  "GET /api/auth/demo-card": demoCardStatus,
+  "POST /api/auth/demo-card": chargeDemoCard,
   "GET /api/auth/wallet-events": walletEvents,
   "POST /api/auth/wallet-events": acknowledgeWalletNotice,
   "GET /api/auth/ai-owner": aiOwner,

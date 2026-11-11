@@ -11,3 +11,10 @@
 .wallet-plain .wallet-plain-foot{font-size:11px;line-height:1.55;color:#99acb8;margin:15px 0 0}
 .wallet-admin-remaining{background:#193a31;border:1px solid #397c5b;padding:10px;border-radius:8px;font-size:12px}
 .wallet-admin-remaining strong{color:#b0ffca}
+
+.wallet-plain .cashier-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wallet-plain .field-label{display:block;font-weight:700;color:#b9c8d0;margin-bottom:7px}
+.wallet-plain .amount{background:#112531;border:1px solid #35536a;border-radius:8px;padding:0 10px;min-height:46px;display:flex;align-items:center}
+.wallet-plain .amount:focus-within{border-color:#51b976;box-shadow:0 0 0 2px #00e70122}
+.wallet-plain input{width:100%;min-width:0;background:none;border:0;box-shadow:none!important;outline:none;color:#f4f9fc;font-variant-numeric:tabular-nums;font-size:14px}
+.wallet-plain input::placeholder{color:#7b96a4}

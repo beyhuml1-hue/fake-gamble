@@ -6,7 +6,7 @@ import { useWallet } from "../state/wallet";
 type Player = { id: string; label: string };
 type Message = { id: string; playerId: string; label: string; body: string; kind?: "chat" | "bigwin"; at: number };
 type Board = {
-  profile: Player & { cents: number };
+  profile: Player;
   rain: { round: number; count: number; joined: 0 | 1; now: number; endsAt: number };
   messages: Message[];
   players: Player[];
@@ -19,7 +19,7 @@ const URL = "/api/auth/community";
 
 export function Community({ compact = false }: { compact?: boolean } = {}) {
   const { isGuest, canSignIn, showSignIn } = useAuth();
-  const {balance,syncSocialWallet}=useWallet();
+  const {balance,walletReady,prepareTransfer,syncSocialWallet}=useWallet();
   const [board, setBoard] = useState<Board | null>(null);
   const [message, setMessage] = useState("");
   const [aiMessages, setAiMessages] = useState<{role:string;body:string;at:number}[]>([]);
@@ -147,7 +147,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
     }
   }
 
-  function transfer() {
+  async function transfer() {
     if (!selected) return;
     const value = amount.trim();
     const cents = Math.round(Number(value) * 100);
@@ -155,8 +155,12 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
       setError("Enter an amount from $0.01 to $1,000,000.00.");
       return;
     }
-    if(cents>balance){setError("Your Play USD wallet doesn't have enough to send.");return;}
-    if(cents>(board?.profile.cents||0)){setError("Only Rain and received-transfer credits are currently transferable. Earn more through Rain.");return;}
+    if(!walletReady){setError("Your main Play USD wallet is still syncing.");return;}
+    setBusy(true);
+    const available=await prepareTransfer();
+    setBusy(false);
+    if(available===null){setError("Couldn't verify your current Play USD balance. Try again.");return;}
+    if(cents>available){setError("Your normal Play USD wallet doesn't have enough to send.");return;}
     const prior = lastTransfer.current;
     const id = prior?.recipient === selected.id && prior.cents === cents ? prior.id : crypto.randomUUID();
     lastTransfer.current = { id, recipient: selected.id, cents };
@@ -227,10 +231,10 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
               <label htmlFor="chat-transfer">Amount in Play USD</label>
               <input id="chat-transfer" inputMode="decimal" value={amount} maxLength={10} required
                 onChange={event => setAmount(event.target.value)} disabled={busy || offline} />
-              <button className="bet-btn" type="submit" disabled={busy || offline}>Send Play USD</button>
+              <button className="bet-btn" type="submit" disabled={busy || offline || !walletReady}>Send Play USD</button>
             </form>
           )}
-          <p className="chat-stats-note">Transfers use your main Play USD wallet. Only Rain and received-transfer credits can currently be transferred.</p>
+          <p className="chat-stats-note">Send from your normal Play USD balance, including your game winnings and Rain rewards. No separate chat currency.</p>
         </section>
       )}
 

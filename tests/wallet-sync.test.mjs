@@ -31,7 +31,7 @@ test("Rain and transfers issue idempotent normal-wallet events, notify recipient
     catch(err){db.exec("ROLLBACK");throw err;}
    }}};
   const root="https://playblockbet.com";
-  const chat=root+"/api/auth/community",wallet=root+"/api/auth/wallet-events";
+  const chat=root+"/api/auth/community",wallet=root+"/api/auth/wallet-events",playusd=root+"/api/auth/playusd";
   const accounts=["alice","bob","cam"],cookies={};
   for(const id of accounts){
    const email=id+"@example.com";
@@ -46,6 +46,10 @@ test("Rain and transfers issue idempotent normal-wallet events, notify recipient
   assert.equal((await post("alice",wallet,{action:"dismiss",id:crypto.randomUUID()},"https://evil.test")).status,403);
   const initial=await Promise.all(accounts.map(async name=>(await (await get(name,chat)).json())));
   const round=initial[0].rain.round;
+  // Each account imports its existing main game wallet balance just once.
+  assert.equal((await post("alice",playusd,{action:"initialize",balance:9000})).status,200);
+  assert.equal((await post("bob",playusd,{action:"initialize",balance:3000})).status,200);
+  assert.equal((await post("cam",playusd,{action:"initialize",balance:0})).status,200);
   assert.equal((await (await get("alice",chat)).json()).players.length,3);
   assert.equal((await post("alice",chat,{action:"message",body:"hello everyone"})).status,201);
   assert.equal((await post("cam",chat,{action:"message",body:"hello alice"})).status,201);
@@ -71,27 +75,29 @@ test("Rain and transfers issue idempotent normal-wallet events, notify recipient
   assert.deepEqual(payout.map(x=>x.events.reduce((sum,e)=>sum+e.delta,0)),[334,333,333]);
   assert.deepEqual(payout.map(x=>x.events[0].kind),["rain","rain","rain"]);
   assert.equal(payout.flatMap(x=>x.events).reduce((s,e)=>s+e.delta,0),1000);
-  const balanceBefore=db.prepare("SELECT cents FROM community_profiles WHERE user_id='alice'").get().cents;
-  assert.equal(balanceBefore,334);
+  const balanceBefore=db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='alice'").get().cents;
+  assert.equal(balanceBefore,9334);
   const eventCountBefore=db.prepare("SELECT COUNT(*) AS n FROM community_wallet_events").get().n;
   assert.equal((await (await get("alice",wallet+"?after=0")).json()).events.length,1);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM community_wallet_events").get().n,eventCountBefore);
 
+  // Transfer $70 from game winnings, far above the old chat reserve.
   const transferId=crypto.randomUUID();
-  const transfer={action:"transfer",id:transferId,recipient:initial[1].profile.id,cents:200};
+  const transfer={action:"transfer",id:transferId,recipient:initial[1].profile.id,cents:7000};
   assert.equal((await post("alice",chat,transfer)).status,200);
   assert.equal((await post("alice",chat,transfer)).status,200);
-  assert.equal((await post("alice",chat,{...transfer,id:crypto.randomUUID(),cents:900})).status,409);
+  assert.equal((await post("alice",chat,{...transfer,id:crypto.randomUUID(),cents:9000})).status,409);
   const aliceEvents=(await (await get("alice",wallet+"?after=0")).json()).events;
   const bobSync=(await (await get("bob",wallet+"?after=0")).json());
-  assert.deepEqual(aliceEvents.map(x=>x.delta),[334,-200]);
-  assert.deepEqual(bobSync.events.map(x=>x.delta),[333,200]);
+  assert.deepEqual(aliceEvents.map(x=>x.delta),[334,-7000]);
+  assert.deepEqual(bobSync.events.map(x=>x.delta),[333,7000]);
   assert.equal(bobSync.notifications.length,1);
-  assert.equal(bobSync.notifications[0].cents,200);
+  assert.equal(bobSync.notifications[0].cents,7000);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM community_transfers").get().n,1);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM community_notifications").get().n,1);
-  assert.equal(db.prepare("SELECT cents FROM community_profiles WHERE user_id='alice'").get().cents,134);
-  assert.equal(db.prepare("SELECT cents FROM community_profiles WHERE user_id='bob'").get().cents,533);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='alice'").get().cents,2334);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='bob'").get().cents,10333);
+  assert.equal(db.prepare("PRAGMA table_info(community_profiles)").all().some(row=>row.name==="cents"),false);
 
   const endCursor=bobSync.events.at(-1).seq;
   assert.deepEqual((await (await get("bob",wallet+"?after="+endCursor)).json()).events,[]);
@@ -110,9 +116,12 @@ test("UI pulls server credits into normal wallet and Mines Battles is fully unli
  assert.doesNotMatch(app,/MinesBattles|path="mines-battles"/);
  assert.doesNotMatch(shell,/to="\/mines-battles"/);
  assert.match(wallet,/blockbet:wallet-sync/);
- assert.match(wallet,/socialCursor/);
+ assert.match(wallet,//api/auth/playusd/);
+ assert.match(wallet,/pendingOps/);
+ assert.match(wallet,/prepareTransfer/);
  assert.match(shell,/notifications\.map/);
  assert.match(chat,/chat-profile-stats/);
  assert.doesNotMatch(chat,/Available to send <strong>|Chat balance/);
- assert.match(chat,/Transfers use your main Play USD wallet/);
+ assert.match(chat,/No separate chat currency/);
+ assert.doesNotMatch(chat,/board\?\.profile\.cents|Rain and received-transfer credits are currently transferable/);
 });

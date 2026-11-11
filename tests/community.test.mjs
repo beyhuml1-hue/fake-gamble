@@ -58,6 +58,14 @@ test("chat authenticates requests, Rain splits exactly $10, and transfers are at
     const boards = [];
     for (const cookie of cookies) boards.push(await (await get(cookie)).json());
     const round = boards[0].rain.round;
+    const walletUrl = origin + "/api/auth/playusd";
+    for (const [index,cookie] of cookies.entries()) {
+      const response = await worker.fetch(new Request(walletUrl,{
+        method:"POST",headers:{cookie,origin,"Content-Type":"application/json"},
+        body:JSON.stringify({action:"initialize",balance:index===0?2000:0})
+      }),env);
+      assert.equal(response.status,200);
+    }
     assert.equal((await post(cookies[0], {action:"join",round:round-1})).status,409);
     assert.equal((await post(cookies[0], {action:"message",body:"Hello"}, "https://other.example")).status,403);
     for (const cookie of cookies) assert.equal((await post(cookie,{action:"join",round})).status,200);
@@ -65,21 +73,26 @@ test("chat authenticates requests, Rain splits exactly $10, and transfers are at
     assert.equal((await (await get(cookies[0])).json()).rain.count,3);
     db.prepare("UPDATE community_rain SET round = ?").run(round-1);
     const totals = [];
-    for (const cookie of cookies) totals.push((await (await get(cookie)).json()).profile.cents);
-    assert.deepEqual(totals,[334,333,333]);
-    assert.equal((await (await get(cookies[0])).json()).profile.cents,334);
+    for (const cookie of cookies) {
+      const response=await worker.fetch(new Request(walletUrl,{headers:{cookie}}),env);
+      totals.push((await response.json()).balance);
+    }
+    assert.deepEqual(totals,[2334,333,333]);
+    assert.equal((await (await get(cookies[0])).json()).profile.cents,undefined);
 
     assert.equal((await post(cookies[1],{action:"message",body:"Hello"})).status,201);
     const messages = (await (await get(cookies[0])).json()).messages;
     assert.equal(messages[0].playerId,boards[1].profile.id);
     assert.doesNotMatch(JSON.stringify(messages),/@example\.com/);
 
-    const transfer = {action:"transfer",id:crypto.randomUUID(),recipient:boards[1].profile.id,cents:300};
+    const transfer = {action:"transfer",id:crypto.randomUUID(),recipient:boards[1].profile.id,cents:1000};
     assert.equal((await post(cookies[0],transfer)).status,200);
     assert.equal((await post(cookies[0],transfer)).status,200);
     assert.equal((await post(cookies[0],{...transfer,id:crypto.randomUUID()})).status,409);
-    assert.equal((await (await get(cookies[0])).json()).profile.cents,34);
-    assert.equal((await (await get(cookies[1])).json()).profile.cents,633);
+    const after=[];
+    for(const cookie of cookies)after.push((await (await worker.fetch(new Request(walletUrl,{headers:{cookie}}),env)).json()).balance);
+    assert.deepEqual(after,[1334,1333,333]);
+    assert.equal((await (await get(cookies[1])).json()).profile.cents,undefined);
   } finally {
     db.close();
   }
