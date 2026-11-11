@@ -17,6 +17,7 @@ import { Hilo } from "../games/Hilo";
 import { Keno } from "../games/Keno";
 import { Limbo } from "../games/Limbo";
 import { Mines } from "../games/Mines";
+import { MinesBattles } from "../games/MinesBattles";
 import { Plinko } from "../games/Plinko";
 import { Pump } from "../games/Pump";
 import { Roulette } from "../games/Roulette";
@@ -26,6 +27,7 @@ import { Wheel } from "../games/Wheel";
 const PAGES: Record<GameId, ComponentType> = {
   dice: Dice,
   mines: Mines,
+  "mines-battles": MinesBattles,
   plinko: Plinko,
   crash: Crash,
   limbo: Limbo,
