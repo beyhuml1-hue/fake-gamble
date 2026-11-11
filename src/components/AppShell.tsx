@@ -43,6 +43,13 @@ function useRollingBalance(cents: number) {
 }
 
 export function AppShell() {
+  const [siteStyle, setSiteStyle] = useState<"classic" | "studio">(() => {
+    try { return localStorage.getItem("blockbet.site-style") === "studio" ? "studio" : "classic"; } catch { return "classic"; }
+  });
+  function updateSiteStyle(style: "classic" | "studio") {
+    setSiteStyle(style);
+    try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
+  }
   const { email: accountEmail, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
@@ -63,7 +70,7 @@ export function AppShell() {
   }, [cashierNonce]);
 
   return (
-    <div className="app">
+    <div className={"app" + (siteStyle === "studio" ? " studio-style" : "")}>
       <aside className={open ? "sidebar open" : "sidebar"}>
         <NavLink to="/" className="brand" end>
           <span className="brand-mark">B</span>
@@ -105,7 +112,7 @@ export function AppShell() {
           ))}
         </nav>
 
-        <p className="side-note">18+</p>
+        <div className="site-style-control"><label htmlFor="site-style-select">Appearance</label><select id="site-style-select" value={siteStyle} onChange={event => updateSiteStyle(event.target.value === "studio" ? "studio" : "classic")}><option value="classic">Classic BlockBet</option><option value="studio">Dark studio</option></select></div><p className="side-note">18+</p>
       </aside>
       {open ? <button className="scrim" type="button" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
 

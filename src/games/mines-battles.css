@@ -1,0 +1,45 @@
+/* Mines Battles — BlockBet's clean charcoal/green visual language. */
+.mb-page{max-width:1210px;margin:0 auto;color:#f3f6f7}
+.mb-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:22px 0 20px}
+.mb-heading small{color:#8fa8a3;letter-spacing:.14em;font-size:10px;font-weight:850}
+.mb-heading h1{font-size:clamp(24px,3vw,34px);letter-spacing:-.035em;margin:5px 0}
+.mb-heading p{font-size:13px;color:#aab9bd;margin:0}
+.mb-mode{font-size:11px;font-weight:850;letter-spacing:.08em;border:1px solid #376051;background:#16382b;color:#abf2be;border-radius:8px;padding:10px 12px;white-space:nowrap}
+.mb-layout{display:grid;grid-template-columns:285px minmax(0,1fr);border:1px solid #2a4147;border-radius:14px;background:#111e27;overflow:hidden;box-shadow:0 15px 45px #0003}
+.mb-controls{padding:21px;background:#1b2d39;border-right:1px solid #344752;display:flex;flex-direction:column;gap:20px}
+.mb-controls-head{display:flex;justify-content:space-between;align-items:center}
+.mb-controls-head h2{font-size:17px;margin:0;letter-spacing:-.02em}
+.mb-controls-head span{font-size:11px;font-weight:800;background:#304b51;border-radius:7px;padding:6px 9px;color:#d6e3e6}
+.mb-rule{color:#a4b8bf;font-size:12px;line-height:1.6;margin:0}
+.mb-start{flex:none;width:100%}
+.mb-log{border-top:1px solid #35505a;padding-top:16px;margin-top:2px}
+.mb-log h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#cad9d9;margin:0 0 12px}
+.mb-log p{font-size:12px;color:#a6bcc0;margin:0;padding:9px 0;border-bottom:1px solid #ffffff0c}
+.mb-arena{background:radial-gradient(ellipse at 50% 20%,#213b40,#101f29 72%);min-width:0;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 18px 35px}
+.mb-scoreboard{display:flex;align-items:center;justify-content:center;gap:25px;width:min(520px,100%);margin-bottom:20px}
+.mb-player{display:flex;align-items:center;gap:10px;flex:1;opacity:.75}
+.mb-player.on{opacity:1}
+.mb-player.on .mb-avatar{box-shadow:0 0 0 2px #00e701}
+.mb-player strong,.mb-player small{display:block;font-size:13px}
+.mb-player small{font-size:11px;color:#9cb1b8;margin-top:3px}
+.mb-player.mb-opponent{justify-content:flex-end;text-align:right}
+.mb-avatar{height:38px;width:38px;display:grid;place-items:center;flex:none;background:#34515d;border-radius:11px;font-weight:850;color:#fff}
+.mb-vs{font-size:21px;font-weight:950;font-style:italic;color:white;letter-spacing:-.07em}
+.mb-status{font-size:13px;font-weight:850;margin:0 0 16px;color:#c6e8da;text-align:center}
+.mb-status.won{color:#79f49d}.mb-status.lost{color:#ffa0aa}.mb-status.draw{color:#f5d589}
+.mb-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:min(435px,100%)}
+.mb-tile{border:1px solid #3f5660;border-bottom:3px solid #1c343d;background:linear-gradient(145deg,#38515c,#283d49);aspect-ratio:1;border-radius:9px;display:grid;place-items:center;transition:transform .15s,background .15s,border-color .15s;position:relative;overflow:hidden}
+.mb-tile:not(:disabled):hover{transform:translateY(-3px);border-color:#88dba4;background:#42616c}
+.mb-tile:disabled{cursor:default}
+.mb-tile.safe{background:radial-gradient(circle at 50% 30%,#266944,#12382c);border:1px solid #3b7854}
+.mb-tile.bomb{background:radial-gradient(circle at 50% 30%,#68343e,#3b202a);border:1px solid #904654}
+.mb-tile.recent{outline:2px solid #d3f7de;outline-offset:1px}
+.mb-tile img{width:76%;height:76%;object-fit:contain;filter:drop-shadow(0 2px 8px #00ff8040);pointer-events:none;animation:mb-pop .25s cubic-bezier(.2,1.4,.3,1)}
+.mb-bomb{width:35%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 30% 27%,#737b80,#151b21 70%);box-shadow:0 3px 7px #0008}
+.mb-tile-shine{width:44%;height:2px;border-radius:50%;background:#66818c;opacity:.2}
+.mb-bottom{display:flex;justify-content:space-between;gap:20px;width:min(435px,100%);font-size:11px;color:#8faeb5;margin-top:14px}
+.mb-rematch{margin-top:20px;padding:0 35px}
+@keyframes mb-pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@media(max-width:830px){.mb-layout{grid-template-columns:1fr}.mb-controls{border-right:0;border-bottom:1px solid #344752}.mb-arena{min-height:auto;padding:28px 14px}.mb-heading{align-items:start;flex-direction:column}.mb-mode{white-space:normal}}
+@media(max-width:480px){.mb-scoreboard{gap:8px}.mb-board{gap:6px}.mb-player strong{font-size:11px}.mb-player small{font-size:10px}.mb-avatar{width:30px;height:30px}}
+@media(prefers-reduced-motion:reduce){.mb-tile,.mb-tile img{transition:none;animation:none}}

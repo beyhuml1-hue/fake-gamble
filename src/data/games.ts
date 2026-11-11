@@ -14,6 +14,13 @@ export const GAMES = [
     gradient: "linear-gradient(160deg,#083344 0%,#0284c7 60%,#7dd3fc 140%)",
   },
   {
+    id: "mines-battles",
+    name: "Mines Battles",
+    blurb: "One shared board. Take turns opening gems.",
+    note: "Turn-based 1v1 practice",
+    gradient: "linear-gradient(160deg,#102b27 0%,#167445 60%,#81edb4 140%)",
+  },
+  {
     id: "plinko",
     name: "Plinko",
     blurb: "Drop a ball through the pegs.",

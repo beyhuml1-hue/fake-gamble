@@ -25,6 +25,9 @@ export function Icon({ name }: { name: string }) {
         <path d="M12 5v2M12 17v2M5 12h2M17 12h2M7.2 7.2l1.4 1.4M15.4 15.4l1.4 1.4M16.8 7.2l-1.4 1.4M8.6 15.4l-1.4 1.4" />
       </>
     ),
+    "mines-battles": (
+      <><path d="M3 7l6 12M9 7L3 19M15 7l6 12M21 7l-6 12" /><path d="M7 5l3 2M17 5l-3 2" /><path d="M12 9l3 3-3 3-3-3z" /></>
+    ),
     plinko: (
       <>
         <circle cx="12" cy="4" r="1.4" fill="currentColor" />
