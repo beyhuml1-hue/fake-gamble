@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { shuffle } from "../lib/random";
 import { sound } from "../lib/sound";
 import "./mines-battles.css";
@@ -53,18 +53,15 @@ export function MinesBattles() {
   const [game, setGame] = useState<Battle | null>(null);
   const [round, setRound] = useState(0);
   const [log, setLog] = useState<string[]>([]);
-  const lock = useRef(false);
 
   const start = () => {
     setGame(fresh(mineCount));
     setLog(["Battle started. You reveal the first tile."]);
     setRound(v => v + 1);
-    lock.current = false;
   };
 
   const reveal = (tile: number) => {
-    if (lock.current || !game || game.turn !== "you" || game.outcome !== "playing" || game.revealed.includes(tile)) return;
-    lock.current = true;
+    if (!game || game.turn !== "you" || game.outcome !== "playing" || game.revealed.includes(tile)) return;
     const next = openTile(game, tile, "you");
     setGame(next);
     if (next.outcome === "lost") {
@@ -74,7 +71,6 @@ export function MinesBattles() {
       sound.gem();
       setLog(lines => ["You found a gem on tile " + (tile + 1) + ".", ...lines].slice(0, 6));
     }
-    lock.current = false;
   };
 
   useEffect(() => {
