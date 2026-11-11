@@ -11,10 +11,13 @@ type Board = {
 };
 const URL = "/api/auth/community";
 
-export function Community() {
+export function Community({ compact = false }: { compact?: boolean } = {}) {
   const { isGuest, canSignIn, showSignIn } = useAuth();
   const [board, setBoard] = useState<Board | null>(null);
   const [message, setMessage] = useState("");
+  const [aiMessages, setAiMessages] = useState<{role:string;body:string;at:number}[]>([]);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [mentionOpen, setMentionOpen] = useState(false);
   const [selected, setSelected] = useState<Player | null>(null);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,6 +43,32 @@ export function Community() {
       if (version === request.current) setOffline(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (isGuest) return;
+    let active = true;
+    fetch("/api/auth/ai-owner",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(data=>{
+      if(active && data?.messages)setAiMessages(data.messages);
+    }).catch(()=>{});
+    return ()=>{active=false;};
+  },[isGuest]);
+
+  async function askAi(body:string) {
+    if(aiBusy)return;
+    setAiBusy(true);setError("");setNotice("");
+    try{
+      const response=await fetch("/api/auth/ai-owner",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({message:body.replace(/^@ai\b\s*/i,"").trim()||body}),
+      });
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error||"AI couldn't respond.");
+      const now=Date.now();
+      setAiMessages(prev=>[...prev.slice(-28),{role:"user",body,at:now},{role:"assistant",body:result.reply,at:now+1}]);
+      setMessage("");follow.current=true;
+    }catch(err){setError(err instanceof Error?err.message:"AI is unavailable.");}
+    finally{setAiBusy(false);}
+  }
 
   useEffect(() => {
     if (isGuest) return;
@@ -121,7 +150,7 @@ export function Community() {
 
   const countdown = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
   return (
-    <section className="community-page">
+    <section className={compact ? "community-page community-compact" : "community-page"}>
       <header className="community-heading">
         <h1>Chat</h1>
         <span>Chat balance <strong>{formatUSD(board.profile.cents)}</strong></span>
@@ -175,18 +204,31 @@ export function Community() {
             <p>{row.body}</p>
           </article>
         )) : <p>No messages yet.</p>}
+        {aiMessages.slice(-20).map((row,i)=><article key={"ai-"+row.at+"-"+i} className={"chat-message ai-"+row.role}>
+          <strong className="chat-player">{row.role==="assistant"?"✦ BlockBet AI":"You → @ai"}</strong>
+          <time dateTime={new Date(row.at).toISOString()}>{new Date(row.at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</time>
+          <p>{row.body}</p>
+        </article>)}
       </div>
       <form className="community-form chat-compose" onSubmit={event => {
         event.preventDefault();
+        if (/^@ai(?:\s|$)/i.test(message.trim())){void askAi(message.trim());return;}
         if (message.trim()) void action({ action: "message", body: message.trim() }, () => {
           follow.current = true;
           setMessage("");
         });
       }}>
         <label htmlFor="chat-message">Message</label>
-        <input id="chat-message" value={message} maxLength={240} autoComplete="off"
-          onChange={event => setMessage(event.target.value)} disabled={busy || offline} />
-        <button className="bet-btn" type="submit" disabled={busy || offline || !message.trim()}>Send</button>
+        <div className="chat-mention-input">
+          <input id="chat-message" value={message} maxLength={240} autoComplete="off" placeholder="Message… try @ai or @player"
+            onChange={event => {setMessage(event.target.value);setMentionOpen(/@[^\s]*$/.test(event.target.value));}} disabled={busy || aiBusy || offline} />
+          {mentionOpen&&<div className="chat-mentions" role="listbox" aria-label="Mention players">
+            {["ai",...Array.from(new Set(board.messages.map(m=>m.label))).slice(0,6)]
+              .filter(name=>name.toLowerCase().includes((message.match(/@([^\s]*)$/)?.[1]||"").toLowerCase()))
+              .map(name=><button type="button" key={name} onClick={()=>{setMessage(v=>v.replace(/@[^\s]*$/,"@"+name+" "));setMentionOpen(false);}}>@{name}</button>)}
+          </div>}
+        </div>
+        <button className="bet-btn" type="submit" disabled={busy || aiBusy || offline || !message.trim()}>{aiBusy?"AI thinking…":"Send"}</button>
       </form>
     </section>
   );

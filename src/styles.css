@@ -1783,3 +1783,25 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .mines-battle-lobby em{font-size:12px;font-style:normal;color:#c5d9dd}
 .mines-battle-lobby>b{font-size:12px;white-space:nowrap;background:#00e701;color:#102415;border-radius:8px;padding:13px 16px}
 @media(max-width:620px){.mines-battle-lobby{gap:11px;padding:14px}.mines-battle-lobby-icon{width:45px;height:45px;font-size:26px}.mines-battle-lobby strong{font-size:18px}.mines-battle-lobby>b{display:none}.mines-battle-cta{gap:8px;padding:10px}.mines-battle-cta strong{display:none}}
+
+/* Right-side live chat drawer; independent of the main page. */
+.chat-drawer-toggle{position:fixed;right:18px;bottom:18px;z-index:110;border:1px solid #43b56e;border-radius:12px;background:#00e701;color:#102516;font-size:13px;font-weight:900;padding:13px 17px;box-shadow:0 8px 30px #0008;cursor:pointer}
+.chat-drawer-toggle.active{right:400px;background:#213b48;color:#d9ffe2}
+.chat-drawer{position:fixed;right:0;top:0;bottom:0;width:min(385px,100vw);z-index:109;display:flex;flex-direction:column;background:#142936;border-left:1px solid #3d6b5b;box-shadow:-14px 0 45px #0009}
+.chat-drawer-head{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;background:#193b3d;border-bottom:1px solid #3b6858;flex:none}
+.chat-drawer-head strong{display:block;font-size:16px;color:#f1fff2}.chat-drawer-head small{display:block;font-size:11px;color:#a5d4b5;margin-top:4px}
+.chat-drawer-head button{border:1px solid #4b7969;background:#254d4b;color:#fff;border-radius:8px;padding:7px 11px;cursor:pointer}
+.chat-drawer .community-compact{padding:10px!important;margin:0!important;max-width:none!important;width:100%;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.chat-drawer .community-heading{padding:0 2px;margin:0 0 8px}.chat-drawer .community-heading h1{font-size:17px}
+.chat-drawer .community-rain{padding:10px!important;margin:0 0 9px!important;flex:none}
+.chat-drawer .community-rain h2{font-size:15px}.chat-drawer .community-rain p{font-size:10px}
+.chat-drawer .chat-thread{flex:1;min-height:80px;max-height:none!important;overflow-y:auto}
+.chat-drawer .chat-compose{flex:none;margin-top:8px}.chat-drawer .chat-profile{max-height:150px;overflow-y:auto}
+.chat-mention-input{position:relative;flex:1;min-width:0}.chat-mention-input input{width:100%}
+.chat-mentions{position:absolute;left:0;bottom:100%;width:100%;max-height:190px;overflow:auto;background:#1c3b4b;border:1px solid #4d796a;border-radius:8px;z-index:3}
+.chat-mentions button{display:block;width:100%;text-align:left;background:none;border:0;color:#d9ffe4;padding:10px;cursor:pointer}
+.chat-mentions button:hover{background:#2a6251}
+.chat-message.ai-assistant{background:#174338;border-left:3px solid #00e701;padding:9px;border-radius:8px}
+.chat-message.ai-assistant .chat-player{color:#98ffad;font-size:12px}
+.chat-message.ai-user{opacity:.85;border-left:2px solid #638a8a;padding-left:8px}
+@media(max-width:650px){.chat-drawer-toggle.active{right:12px;bottom:12px;z-index:111}.chat-drawer{width:100vw}.chat-drawer .community-compact{padding-bottom:64px!important}}

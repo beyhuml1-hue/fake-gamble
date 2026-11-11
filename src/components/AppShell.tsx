@@ -9,6 +9,7 @@ import { BetsTable } from "./BetsTable";
 import { Cashier } from "./Cashier";
 import { Icon } from "./Icons";
 import { HighlightToast } from "./Highlights";
+import { Community } from "../pages/Community";
 
 export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>> };
 
@@ -50,6 +51,7 @@ export function AppShell() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [muted, setMuted] = useState(false);
   const location = useLocation();
 
@@ -184,6 +186,16 @@ export function AppShell() {
         </div>
       </div>
 
+      <button type="button" className={"chat-drawer-toggle"+(chatOpen?" active":"")} aria-expanded={chatOpen}
+        aria-label={chatOpen?"Close live chat":"Open live chat"} onClick={()=>setChatOpen(v=>!v)}>
+        {chatOpen?"✕":"💬"} <span>{chatOpen?"Close chat":"Live Chat"}</span>
+      </button>
+      {chatOpen&&<aside className="chat-drawer" aria-label="Live BlockBet chat">
+        <header className="chat-drawer-head"><div><strong>✦ BlockBet Chat</strong><small>Live chat · Rain · @ai</small></div>
+          <button type="button" aria-label="Close chat" onClick={()=>setChatOpen(false)}>✕</button>
+        </header>
+        <Community compact/>
+      </aside>}
       <Cashier open={walletOpen} onClose={() => setWalletOpen(false)} />
       <HighlightToast />
     </div>
