@@ -19,7 +19,7 @@ const URL = "/api/auth/community";
 
 export function Community({ compact = false }: { compact?: boolean } = {}) {
   const { isGuest, canSignIn, showSignIn } = useAuth();
-  const {balance,walletReady,prepareTransfer,syncSocialWallet}=useWallet();
+  const {walletReady,prepareTransfer,syncSocialWallet}=useWallet();
   const [board, setBoard] = useState<Board | null>(null);
   const [message, setMessage] = useState("");
   const [aiMessages, setAiMessages] = useState<{role:string;body:string;at:number}[]>([]);
