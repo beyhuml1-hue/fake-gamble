@@ -88,7 +88,7 @@ test("chat authenticates requests, Rain splits exactly $10, and transfers are at
     const transfer = {action:"transfer",id:crypto.randomUUID(),recipient:boards[1].profile.id,cents:1000};
     assert.equal((await post(cookies[0],transfer)).status,200);
     assert.equal((await post(cookies[0],transfer)).status,200);
-    assert.equal((await post(cookies[0],{...transfer,id:crypto.randomUUID()})).status,409);
+    assert.equal((await post(cookies[0],{...transfer,id:crypto.randomUUID(),cents:2000})).status,409);
     const after=[];
     for(const cookie of cookies)after.push((await (await worker.fetch(new Request(walletUrl,{headers:{cookie}}),env)).json()).balance);
     assert.deepEqual(after,[1334,1333,333]);
