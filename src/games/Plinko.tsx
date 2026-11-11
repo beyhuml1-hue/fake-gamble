@@ -4,7 +4,6 @@ import { GameLayout } from "../components/GameLayout";
 import { PLINKO, PLINKO_ROWS, type PlinkoRows, type Risk } from "../lib/math";
 import { betCents, formatMult, payout } from "../lib/money";
 import { random } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const MAX_BALLS = 15;
@@ -48,7 +47,11 @@ function pose(ball: Ball, now: number) {
   const frac = step - whole;
   const ease = frac * frac * (3 - 2 * frac);
   if (whole < ball.rows) rights += (ball.path[whole] ?? 0) * ease;
-  return { step, rights, lift: t < 1 ? Math.sin(frac * Math.PI) : 0, done: t >= 1 };
+  // A small per-ball wobble and eased vertical hop simulate peg impacts.
+  // Neither changes the sampled left/right path or its landing bin.
+  const bounce=Math.sin(frac*Math.PI);
+  const sway=bounce*Math.sin((whole+ball.id)*1.9)*.07;
+  return {step,rights,sway,lift:t<1?Math.pow(bounce,.8):0,done:t>=1};
 }
 
 export function Plinko() {
@@ -132,7 +135,7 @@ export function Plinko() {
 
       for (const ball of balls.current) {
         const spot = pose(ball, now);
-        const x = w / 2 + (spot.rights - spot.step / 2) * gapX;
+        const x = w / 2 + (spot.rights - spot.step / 2 + spot.sway) * gapX;
         const y = top + gapY * spot.step + 8 - spot.lift * gapY * 0.42;
         ctx.beginPath();
         ctx.fillStyle = "rgba(0,0,0,0.35)";
@@ -200,12 +203,9 @@ export function Plinko() {
     const table = binsRef.current;
     const path: number[] = [];
     let rights = 0;
-    let target = 0;
-    table.forEach((mult, index) => {
-      if (mult > (table[target] ?? 0)) target = index;
-    });
+    // Fair binomial paths: every decision is a 50/50 sample.
     for (let i = 0; i < boardRows; i++) {
-      const right = luckOn() ? (rights < target ? 1 : 0) : random() < 0.5 ? 1 : 0;
+      const right=random()<.5?1:0;
       path.push(right);
       rights += right;
     }

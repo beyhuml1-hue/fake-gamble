@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
 import { GAMES } from "../data/games";
-import { formatUSD } from "../lib/money";
+import { HomeSpotlight } from "./HomeSpotlight";
 import { useWallet } from "../state/wallet";
 
 const ART_KEY = "blockbet.cover-style.v2";
@@ -53,32 +53,10 @@ export function Lobby() {
   });
   const featured = q || group !== "all" ? [] : FEATURED.map((id) => games.find((game) => game.id === id)).filter((game) => game != null);
   const rest = q || group !== "all" ? games : games.filter((game) => !FEATURED.includes(game.id));
-  const wagered = history.reduce((sum, row) => sum + row.wager, 0);
-  const profit = history.reduce((sum, row) => sum + row.payout - row.wager, 0);
 
   return (
     <section className="lobby" data-cover-style={artStyle}>
-      <div className="home-hero">
-        <div>
-          <p className="kicker">Play money</p>
-          <h1>Casino lobby</h1>
-          <p>Play with Play USD. No deposits or withdrawals.</p>
-        </div>
-        <Link to="/stats" className="hero-metrics" aria-label="View play stats">
-          <span>
-            <small>Net result</small>
-            <b className={profit > 0 ? "pos" : profit < 0 ? "neg" : ""}>{formatUSD(profit)}</b>
-          </span>
-          <span>
-            <small>Wagered</small>
-            <b>{formatUSD(wagered)}</b>
-          </span>
-          <span>
-            <small>Bets</small>
-            <b>{history.length}</b>
-          </span>
-        </Link>
-      </div>
+      <HomeSpotlight history={history}/>
       <div className="lobby-tools">
         <label className="search lobby-search">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -108,7 +86,7 @@ export function Lobby() {
         <>
           {featured.length > 0 ? (
             <>
-              <div className="section-label"><h2>Featured games</h2></div>
+              <div className="section-label"><h2>ORIGINALS</h2></div>
               <div className="feature-grid">
                 {featured.map((game) => (
                   <Link key={game.id} to={`/game/${game.id}`} className="tile feature">

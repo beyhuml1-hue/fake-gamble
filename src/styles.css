@@ -1816,3 +1816,31 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .tile-btn.safe{background:linear-gradient(135deg,#10492f,#1f533c);box-shadow:inset 0 0 12px #26ec7750}
 .tile-btn.safe .blockbet-revealed-gem{width:auto;height:83%;max-width:95%}
 @media(prefers-reduced-motion:reduce){.mine.gem,.tile-btn.safe{animation:none}}
+
+
+/* Reference-inspired black originals lobby; other game screens retain BlockBet styling. */
+.lobby{background:#08090b;border-radius:15px;padding:clamp(12px,2vw,28px);color:#f5f5f5;max-width:1300px}
+.lobby .lobby-tools{background:transparent;gap:12px;margin:0 0 15px}
+.lobby .lobby-search{background:#1b1b1d;border:1px solid #29292e;border-radius:13px;padding:7px 12px;min-height:54px;color:#e8e8e8}
+.lobby .lobby-search input{background:transparent;color:#f5f5f5}
+.lobby .chip-row button{background:#171719;color:#b7b7b7;border:1px solid #353535;border-radius:10px}
+.lobby .chip-row button[aria-pressed="true"]{background:#1e3328;border-color:#00e701;color:#b8ffc2}
+.lobby .art-style{color:#b8b8b8}
+.lobby .section-label{margin:25px 0 15px;display:flex;align-items:center;gap:14px}
+.lobby .section-label h2{font-size:17px;font-weight:900;letter-spacing:.12em;color:white}
+.lobby .section-label:after{content:"";flex:1;height:1px;background:#323232}
+.lobby .section-label>span{order:3;color:#858585;font-size:11px}
+.lobby .tile{background:#111;border-color:#252525;border-radius:14px;overflow:hidden;transition:transform .18s,border-color .18s}
+.lobby .tile:hover{transform:translateY(-2px);border-color:#00e701}
+.lobby .tile-art{position:relative}
+.lobby .tile-art img{aspect-ratio:4/4.6;object-fit:cover}
+.lobby .tile-name{position:absolute;left:0;right:0;bottom:0;padding:13px 10px 12px;color:#fff;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:-.025em;text-align:center;text-shadow:0 2px 8px #000}
+.lobby .tile-art:after{content:"";pointer-events:none;position:absolute;left:0;right:0;bottom:0;height:33%;background:linear-gradient(transparent,#0009)}
+.lobby .tile-name{z-index:1}
+.lobby .tile.feature .tile-name b{font-size:18px}
+.lobby .tile.feature .tile-name small{display:none}
+@media(max-width:780px){.lobby .feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.lobby .tile-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.lobby .lobby-tools{display:flex;flex-wrap:wrap}.lobby .lobby-search{flex-basis:100%}.lobby .tile-art img{aspect-ratio:1/1.24}}
+@media(min-width:781px){.lobby .feature-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.lobby .tile-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
+.chat-bigwin{background:linear-gradient(115deg,#45340e,#1e2c21);border:1px solid #a17e26;border-radius:9px;padding:11px!important;box-shadow:0 0 15px #b68b241a}
+.chat-bigwin .chat-player{color:#ffe193!important}
+.chat-bigwin p{font-weight:780;color:#f9df9c;line-height:1.5}

@@ -4,7 +4,7 @@ import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
 type Player = { id: string; label: string };
-type Message = { id: string; playerId: string; label: string; body: string; at: number };
+type Message = { id: string; playerId: string; label: string; body: string; kind?: "chat" | "bigwin"; at: number };
 type Board = {
   profile: Player & { cents: number };
   rain: { round: number; count: number; joined: 0 | 1; now: number; endsAt: number };
@@ -240,7 +240,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
           follow.current = box.scrollHeight - box.scrollTop - box.clientHeight < 32;
         }}>
         {board.messages.length ? board.messages.map(row => (
-          <article key={row.id} className="chat-message">
+          <article key={row.id} className={row.kind==="bigwin"?"chat-message chat-bigwin":"chat-message"}>
             <button type="button" className="chat-player" disabled={busy} onClick={() => {
               setSelected({ id: row.playerId, label: row.label });
               setAmount("");

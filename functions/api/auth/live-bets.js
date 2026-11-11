@@ -39,10 +39,27 @@ export async function onRequestPost({ request, env }) {
     const allowed=await hitRateLimit(env,"live-user:"+user.id,3600000,120,now);
     if(!allowed) return json({error:"Too many live bet updates."},429);
     const label="Player "+(await digest("feed:"+user.id,env.AUTH_PEPPER)).slice(0,6).toUpperCase();
-    await env.DB.prepare(
+    const inserted=await env.DB.prepare(
       "INSERT INTO auth_live_bets (id,user_id,label,game,wager,payout,at_ms) " +
       "VALUES (?1,?2,?3,?4,?5,?6,?7) ON CONFLICT(id) DO NOTHING"
     ).bind(id,user.id,label,game,wager,payout,now).run();
+    // Publish player-reported highlights automatically, never as verified results.
+    // A duplicate bet ID can't trigger another announcement.
+    const profit=payout-wager, mult=payout/wager;
+    if(inserted.meta?.changes===1 && ((profit>=5000&&mult>=5)||profit>=25000)){
+      if(await hitRateLimit(env,"bigwin:"+user.id,3600000,3,now)){
+        const amount=(payout/100).toLocaleString("en-US",{style:"currency",currency:"USD"});
+        const line="🎉 BIG WIN · "+mult.toFixed(2)+"× on "+game+" · "+amount+" Play USD payout (player-reported)";
+        try{
+          await env.DB.batch([
+            env.DB.prepare("INSERT OR IGNORE INTO community_profiles(user_id,public_id,label) VALUES(?1,?2,?3)")
+              .bind(user.id,crypto.randomUUID(),label),
+            env.DB.prepare("INSERT OR IGNORE INTO community_messages(id,user_id,body,kind,at_ms) "+
+              "VALUES(?1,?2,?3,'bigwin',?4)").bind(id,user.id,line,now),
+          ]);
+        }catch{/* Noncritical announcement failure doesn't invalidate the bet. */}
+      }
+    }
     // Keep a small, bounded public feed. No emails are ever exposed.
     if(Math.floor(now/1000)%17===0) {
       await env.DB.prepare("DELETE FROM auth_live_bets WHERE at_ms < ?1")

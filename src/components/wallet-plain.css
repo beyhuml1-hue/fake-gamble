@@ -1,0 +1,13 @@
+.wallet-plain{width:min(490px,100%);max-height:min(92vh,920px);overflow:auto}
+.wallet-plain-intro{border:1px solid #3a5863;border-radius:11px;background:#172d39;padding:13px 16px;margin:18px 0}
+.wallet-plain-intro strong{display:block;color:white;font-size:15px;margin-bottom:5px}
+.wallet-plain-intro span{display:block;color:#9eb9c3;font-size:12px;line-height:1.55}
+.wallet-plain-form{display:flex;flex-direction:column;gap:12px}
+.wallet-plain .field{display:block}.wallet-plain .field-label{display:block;margin-bottom:6px}
+.wallet-plain .amount input{min-width:0;flex:1;background:transparent;color:white;letter-spacing:.045em}
+.wallet-plain .cashier-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wallet-plain .cashier-row .field{min-width:0}
+.wallet-plain .quick-amounts{margin:0 0 3px}
+.wallet-plain .wallet-plain-foot{font-size:11px;line-height:1.55;color:#99acb8;margin:15px 0 0}
+.wallet-admin-remaining{background:#193a31;border:1px solid #397c5b;padding:10px;border-radius:8px;font-size:12px}
+.wallet-admin-remaining strong{color:#b0ffca}

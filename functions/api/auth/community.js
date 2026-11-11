@@ -55,7 +55,7 @@ export async function onRequestGet({ request, env }) {
       "SELECT COUNT(*) AS count, COALESCE(MAX(user_id = ?2), 0) AS joined FROM community_rain WHERE round = ?1"
     ).bind(round, user.id),
     env.DB.prepare(
-      "SELECT m.id, p.public_id AS playerId, p.label, m.body, m.at_ms AS at FROM community_messages m " +
+      "SELECT m.id, p.public_id AS playerId, p.label, m.body, m.kind, m.at_ms AS at FROM community_messages m " +
       "JOIN community_profiles p ON p.user_id = m.user_id " +
       "WHERE m.at_ms > ?1 AND NOT EXISTS (SELECT 1 FROM auth_account_controls c WHERE c.user_id = m.user_id AND c.banned = 1) " +
       "ORDER BY m.at_ms DESC, m.id DESC LIMIT 40"
