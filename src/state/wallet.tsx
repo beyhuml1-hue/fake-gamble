@@ -25,7 +25,9 @@ export type LedgerRow = {
   ref: string;
 };
 
+export type WalletNotification={id:string;sender:string;cents:number;at:number};
 type Saved = {
+  socialCursor?: number;
   balanceRevision?: string;
   balance: number;
   card: number;
@@ -39,6 +41,9 @@ type WalletValue = {
   history: BetRecord[];
   ledger: LedgerRow[];
   cashierNonce: number;
+  notifications: WalletNotification[];
+  dismissNotification: (id:string) => void;
+  syncSocialWallet: () => void;
   debit: (cents: number) => boolean;
   credit: (cents: number) => void;
   record: (game: string, wager: number, payout: number) => void;
@@ -87,6 +92,7 @@ function load(email: string): Saved {
       const parsed = JSON.parse(raw) as Saved;
       return {
         balanceRevision: typeof parsed.balanceRevision === "string" ? parsed.balanceRevision : undefined,
+        socialCursor: Number.isSafeInteger(parsed.socialCursor) && (parsed.socialCursor||0)>=0 ? parsed.socialCursor : 0,
         balance: clamp(Number(parsed.balance) || 0),
         card: Math.max(0, Math.round(Number(parsed.card) || 0)),
         history: readHistory(JSON.stringify(parsed.history ?? [])),
@@ -139,6 +145,8 @@ export function WalletProvider({ email, children, adjustment }: {
   const saved = applyAdjustment(stored, adjustment);
   if (saved !== stored) setSaved(saved);
   const [cashierNonce, setCashierNonce] = useState(0);
+  const [notifications,setNotifications] = useState<WalletNotification[]>([]);
+  const socialCursor = useRef(saved.socialCursor || 0);
   const balanceRef = useRef(saved.balance);
   const cardRef = useRef(saved.card);
   balanceRef.current = saved.balance;
@@ -151,6 +159,56 @@ export function WalletProvider({ email, children, adjustment }: {
       /* private mode */
     }
   }, [email, saved]);
+
+  // Server-recorded Rain and transfers are applied to the normal Play USD wallet
+  // exactly once per saved browser wallet. Other devices have independent game wallets.
+  useEffect(() => {
+    if(email==="phone")return;
+    let closed=false,waiting=false;
+    async function sync(){
+      if(closed||waiting||document.hidden)return;
+      waiting=true;
+      try{
+        const response=await fetch("/api/auth/wallet-events?after="+socialCursor.current,{cache:"no-store",credentials:"same-origin"});
+        if(!response.ok)return;
+        const body=await response.json() as {
+          events?:{seq:number;delta:number;kind:string}[];
+          notifications?:WalletNotification[];
+          hasMore?:boolean;
+        };
+        if(closed)return;
+        const rows=Array.isArray(body.events)?body.events.filter(x=>
+          Number.isSafeInteger(x.seq)&&x.seq>socialCursor.current&&
+          Number.isSafeInteger(x.delta)&&Math.abs(x.delta)<=100_000_000
+        ).sort((a,b)=>a.seq-b.seq):[];
+        if(rows.length){
+          // Apply in one functional update so game bets cannot overwrite the payout.
+          const cursor=rows[rows.length-1]!.seq;
+          socialCursor.current=cursor;
+          setSaved(prev=>{
+            const existing=prev.socialCursor||0;
+            const pending=rows.filter(x=>x.seq>existing);
+            const difference=pending.reduce((sum,e)=>sum+e.delta,0);
+            const next=clamp(prev.balance+difference);
+            balanceRef.current=next;
+            return {...prev,balance:next,socialCursor:cursor};
+          });
+        }
+        if(Array.isArray(body.notifications)){
+          setNotifications(body.notifications.filter(x=>typeof x.id==="string"&&
+            typeof x.sender==="string"&&Number.isSafeInteger(x.cents)&&x.cents>0).slice(0,5));
+        }
+        if(body.hasMore)window.dispatchEvent(new Event("blockbet:wallet-sync"));
+      }catch{ /* Retry on next poll. */ }
+      finally{waiting=false;}
+    }
+    const onSync=()=>void sync();
+    void sync();
+    const timer=window.setInterval(()=>void sync(),6000);
+    window.addEventListener("focus",onSync);
+    window.addEventListener("blockbet:wallet-sync",onSync);
+    return()=>{closed=true;window.clearInterval(timer);window.removeEventListener("focus",onSync);window.removeEventListener("blockbet:wallet-sync",onSync);};
+  },[email]);
 
   const assign = (balance: number, card = cardRef.current) => {
     const nextBalance = clamp(balance);
@@ -166,6 +224,15 @@ export function WalletProvider({ email, children, adjustment }: {
     history: saved.history,
     ledger: saved.ledger,
     cashierNonce,
+    notifications,
+    dismissNotification: (id) => {
+      setNotifications(prev=>prev.filter(x=>x.id!==id));
+      void fetch("/api/auth/wallet-events",{
+        method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"dismiss",id})
+      }).catch(()=>{});
+    },
+    syncSocialWallet: () => window.dispatchEvent(new Event("blockbet:wallet-sync")),
     debit: (cents) => {
       if (!Number.isFinite(cents) || cents <= 0 || balanceRef.current < cents) return false;
       assign(balanceRef.current - cents);

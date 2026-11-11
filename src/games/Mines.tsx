@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
@@ -114,11 +113,6 @@ export function Mines() {
         </BetPanel>
       }
     >
-      <Link to="/mines-battles" className="mines-battle-cta">
-        <span className="mines-battle-cta-icon">⚔</span>
-        <span><b>Challenge another player</b><small>New: real multiplayer Mines Battles · free to play</small></span>
-        <strong>Play battles →</strong>
-      </Link>
       <div className="mines-layout">
         <div className="mines-mult">
           <span>Next</span>

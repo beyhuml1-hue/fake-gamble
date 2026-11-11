@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { formatUSD } from "../lib/money";
+import { useWallet } from "../state/wallet";
 
 type Player = { id: string; label: string };
 type Message = { id: string; playerId: string; label: string; body: string; at: number };
@@ -8,17 +9,25 @@ type Board = {
   profile: Player & { cents: number };
   rain: { round: number; count: number; joined: 0 | 1; now: number; endsAt: number };
   messages: Message[];
+  players: Player[];
 };
+type PublicStats={
+ bets:number;wins:number;losses:number;wageredCents:number;wonCents:number;lostCents:number;netCents:number;
+};
+
 const URL = "/api/auth/community";
 
 export function Community({ compact = false }: { compact?: boolean } = {}) {
   const { isGuest, canSignIn, showSignIn } = useAuth();
+  const {balance,syncSocialWallet}=useWallet();
   const [board, setBoard] = useState<Board | null>(null);
   const [message, setMessage] = useState("");
   const [aiMessages, setAiMessages] = useState<{role:string;body:string;at:number}[]>([]);
   const [aiBusy, setAiBusy] = useState(false);
   const [mentionOpen, setMentionOpen] = useState(false);
   const [selected, setSelected] = useState<Player | null>(null);
+  const [playerStats,setPlayerStats]=useState<PublicStats|null>(null);
+  const [statsLoading,setStatsLoading]=useState(false);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -96,6 +105,26 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
     if (follow.current && thread.current) thread.current.scrollTop = thread.current.scrollHeight;
   }, [board?.messages]);
 
+  useEffect(()=>{
+    if(!selected){setPlayerStats(null);setStatsLoading(false);return;}
+    let disposed=false;
+    setPlayerStats(null);setStatsLoading(true);
+    void fetch(URL+"?player="+encodeURIComponent(selected.id),{cache:"no-store"})
+      .then(async response=>response.ok?response.json():null)
+      .then(data=>{if(!disposed)setPlayerStats(data?.stats||null);})
+      .catch(()=>{})
+      .finally(()=>{if(!disposed)setStatsLoading(false);});
+    return()=>{disposed=true;};
+  },[selected?.id]);
+
+  function mention(body:string){
+    const parts=body.split(/(@Player [0-9A-F]{6}|@ai)/gi);
+    return parts.map((fragment,index)=>{
+      const person=board?.players?.find(p=>("@"+p.label).toLowerCase()===fragment.toLowerCase());
+      return person?<button key={index} type="button" className="chat-inline-mention" onClick={()=>setSelected(person)}>{fragment}</button>:fragment;
+    });
+  }
+
   async function action(payload: object, onSuccess?: () => void) {
     if (busy) return;
     setBusy(true);
@@ -126,12 +155,15 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
       setError("Enter an amount from $0.01 to $1,000,000.00.");
       return;
     }
+    if(cents>balance){setError("Your Play USD wallet doesn't have enough to send.");return;}
+    if(cents>(board?.profile.cents||0)){setError("Only Rain and received-transfer credits are currently transferable. Earn more through Rain.");return;}
     const prior = lastTransfer.current;
     const id = prior?.recipient === selected.id && prior.cents === cents ? prior.id : crypto.randomUUID();
     lastTransfer.current = { id, recipient: selected.id, cents };
     void action({ action: "transfer", id, recipient: selected.id, cents }, () => {
       lastTransfer.current = null;
-      setNotice(`Sent ${formatUSD(cents)} to ${selected.label}.`);
+      syncSocialWallet();
+      setNotice(`Sent ${formatUSD(cents)} to ${selected.label}. Their wallet will update and they'll receive a notification.`);
       setSelected(null);
       setAmount("");
     });
@@ -153,7 +185,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
     <section className={compact ? "community-page community-compact" : "community-page"}>
       <header className="community-heading">
         <h1>Chat</h1>
-        <span>Chat balance <strong>{formatUSD(board.profile.cents)}</strong></span>
+        <span>Available to send <strong>{formatUSD(board.profile.cents)}</strong></span>
       </header>
       <section className="community-rain" aria-labelledby="rain-title">
         <div>
@@ -164,7 +196,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
           onClick={() => void action({ action: "join", round: board.rain.round })}>
           {board.rain.joined ? "Joined" : seconds ? "Join Rain" : "Round closed"}
         </button>
-        <p className="rain-details">A new round opens every 7 minutes. Players who join split $10 in Play USD.</p>
+        <p className="rain-details">Every 7 minutes, joined players split $10. Rewards go into your normal Play USD wallet automatically.</p>
       </section>
 
       {offline && <p role="status">Chat disconnected. Trying again…</p>}
@@ -177,6 +209,19 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
             <h2>{selected.label}</h2>
             <button type="button" className="ghost-btn" disabled={busy} onClick={() => setSelected(null)}>Close profile</button>
           </header>
+          <div className="chat-profile-stats">
+            {statsLoading?<p>Loading player stats…</p>:playerStats?(
+              <>
+                <div><small>Total wagered</small><strong>{formatUSD(playerStats.wageredCents)}</strong></div>
+                <div><small>Won (profit)</small><strong className="pos">{formatUSD(playerStats.wonCents)}</strong></div>
+                <div><small>Lost</small><strong className="neg">{formatUSD(playerStats.lostCents)}</strong></div>
+                <div><small>Wins / losses</small><strong>{playerStats.wins} / {playerStats.losses}</strong></div>
+                <div><small>Net result</small><strong>{formatUSD(playerStats.netCents)}</strong></div>
+                <div><small>Recorded bets</small><strong>{playerStats.bets}</strong></div>
+              </>
+            ):<p>No recorded stats available.</p>}
+          </div>
+          <p className="chat-stats-note">Based on reported community bets; records may be incomplete.</p>
           {selected.id === board.profile.id ? <p>This is your profile.</p> : (
             <form className="community-form" onSubmit={event => { event.preventDefault(); transfer(); }}>
               <label htmlFor="chat-transfer">Amount in Play USD</label>
@@ -185,7 +230,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
               <button className="bet-btn" type="submit" disabled={busy || offline}>Send Play USD</button>
             </form>
           )}
-          <p>Chat balance is separate from your game wallet.</p>
+          <p className="chat-stats-note">Transfers debit your normal Play USD wallet when synced. The available-to-send limit is backed by Rain and previously received transfers.</p>
         </section>
       )}
 
@@ -201,7 +246,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
               setAmount("");
             }}>{row.label}</button>
             <time dateTime={new Date(row.at).toISOString()}>{new Date(row.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
-            <p>{row.body}</p>
+            <p>{mention(row.body)}</p>
           </article>
         )) : <p>No messages yet.</p>}
         {aiMessages.slice(-20).map((row,i)=><article key={"ai-"+row.at+"-"+i} className={"chat-message ai-"+row.role}>
@@ -223,7 +268,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
           <input id="chat-message" value={message} maxLength={240} autoComplete="off" placeholder="Message… try @ai or @player"
             onChange={event => {setMessage(event.target.value);setMentionOpen(/@[^\s]*$/.test(event.target.value));}} disabled={busy || aiBusy || offline} />
           {mentionOpen&&<div className="chat-mentions" role="listbox" aria-label="Mention players">
-            {["ai",...Array.from(new Set(board.messages.map(m=>m.label))).slice(0,6)]
+            {["ai",...Array.from(new Set((board.players||[]).map(m=>m.label))).slice(0,25)]
               .filter(name=>name.toLowerCase().includes((message.match(/@([^\s]*)$/)?.[1]||"").toLowerCase()))
               .map(name=><button type="button" key={name} onClick={()=>{setMessage(v=>v.replace(/@[^\s]*$/,"@"+name+" "));setMentionOpen(false);}}>@{name}</button>)}
           </div>}

@@ -16,14 +16,14 @@ import { onRequestGet as liveBets, onRequestPost as postLiveBet } from "./functi
 import { onRequestGet as getAccount, onRequestPost as updateAccount } from "./functions/api/auth/admin.js";
 
 import { onRequestGet as community, onRequestPost as postCommunity } from "./functions/api/auth/community.js";
-import { onRequestGet as minesBattles, onRequestPost as postMinesBattle } from "./functions/api/auth/mines-battles.js";
 import { onRequestGet as aiOwner, onRequestPost as postAiOwner } from "./functions/api/auth/ai-owner.js";
+import { onRequestGet as walletEvents, onRequestPost as acknowledgeWalletNotice } from "./functions/api/auth/wallet-events.js";
 
 const routes = {
+  "GET /api/auth/wallet-events": walletEvents,
+  "POST /api/auth/wallet-events": acknowledgeWalletNotice,
   "GET /api/auth/ai-owner": aiOwner,
   "POST /api/auth/ai-owner": postAiOwner,
-  "GET /api/auth/mines-battles": minesBattles,
-  "POST /api/auth/mines-battles": postMinesBattle,
   "GET /api/auth/community": community,
   "POST /api/auth/community": postCommunity,
   "GET /api/auth/admin": getAccount,

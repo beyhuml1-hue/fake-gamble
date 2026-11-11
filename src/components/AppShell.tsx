@@ -46,7 +46,7 @@ function useRollingBalance(cents: number) {
 export function AppShell() {
   const { email: accountEmail, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
-  const { balance, cashierNonce, openCashier } = useWallet();
+  const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -196,6 +196,13 @@ export function AppShell() {
         </header>
         <Community compact/>
       </aside>}
+      {notifications.length>0&&<section className={"transfer-notifications"+(chatOpen?" drawer-open":"")} role="region" aria-label="Transfer notifications">
+        {notifications.map(item=><div key={item.id} className="transfer-notification" role="status">
+          <span className="transfer-notification-icon">✦</span>
+          <div><b>Play USD received!</b><p>{item.sender} sent you <strong>{formatAmount(item.cents)} Play USD</strong>.</p></div>
+          <button type="button" aria-label="Dismiss transfer notification" onClick={()=>dismissNotification(item.id)}>✕</button>
+        </div>)}
+      </section>}
       <Cashier open={walletOpen} onClose={() => setWalletOpen(false)} />
       <HighlightToast />
     </div>
