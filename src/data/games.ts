@@ -15,7 +15,7 @@ export const GAMES = [
   },
   {
     id: "mines-battles",
-    name: "Mines Battles",
+    name: "Mines Duel",
     blurb: "One shared board. Take turns opening gems.",
     note: "Turn-based 1v1 practice",
     gradient: "linear-gradient(160deg,#102b27 0%,#167445 60%,#81edb4 140%)",
@@ -78,7 +78,7 @@ export const GAMES = [
   },
   {
     id: "dragon",
-    name: "Dragon Tower",
+    name: "Towers",
     blurb: "Climb the tower, one tile a row.",
     note: "99% RTP",
     gradient: "linear-gradient(160deg,#1e1b4b 0%,#4f46e5 55%,#c7d2fe 140%)",
@@ -92,7 +92,7 @@ export const GAMES = [
   },
   {
     id: "diamonds",
-    name: "Diamonds",
+    name: "Gem Drop",
     blurb: "Five gems. Pairs pay.",
     note: "99% RTP",
     gradient: "linear-gradient(160deg,#0c4a6e 0%,#2563eb 45%,#f472b6 140%)",
@@ -146,6 +146,22 @@ export const GAMES = [
     note: "99% RTP",
     gradient: "linear-gradient(160deg,#450a0a 0%,#dc2626 55%,#fecaca 140%)",
   },
+  { id: "case-battles", name: "Case Battles", blurb: "Open a case against a computer rival.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "coinflip", name: "Coinflip", blurb: "Call heads or tails on a single coin.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "uno", name: "Uno", blurb: "Match cards by color or rank against the computer.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "connect-four", name: "Connect Four", blurb: "Drop four discs in a row against the computer.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "poker", name: "Poker", blurb: "Play a five-card draw showdown.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "pool", name: "8-Ball Pool", blurb: "Aim, set power and pocket the eight ball last.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "chess", name: "Chess", blurb: "Play a full game against the computer.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "floor-is-lava", name: "Floor is Lava", blurb: "Find safe stepping stones and claim your streak.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "draw", name: "Draw", blurb: "Draw to improve cards, then claim them before they bust.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "rps", name: "Rock Paper Scissors", blurb: "Make your move against the computer.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "double", name: "Double", blurb: "Pick red, black, or the rare gold result.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "pig-race", name: "Derby", blurb: "Pick a lane and watch the race.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "stocks", name: "Stocks", blurb: "Call the direction of the simulated market.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "slide", name: "Slide", blurb: "Chase a target before the slider reaches its limit.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "blitz", name: "Blitz", blurb: "Draw unique cards without pulling a repeat.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "snakes", name: "Snakes", blurb: "Roll two dice and cash out before hitting a snake.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
 ] as const;
 
 export type GameId = (typeof GAMES)[number]["id"];

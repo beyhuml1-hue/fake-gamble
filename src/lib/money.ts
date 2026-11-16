@@ -1,8 +1,8 @@
 export const START_CENTS = 2_000;
 export const MIN_BET = 10;
-export const MAX_BALANCE = 100_000_000;
+export const MAX_BALANCE = 10_000_000_000;
 
-export const PEG_COPY = "Balances are shown in USD.";
+export const PEG_COPY = "Play USD is simulated currency with no cash value.";
 
 export function formatUSD(cents: number): string {
   const sign = cents < 0 ? "-" : "";
@@ -39,5 +39,5 @@ export function betCents(dollars: number, balance: number): number | null {
 
 export function payout(bet: number, mult: number): number {
   if (mult <= 0) return 0;
-  return Math.max(0, Math.round(bet * mult));
+  return Math.min(MAX_BALANCE, Math.max(0, Math.round(bet * mult)));
 }

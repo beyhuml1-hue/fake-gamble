@@ -4,7 +4,7 @@ import {preparePlayer} from "./community.js";
 // One canonical Play USD account per signed-in user. All currency is fictional;
 // game actions are reported by browser game engines, never audited real money.
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const LIMIT=100000000;
+const LIMIT=10000000000;
 async function readBalance(env,user){
  return env.DB.prepare("SELECT cents,initialized FROM playusd_wallets WHERE user_id=?1").bind(user.id).first();
 }
@@ -52,8 +52,8 @@ export async function onRequestPost({request,env}){
    const [written,existing]=await env.DB.batch([
     env.DB.prepare("INSERT OR IGNORE INTO playusd_game_ops(id,user_id,delta_cents,at_ms) "+
      "SELECT ?1,?2,?3,?4 FROM playusd_wallets "+
-     "WHERE user_id=?2 AND initialized=1 AND cents+?3 BETWEEN 0 AND ?5")
-      .bind(id,user.id,delta,now,LIMIT),
+     "WHERE user_id=?2 AND initialized=1 AND cents+?3>=0")
+      .bind(id,user.id,delta,now),
     env.DB.prepare("SELECT 1 AS ok FROM playusd_game_ops WHERE id=?1 AND user_id=?2 AND delta_cents=?3")
       .bind(id,user.id,delta),
    ]);

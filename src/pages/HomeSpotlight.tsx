@@ -80,7 +80,7 @@ export function HomeSpotlight({history}:{history:BetRecord[]}){
     {active==="leaderboard"?<div className="home-leader-list">
       {loading?<div className="home-leader-empty">Loading community leaderboard…</div>:
        offline?<div className="home-leader-empty">Leaderboard is temporarily unavailable.</div>:
-       leaders.length?leaders.map((row,index)=><div className="home-leader-row" key={row.label}>
+       leaders.length?leaders.map((row,index)=><div className="home-leader-row" key={row.label+index}>
          <span className={"home-medal rank-"+index}>{["🥇","🥈","🥉"][index]}</span>
          <span className="home-leader-avatar" aria-hidden="true">{row.label.slice(0,1).toUpperCase()}</span>
          <span className="home-leader-name">{row.label}<small>{row.bets} recorded bets</small></span>

@@ -1,0 +1,144 @@
+.arcade-shell { --arcade-bg:#151b1d; --arcade-panel:#1d2627; --arcade-line:#303c3b; --arcade-jade:#72e1a0; }
+.arcade-shell .content { background:radial-gradient(ellipse at 75% 0%, #253331, var(--arcade-bg) 58%); }
+.arcade-shell .header { background:var(--arcade-panel); border-color:var(--arcade-line); }
+.arcade-shell .sidebar { background:var(--arcade-panel); border-color:var(--arcade-line); }
+.arcade-lobby, .arcade-race { max-width:1290px; margin:0 auto; padding:26px 0 42px; }
+.arcade-shell .lobby.arcade-lobby { background:transparent; }
+.arcade-hero { display:grid; grid-template-columns: minmax(0, 1.65fr) minmax(230px, 1fr); gap:14px; margin-bottom:25px; }
+.arcade-hero-card { border:1px solid #344541; border-radius:12px; padding:22px; background:linear-gradient(120deg,#252e2e,#1e2426 57%,#123b30); position:relative; overflow:hidden; }
+.arcade-hero-card h1, .arcade-hero-card h2 { margin:4px 0 14px; line-height:1; letter-spacing:-.045em; font-size:clamp(25px,3vw,39px); }
+.arcade-kicker { color:var(--arcade-jade); font-size:12px; font-weight:800; margin:0; }
+.arcade-wallet-stats { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.arcade-wallet-stats div { display:grid; padding:8px 13px; gap:4px; background:#121a1b; border-radius:7px; }
+.arcade-wallet-stats small,.arcade-wallet-note,.arcade-race-link span { color:#afc4bf; font-size:12px; }
+.arcade-wallet-note { margin:9px 0 0; }
+.arcade-account .bet-btn { width:auto; min-height:34px; padding:8px 14px; }
+.arcade-race-link { display:grid; align-items:end; min-height:170px; isolation:isolate; background:#084532; }
+.arcade-race-link:hover { border-color:var(--arcade-jade); }
+.arcade-race-link .arcade-art { position:absolute; z-index:-1; width:67%; height:auto; bottom:0; right:-4%; opacity:.85; mask-image:linear-gradient(to right,transparent,#000 30%); }
+.arcade-race-link h2 { margin:5px 0 4px; }
+.arcade-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.arcade-toolbar h2 { font-size:21px; margin:0 auto 0 0; }
+.arcade-toolbar .lobby-search { width:min(100%,240px); }
+.arcade-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,132px),1fr)); gap:14px; }
+.arcade-tile { position:relative; min-width:0; display:grid; grid-template-rows:auto minmax(44px,auto); align-items:center; justify-items:stretch; border:1px solid #245945; border-radius:9px; overflow:hidden; background:#084331; transition:transform .16s,border-color .16s; }
+.arcade-tile:hover { transform:translateY(-3px); border-color:var(--arcade-jade); }
+.arcade-tile strong { padding:4px 8px 9px; text-align:center; font-size:clamp(13px,1.15vw,19px); font-family:"Arial Black", Inter, sans-serif; font-weight:900; line-height:1.05; text-transform:uppercase; letter-spacing:-.03em; }
+.arcade-art,.arcade-game-art { aspect-ratio:1; background-image:url('/covers/arcade/blockbet-atlas.webp'); background-size:600% 400%; background-position:var(--art-x,0%) var(--art-y,0%); background-repeat:no-repeat; }
+.arcade-hero-card p:last-child { max-width:52ch; }
+.arcade-race .arcade-hero-card { display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap; }
+.race-clock { display:block; font-size:clamp(28px,4vw,52px); font-variant-numeric:tabular-nums; color:var(--arcade-jade); }
+.race-results { margin-top:18px; padding:20px; background:var(--arcade-panel); border:1px solid var(--arcade-line); border-radius:12px; }
+.race-results h2 { margin-top:0; }
+.race-results ol { padding-inline-start:28px; margin:0; }
+.race-results li { border-top:1px solid var(--arcade-line); padding:10px 0 10px 6px; }
+.race-results li strong { float:right; color:var(--arcade-jade); }
+.race-results li small { display:block; color:#afc4bf; }
+.arcade-shell .chat-drawer { background:#171e20; border-color:var(--arcade-line); box-shadow:none; }
+.arcade-shell .chat-drawer-head { background:var(--arcade-panel); border-color:var(--arcade-line); padding:12px; }
+.arcade-shell .chat-drawer-head strong { font-size:14px; }
+.arcade-shell .chat-drawer-head button { background:#293636; border-color:var(--arcade-line); }
+.arcade-shell .community-rain { background:linear-gradient(105deg,#253736,#1a2c26); }
+.arcade-shell .community-compact .rain-details { display:none; }
+.arcade-shell .community-compact .chat-thread { background:#101719; padding:6px; }
+.arcade-shell .community-compact .chat-message { background:#1d2628; padding:8px; border-radius:6px; border-top:0; }
+.arcade-shell .community-compact .chat-message+.chat-message { margin-top:5px; }
+.arcade-shell .community-compact .chat-message p { font-size:13px; }
+.arcade-shell .community-compact .chat-message time { font-size:10px; }
+.arcade-shell .community-compact .chat-compose { grid-template-columns: minmax(0,1fr) auto; }
+.arcade-shell .community-compact .chat-compose label { grid-column:1/-1; }
+.chat-avatar { display:inline-grid; place-items:center; margin-right:6px; width:20px; height:20px; border-radius:5px; background:#285445; color:#dffaea; font-size:10px; font-weight:900; vertical-align:middle; }
+.arcade-round,.arcade-board-stage { width:min(100%,690px); margin:auto; padding:22px; display:grid; justify-items:center; gap:12px; text-align:center; }
+.arcade-game-art { width:min(215px,60%); border-radius:13px; }
+.arcade-moves { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; }
+.arcade-playing-card,.uno-card { display:grid; place-items:center; background:#f7ecd2; color:#1d3029; font-size:24px; font-weight:900; border:3px solid transparent; border-radius:6px; width:52px; aspect-ratio:2/3; }
+.arcade-playing-card[aria-pressed=true] { border-color:#41d276; transform:translateY(-5px); }
+.uno-card { background:#b83345; color:#fff; border-color:#fff4; }
+.uno-card[data-color="1"] { background:#0b7356; }
+.uno-card[data-color="2"] { background:#2356a7; }
+.uno-card[data-color="3"] { background:#b06a18; }
+.uno-card:disabled { opacity:.55; }
+.uno-top { width:68px; font-size:34px; }
+.arcade-track { display:grid; width:min(390px,90%); gap:5px; }
+.arcade-track span { height:8px; background:linear-gradient(to right,#ffc35d var(--progress),#202c30 var(--progress)); border-radius:9px; }
+.connect-board,.connect-choices { display:grid; grid-template-columns: repeat(7,1fr); width:min(100%,370px); gap:5px; }
+.connect-board { background:#22509e; padding:8px; border-radius:8px; }
+.connect-board span { aspect-ratio:1; background:#15263d; box-shadow:inset 0 2px 7px #0009; border-radius:50%; }
+.connect-board span[data-disc="1"] { background:#ffcb4e; }
+.connect-board span[data-disc="2"] { background:#f25465; }
+.arcade-chess { display:grid; grid-template-columns:repeat(8,1fr); width:min(100%,440px); border:5px solid #2e4540; border-radius:5px; }
+.arcade-chess button { position:relative; aspect-ratio:1; min-width:0; line-height:1; border:0; color:#101717; background:#e2e9ca; font-family:"Segoe UI Symbol",serif; font-size:clamp(15px,4vw,40px); padding:0; }
+.arcade-chess button[data-dark=true] { background:#7ead8c; }
+.arcade-chess button[aria-pressed=true] { background:#ffc75d; }
+.arcade-chess button[data-legal=true]::after { content:""; position:absolute; inset:34%; border-radius:50%; background:#d49738a3; pointer-events:none; }
+.pool-table { display:block; width:100%; background:#293828; border:5px solid #554331; border-radius:13px; cursor:crosshair; touch-action:none; }
+@media(min-width:1080px) {
+ .arcade-shell.with-live-chat .sidebar { display:none; }
+ .arcade-shell.with-live-chat .transfer-notifications.drawer-open { right:18px; }
+ .arcade-shell.with-live-chat .main { margin-left:268px; }
+ .arcade-shell.with-live-chat .chat-drawer { inset:0 auto 0 0; width:268px; border-left:0; border-right:1px solid var(--arcade-line); }
+ .arcade-shell.with-live-chat .chat-drawer-toggle.active { display:none; }
+ .arcade-shell .mobile-brand { display:inline-block; font-weight:900; font-size:17px; }
+}
+@media(max-width:720px) {
+ .arcade-hero { grid-template-columns:1fr; }
+ .arcade-hero-card { padding:16px; }
+ .arcade-race-link { min-height:115px; }
+ .arcade-race-link .arcade-art { width:145px; right:0; }
+ .arcade-grid { grid-template-columns:repeat(auto-fill,minmax(min(100%,105px),1fr)); gap:8px; }
+ .arcade-toolbar .lobby-search { width:100%; }
+ .arcade-board-stage,.arcade-round { padding:10px; }
+}
+[data-game="mines"] { --art-x:0%; --art-y:0%; }
+[data-game="cases"] { --art-x:20%; --art-y:0%; }
+[data-game="case-battles"] { --art-x:40%; --art-y:0%; }
+[data-game="flip"] { --art-x:60%; --art-y:0%; }
+[data-game="blackjack"] { --art-x:80%; --art-y:0%; }
+[data-game="dice"] { --art-x:100%; --art-y:0%; }
+[data-game="dragon"] { --art-x:0%; --art-y:33.333333333333336%; }
+[data-game="mines-battles"] { --art-x:20%; --art-y:33.333333333333336%; }
+[data-game="coinflip"] { --art-x:40%; --art-y:33.333333333333336%; }
+[data-game="crash"] { --art-x:60%; --art-y:33.333333333333336%; }
+[data-game="uno"] { --art-x:80%; --art-y:33.333333333333336%; }
+[data-game="connect-four"] { --art-x:100%; --art-y:33.333333333333336%; }
+[data-game="poker"] { --art-x:0%; --art-y:66.66666666666667%; }
+[data-game="pool"] { --art-x:20%; --art-y:66.66666666666667%; }
+[data-game="chess"] { --art-x:40%; --art-y:66.66666666666667%; }
+[data-game="floor-is-lava"] { --art-x:60%; --art-y:66.66666666666667%; }
+[data-game="draw"] { --art-x:80%; --art-y:66.66666666666667%; }
+[data-game="rps"] { --art-x:100%; --art-y:66.66666666666667%; }
+[data-game="upgrader"] { --art-x:0%; --art-y:100%; }
+[data-game="plinko"] { --art-x:20%; --art-y:100%; }
+[data-game="roulette"] { --art-x:40%; --art-y:100%; }
+[data-game="pig-race"] { --art-x:60%; --art-y:100%; }
+[data-game="race"] { --art-x:80%; --art-y:100%; }
+[data-game="chicken"] { --art-x:100%; --art-y:100%; }
+.arcade-art[data-game="snakes"], .arcade-game-art[data-game="snakes"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:0%; --art-y:5.5%; }
+.arcade-art[data-game="slide"], .arcade-game-art[data-game="slide"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:33.333333333333336%; --art-y:5.5%; }
+.arcade-art[data-game="blitz"], .arcade-game-art[data-game="blitz"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:66.66666666666667%; --art-y:5.5%; }
+.arcade-art[data-game="stocks"], .arcade-game-art[data-game="stocks"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:100%; --art-y:5.5%; }
+.arcade-art[data-game="keno"], .arcade-game-art[data-game="keno"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:0%; --art-y:49.2%; }
+.arcade-art[data-game="hilo"], .arcade-game-art[data-game="hilo"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:33.333333333333336%; --art-y:49.2%; }
+.arcade-art[data-game="limbo"], .arcade-game-art[data-game="limbo"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:66.66666666666667%; --art-y:49.2%; }
+.arcade-art[data-game="baccarat"], .arcade-game-art[data-game="baccarat"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:100%; --art-y:49.2%; }
+.arcade-art[data-game="wheel"], .arcade-game-art[data-game="wheel"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:0%; --art-y:94.5%; }
+.arcade-art[data-game="diamonds"], .arcade-game-art[data-game="diamonds"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:33.333333333333336%; --art-y:94.5%; }
+.arcade-art[data-game="packs"], .arcade-game-art[data-game="packs"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:66.66666666666667%; --art-y:94.5%; }
+.arcade-art[data-game="darts"], .arcade-game-art[data-game="darts"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:100%; --art-y:94.5%; }
+
+
+.lava-board { display:grid; grid-template-columns:repeat(7,1fr); width:min(100%,350px); gap:4px; padding:8px; border-radius:10px; background:#772d24; }
+.lava-board button { aspect-ratio:1; border:2px solid #716b85; background:#3a354b; border-radius:5px; }
+.lava-board button:hover,.lava-board button[data-chosen=true] { border-color:#fff9ae; }
+.lava-board button[data-sunk=true] { background:#e05220; border-color:#f28c30; }
+
+@media(min-width:1440px) { .arcade-grid { grid-template-columns:repeat(8,minmax(0,1fr)); } }
+.arcade-account { isolation:isolate; }
+.arcade-account .arcade-art { position:absolute; width:min(37%,224px); bottom:-12%; right:0; z-index:-1; opacity:.82; mask-image:radial-gradient(ellipse at center,#000 48%,transparent 76%); }
+.arcade-tile .arcade-art { mask-image:linear-gradient(#000 95%,transparent 100%); }
+.arcade-art:is([data-game="double"],[data-game="pump"],[data-game="account-coins"],[data-game="rain"]),
+.arcade-game-art[data-game="double"] { background-image:url('/covers/arcade/blockbet-atlas-extras.webp'); background-size:200% 200%; }
+[data-game="pump"], [data-game="rain"] { --art-x:100%; }
+[data-game="account-coins"], [data-game="rain"] { --art-y:100%; }
+.chat-rain-art { display:inline-block; vertical-align:middle; width:25px; margin-right:6px; border-radius:5px; }
+@media(max-width:570px) { .arcade-account .arcade-art { opacity:.5; } }

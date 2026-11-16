@@ -103,7 +103,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
 
   useEffect(() => {
     if (follow.current && thread.current) thread.current.scrollTop = thread.current.scrollHeight;
-  }, [board?.messages]);
+  }, [board?.messages, aiMessages]);
 
   useEffect(()=>{
     if(!selected){setPlayerStats(null);setStatsLoading(false);return;}
@@ -118,9 +118,10 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
   },[selected?.id]);
 
   function mention(body:string){
-    const parts=body.split(/(@Player [0-9A-F]{6}|@ai)/gi);
+    const parts=body.split(/(@Player [0-9A-F]{6}|@[a-z]+)/gi);
     return parts.map((fragment,index)=>{
-      const person=board?.players?.find(p=>("@"+p.label).toLowerCase()===fragment.toLowerCase());
+      const matches=board?.players?.filter(p=>("@"+p.label).toLowerCase()===fragment.toLowerCase())??[];
+      const person=matches.length===1?matches[0]:null;
       return person?<button key={index} type="button" className="chat-inline-mention" onClick={()=>setSelected(person)}>{fragment}</button>:fragment;
     });
   }
@@ -173,27 +174,24 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
     });
   }
 
-  if (isGuest) return <section className="community-page">
-    <h1>Chat</h1>
+  if (isGuest) return <section className={compact ? "community-page community-compact" : "community-page"}>
+    {!compact && <h1>Live Chat</h1>}
     <p>Log in to chat, send Play USD, and join Rain.</p>
     {canSignIn && <button type="button" className="bet-btn" onClick={showSignIn}>Log in</button>}
   </section>;
 
-  if (!board) return <section className="community-page">
-    <h1>Chat</h1>
+  if (!board) return <section className={compact ? "community-page community-compact" : "community-page"}>
+    {!compact && <h1>Live Chat</h1>}
     <p role="status">{offline ? "Chat is unavailable. Trying again…" : "Opening chat…"}</p>
   </section>;
 
   const countdown = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
   return (
     <section className={compact ? "community-page community-compact" : "community-page"}>
-      <header className="community-heading">
-        <h1>Chat</h1>
-        
-      </header>
+      {!compact && <header className="community-heading"><h1>Live Chat</h1></header>}
       <section className="community-rain" aria-labelledby="rain-title">
         <div>
-          <h2 id="rain-title">$10 Rain</h2>
+          <h2 id="rain-title"><span aria-hidden="true" className="arcade-art chat-rain-art" data-game="rain"/>$10 Rain</h2>
           <p>{countdown} left · {board.rain.count} joined</p>
         </div>
         <button className="bet-btn" type="button" disabled={busy || offline || !!board.rain.joined || !seconds}
@@ -248,7 +246,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
             <button type="button" className="chat-player" disabled={busy} onClick={() => {
               setSelected({ id: row.playerId, label: row.label });
               setAmount("");
-            }}>{row.label}</button>
+            }}><span className="chat-avatar" aria-hidden="true">{row.label.split(" ").at(-1)?.slice(0,2)}</span>{row.label}</button>
             <time dateTime={new Date(row.at).toISOString()}>{new Date(row.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
             <p>{mention(row.body)}</p>
           </article>
@@ -269,7 +267,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
       }}>
         <label htmlFor="chat-message">Message</label>
         <div className="chat-mention-input">
-          <input id="chat-message" value={message} maxLength={240} autoComplete="off" placeholder="Message… try @ai or @player"
+          <input id="chat-message" value={message} maxLength={240} autoComplete="off" placeholder="Message… use @ to mention a player"
             onChange={event => {setMessage(event.target.value);setMentionOpen(/@[^\s]*$/.test(event.target.value));}} disabled={busy || aiBusy || offline} />
           {mentionOpen&&<div className="chat-mentions" role="listbox" aria-label="Mention players">
             {["ai",...Array.from(new Set((board.players||[]).map(m=>m.label))).slice(0,25)]

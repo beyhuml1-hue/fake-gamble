@@ -6,8 +6,8 @@ function safe(row:unknown):row is Highlight{
  if(!row||typeof row!=="object")return false;
  const r=row as Record<string,unknown>;
  return typeof r.id==="string"&&typeof r.game==="string"&&/^[A-Za-z \-]{2,32}$/.test(r.game)&&
- typeof r.wager==="number"&&Number.isSafeInteger(r.wager)&&r.wager>0&&r.wager<=100000000&&
- typeof r.payout==="number"&&Number.isSafeInteger(r.payout)&&r.payout>=0&&r.payout<=1000000000&&
+ typeof r.wager==="number"&&Number.isSafeInteger(r.wager)&&r.wager>0&&r.wager<=10000000000&&
+ typeof r.payout==="number"&&Number.isSafeInteger(r.payout)&&r.payout>=0&&r.payout<=10000000000&&
  typeof r.at==="number"&&Number.isFinite(r.at);
 }
 function urlFor(row:Highlight){

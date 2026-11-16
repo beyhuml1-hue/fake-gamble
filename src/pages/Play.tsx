@@ -22,10 +22,15 @@ import { Plinko } from "../games/Plinko";
 import { Pump } from "../games/Pump";
 import { Roulette } from "../games/Roulette";
 import { Upgrader } from "../games/Upgrader";
+import { Blitz, Snakes } from "../games/CardAndDice";
+import { ArcadeRound } from "../games/ArcadeRound";
+import { BoardArcade } from "../games/BoardArcade";
 import { Wheel } from "../games/Wheel";
 
-const PAGES: Record<GameId, ComponentType> = {
+const PAGES: Partial<Record<GameId, ComponentType>> = {
   dice: Dice,
+  blitz: Blitz,
+  snakes: Snakes,
   mines: Mines,
   "mines-battles": MinesBattles,
   plinko: Plinko,
@@ -38,6 +43,7 @@ const PAGES: Record<GameId, ComponentType> = {
   roulette: Roulette,
   dragon: Dragon,
   flip: Flip,
+  coinflip: () => <Flip game="Coinflip" />,
   diamonds: Diamonds,
   baccarat: Baccarat,
   pump: Pump,
@@ -53,5 +59,8 @@ export function Play() {
   const game = gameById(id);
   if (!game) return <Navigate to="/" replace />;
   const Page = PAGES[game.id];
-  return <Page />;
+  if (Page) return <Page key={game.id} />;
+  if (game.id === "chess" || game.id === "connect-four" || game.id === "uno" || game.id === "pool")
+    return <BoardArcade key={game.id} game={game.id} />;
+  return <ArcadeRound key={game.id} game={game} />;
 }

@@ -1,9 +1,10 @@
-import { json, currentUser, dbReady, sameOrigin, readBody, digest, hitRateLimit } from "../../_shared/auth.js";
+import { json, currentUser, dbReady, sameOrigin, readBody, publicDisplayName, hitRateLimit } from "../../_shared/auth.js";
 
 const GAMES = new Set([
   "Dice","Mines","Plinko","Crash","Limbo","Keno","Wheel","Hi-Lo",
   "Blackjack","Roulette","Dragon Tower","Flip","Diamonds","Baccarat",
   "Pump","Cases","Packs","Upgrader","Chicken Road","Darts",
+  "Case Battles","Coinflip","Uno","Connect Four","Poker","8-Ball Pool","Chess","Floor is Lava","Draw","Rock Paper Scissors","Double","Derby","Stocks","Slide","Blitz","Snakes",
 ]);
 const HEADERS = {"Cache-Control":"no-store"};
 
@@ -11,10 +12,10 @@ export async function onRequestGet({ env }) {
   if (!(await dbReady(env))) return json({ error:"Live bets currently unavailable." },503);
   try {
     const rows=await env.DB.prepare(
-      "SELECT id, label, game, wager, payout, at_ms AS at FROM auth_live_bets " +
-      "WHERE at_ms > ?1 ORDER BY at_ms DESC, id DESC LIMIT 30"
+      "SELECT b.id, u.email, b.game, b.wager, b.payout, b.at_ms AS at FROM auth_live_bets b JOIN auth_users u ON u.id=b.user_id " +
+      "WHERE at_ms > ?1 ORDER BY b.at_ms DESC, b.id DESC LIMIT 30"
     ).bind(Date.now()-24*3600*1000).all();
-    return json({ bets:rows.results || [], live:true, notice:"Real player-submitted bets. Credits are fictional and outcomes are not server-audited." },200,HEADERS);
+    return json({ bets:(rows.results || []).map(({email,...row})=>({...row,label:publicDisplayName(email)})), live:true, notice:"Real player-submitted bets. Credits are fictional and outcomes are not server-audited." },200,HEADERS);
   } catch {
     return json({error:"Live bets feed is temporarily offline."},503);
   }
@@ -30,15 +31,15 @@ export async function onRequestPost({ request, env }) {
   const game=typeof body?.game==="string"&&GAMES.has(body.game)?body.game:null;
   const wager=body?.wager;
   const payout=body?.payout;
-  if(!id||!game||!Number.isInteger(wager)||wager<10||wager>100_000_000||
-     !Number.isInteger(payout)||payout<0||payout>500_000_000) {
+  if(!id||!game||!Number.isInteger(wager)||wager<10||wager>10_000_000_000||
+     !Number.isInteger(payout)||payout<0||payout>10_000_000_000) {
     return json({error:"Invalid bet."},400);
   }
   try {
     const now=Date.now();
     const allowed=await hitRateLimit(env,"live-user:"+user.id,3600000,120,now);
     if(!allowed) return json({error:"Too many live bet updates."},429);
-    const label="Player "+(await digest("feed:"+user.id,env.AUTH_PEPPER)).slice(0,6).toUpperCase();
+    const label=publicDisplayName(user.email);
     const inserted=await env.DB.prepare(
       "INSERT INTO auth_live_bets (id,user_id,label,game,wager,payout,at_ms) " +
       "VALUES (?1,?2,?3,?4,?5,?6,?7) ON CONFLICT(id) DO NOTHING"

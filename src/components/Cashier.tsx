@@ -59,17 +59,17 @@ export function Cashier({open,onClose}:{open:boolean;onClose:()=>void}){
  return <div className="modal-back" role="presentation" onClick={close}>
   <div className="modal wallet-modal wallet-plain" role="dialog" aria-labelledby="cashier-title" onClick={e=>e.stopPropagation()}>
    <header className="cashier-head">
-    <div><h2 id="cashier-title">Wallet</h2><p className="hint">Play USD Balance <strong>{formatUSD(balance)}</strong></p></div>
+    <div><h2 id="cashier-title">Demo wallet</h2><p className="hint">Play USD Balance <strong>{formatUSD(balance)}</strong></p></div>
     <button className="text-btn" type="button" onClick={close}>Close</button>
    </header>
    {receipt?<div className="receipt" role="status">
-    <span className="receipt-mark">✓</span><h3>Payment accepted</h3><strong>{formatUSD(receipt.amount)}</strong>
+    <span className="receipt-mark">✓</span><h3>Demo credits added</h3><strong>{formatUSD(receipt.amount)}</strong>
     <p>Your normal Play USD balance will update automatically.</p>
     <small>Simulation receipt {receipt.id.slice(0,8).toUpperCase()}</small>
     <button className="bet-btn" type="button" onClick={()=>setReceipt(null)}>Done</button>
    </div>:<>
     <div className="wallet-plain-intro">
-     <strong>Card details</strong><span>Use your PlayBlockBet test card to add simulated credits.</span>
+     <strong>Card details</strong><span>Use only a BlockBet demo card. Play USD has no cash value.</span>
     </div>
     {remaining!==null&&<p className="wallet-admin-remaining">Shared card balance: <strong>{formatUSD(remaining)}</strong></p>}
     <form className="wallet-plain-form" onSubmit={e=>void submit(e)}>

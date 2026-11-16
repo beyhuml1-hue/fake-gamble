@@ -3,12 +3,13 @@ import {
   type FormEvent, type ReactNode,
 } from "react";
 
-type Phase = "loading" | "unavailable" | "login" | "signup" | "verify" | "authenticated" | "guest";
+type Phase = "loading" | "login" | "signup" | "verify" | "authenticated" | "guest";
 export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" };
-type Account = { email: string; admin?: boolean; balanceAdjustment?: BalanceAdjustment | null };
+type Account = { email: string; displayName?: string; admin?: boolean; balanceAdjustment?: BalanceAdjustment | null };
 type AuthValue = {
   isAdmin: boolean;
   email: string | null;
+  displayName: string | null;
   isGuest: boolean;
   canSignIn: boolean;
   logout: () => Promise<void>;
@@ -42,7 +43,6 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   const [account, setAccount] = useState<Account | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [code, setCode] = useState("");
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
       try {
         const status = await api("status");
         if (!status.enabled) {
-          if (alive) setPhase("unavailable");
+          if (alive) setPhase("guest");
           return;
         }
         if (alive) setEnabled(true);
@@ -68,9 +68,9 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
             return;
           }
         } catch { /* No active session. */ }
-        if (alive) setPhase("login");
+        if (alive) setPhase("guest");
       } catch {
-        if (alive) setPhase("unavailable");
+        if (alive) setPhase("guest");
       }
     }
     void init();
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
 
   function switchTo(next: "login" | "signup") {
     setPhase(next);
-    setError(""); setNotice(""); setPassword(""); setConfirm(""); setCode(""); setVisible(false);
+    setError(""); setNotice(""); setPassword(""); setCode(""); setVisible(false);
   }
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
       if (!result.user?.email) throw new Error("Couldn't log in.");
       setAccount(result.user);
       setEmail(result.user.email);
-      setPassword(""); setConfirm(""); setPhase("authenticated");
+      setPassword(""); setPhase("authenticated");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't log in.");
     } finally { setBusy(false); }
@@ -133,12 +133,11 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
     if (password.length < 6 || password.length > 128) {
       setError("Choose a password with at least 6 characters."); return;
     }
-    if (password !== confirm) { setError("Your passwords don't match."); return; }
     setBusy(true);
     try {
       const result = await api("signup", { email: email.trim(), password });
       setNotice(result.message || "We've sent your six-digit verification code.");
-      setCode(""); setPassword(""); setConfirm(""); setPhase("verify");
+      setCode(""); setPassword(""); setPhase("verify");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't start sign-up.");
     } finally { setBusy(false); }
@@ -180,22 +179,17 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   };
 
   const showSignIn = () => switchTo("login");
-  const ready = phase === "authenticated" || phase === "guest";
+  const signedIn = phase === "authenticated";
+  const editing = phase === "login" || phase === "signup" || phase === "verify";
   const context: AuthValue = {
     isAdmin: phase === "authenticated" && account?.admin === true,
-    email: phase === "authenticated" ? email : null,
-    isGuest: phase === "guest",
+    email: signedIn ? account?.email ?? null : null,
+    displayName: signedIn ? account?.displayName ?? "Player" : null,
+    isGuest: !signedIn,
     canSignIn: enabled,
     logout,
     showSignIn,
   };
-  if (ready) {
-    // Wallet state remains browser-local, namespaced to verified accounts on this device.
-    return <AuthContext.Provider value={context}>
-      {children(phase === "guest" ? "phone" : email, phase === "authenticated" ? account?.balanceAdjustment : null)}
-    </AuthContext.Provider>;
-  }
-
   if (phase === "loading") {
     return <div className="auth-screen"><div className="auth-card">
       <div className="auth-logo">B</div><h1>BlockBet</h1><p>Checking your session…</p>
@@ -203,27 +197,24 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   }
 
   return (
-    <div className="auth-screen">
-      <section className="auth-card" aria-label="BlockBet player account">
+    <AuthContext.Provider value={context}>
+    <div className="auth-app" inert={editing}>{children(signedIn ? account?.email ?? email : "phone", signedIn ? account?.balanceAdjustment : null)}</div>
+    {editing && <div className="auth-screen auth-overlay" onKeyDown={event=>{if(event.key==="Escape"&&!busy)setPhase("guest");}}>
+      <section className="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-dialog-title">
         <div className="auth-heading">
           <span className="auth-logo">B</span>
           <div><strong>BlockBet</strong><small>Player account</small></div>
+          <button type="button" className="auth-close" disabled={busy} aria-label="Close sign-in" onClick={()=>setPhase("guest")}>&times;</button>
         </div>
-        {phase === "unavailable" ? (
-          <>
-            <h1>Accounts are temporarily unavailable</h1>
-            <p>You can still play as a guest. Your balance stays on this device.</p>
-            <button type="button" className="auth-back" onClick={() => window.location.reload()}>Try again</button>
-          </>
-        ) : phase === "verify" ? (
+        {phase === "verify" ? (
           <>
             <div className="auth-verify-icon" aria-hidden="true">✉</div>
-            <h1>Verify your email</h1>
+            <h1 id="auth-dialog-title">Verify your email</h1>
             <p>Enter the six-digit code sent to <strong>{email}</strong>. Your code expires in 10 minutes.</p>
             <form className="auth-form" onSubmit={submitVerify}>
               <label htmlFor="account-code">Verification code</label>
               <input id="account-code" className="otp-input" type="text" name="code"
-                autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
+                autoComplete="one-time-code" autoFocus inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
                 placeholder="000000" required disabled={busy} value={code}
                 onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}/>
               <button type="submit" className="bet-btn auth-submit" disabled={busy || code.length !== 6}>
@@ -235,7 +226,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
           </>
         ) : (
           <>
-            <h1>{phase === "signup" ? "Create an account" : "Log in"}</h1>
+            <h1 id="auth-dialog-title">{phase === "signup" ? "Create an account" : "Sign in"}</h1>
             <p>{phase === "signup" ? "We'll email you a six-digit code to confirm your address." : "Enter your email and password to access your account."}</p>
             <div className="auth-switch" role="group" aria-label="Account access">
               <button type="button" className={phase === "login" ? "selected" : ""} onClick={() => switchTo("login")} aria-pressed={phase === "login"}>Log in</button>
@@ -244,7 +235,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
             <form className="auth-form" onSubmit={phase === "signup" ? submitSignup : submitLogin}>
               <label htmlFor="account-email">Email address</label>
               <input id="account-email" type="email" name="email" placeholder="you@example.com"
-                autoComplete="email" inputMode="email" maxLength={254}
+                autoComplete="username" autoFocus inputMode="email" maxLength={254}
                 required value={email} onChange={e => setEmail(e.target.value)} disabled={busy} />
               <label htmlFor="account-password">Password</label>
               <div className="auth-password-wrap">
@@ -256,16 +247,6 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
                 <button type="button" aria-label={visible ? "Hide password" : "Show password"}
                   onClick={() => setVisible(v => !v)}>{visible ? "Hide" : "Show"}</button>
               </div>
-              {phase === "signup" && (
-                <>
-                  <label htmlFor="account-confirm">Confirm password</label>
-                  <input id="account-confirm" name="confirm" type={visible ? "text" : "password"}
-                    autoComplete="new-password" placeholder="Repeat your password"
-                    minLength={6} maxLength={128} required value={confirm}
-                    onChange={e => setConfirm(e.target.value)} disabled={busy} />
-                  <small className="auth-password-hint">Use at least 6 characters. Longer passwords are safer.</small>
-                </>
-              )}
               <button className="bet-btn auth-submit" type="submit" disabled={busy}>
                 {busy ? "Please wait…" : phase === "signup" ? "Create account" : "Log in"}
               </button>
@@ -277,9 +258,10 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
         <button className="auth-guest-link" type="button" onClick={() => setPhase("guest")}>
           Continue as guest <span aria-hidden="true">→</span>
         </button>
-        <p className="auth-fineprint">18+ · Your game wallet and bet history stay on this device.</p>
+        <p className="auth-fineprint">18+ · Play USD is simulated.</p>
       </section>
-    </div>
+    </div>}
+    </AuthContext.Provider>
   );
 }
 
