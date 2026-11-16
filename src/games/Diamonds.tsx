@@ -52,7 +52,7 @@ export function Diamonds() {
 
   return (
     <GameLayout
-      title="Diamonds"
+      title="Gem Drop"
       note="99% RTP"
       panel={
         <BetPanel

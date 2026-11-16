@@ -30,7 +30,7 @@ export function GameLayout({
           {panel}
         </div>
         <div className="game-stage">{children}</div>
-        <p className="game-meta">USD balance · Results settle instantly</p>
+        <p className="game-meta">Play USD · Simulated credits</p>
       </div>
     </section>
   );

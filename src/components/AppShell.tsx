@@ -57,7 +57,7 @@ export function AppShell() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(() => window.matchMedia("(min-width: 1080px)").matches);
   const [muted, setMuted] = useState(false);
   const location = useLocation();
 
@@ -69,8 +69,10 @@ export function AppShell() {
     if (cashierNonce > 0) setWalletOpen(true);
   }, [cashierNonce]);
 
+  const showChat = chatOpen && location.pathname !== "/chat";
+
   return (
-    <div className={"app" + (siteStyle === "studio" ? " studio-style" : "")}>
+    <div className={"app arcade-shell" + (showChat ? " with-live-chat" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
       <aside className={open ? "sidebar open" : "sidebar"}>
         <NavLink to="/" className="brand" end>
           <span className="brand-mark">B</span>
@@ -89,6 +91,7 @@ export function AppShell() {
           <Icon name="stats" />
           Stats
         </NavLink>
+        <NavLink to="/race" className={({isActive}) => isActive?"nav-item active":"nav-item"}>Race</NavLink>
         <a className="nav-item" href="/#live-bets">
           <span className="live-nav-dot" aria-hidden="true" />
           Live Bets
@@ -126,20 +129,21 @@ export function AppShell() {
           <NavLink to="/" className="mobile-brand" end>BlockBet</NavLink>
           <nav className="head-links">
             <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : "")}>
-              Casino
+              Games
             </NavLink>
             <NavLink to="/stats" className={({ isActive }) => (isActive ? "on" : "")}>
               Stats
             </NavLink>
+            <NavLink to="/race">Race</NavLink>
             <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
           <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
             <span className="usd-mark">$</span>
             <span className="bal">
               <strong>{formatAmount(rolling.shown)}</strong>
-              <small>Play USD</small>
+              <small>Simulated Play USD</small>
             </span>
-            <button type="button" className="wallet-btn" onClick={openCashier}>
+            <button type="button" className="wallet-btn" aria-label="Open demo wallet" onClick={openCashier}>
               Wallet
             </button>
           </div>
@@ -167,7 +171,7 @@ export function AppShell() {
             {accountOpen && (
               <div className="account-menu">
                 <strong>{accountEmail || "Guest profile"}</strong>
-                <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · wallet saved on this device"}</p>
+                <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · synced Play USD wallet"}</p>
                 {isAdmin && <NavLink to="/admin" onClick={() => setAccountOpen(false)}>Manage accounts</NavLink>}
                 {isGuest
                   ? (canSignIn
@@ -188,12 +192,12 @@ export function AppShell() {
         </div>
       </div>
 
-      <button type="button" className={"chat-drawer-toggle"+(chatOpen?" active":"")} aria-expanded={chatOpen}
+      {location.pathname !== "/chat" && <button type="button" className={"chat-drawer-toggle"+(chatOpen?" active":"")} aria-expanded={chatOpen}
         aria-label={chatOpen?"Close live chat":"Open live chat"} onClick={()=>setChatOpen(v=>!v)}>
         {chatOpen?"✕":"💬"} <span>{chatOpen?"Close chat":"Live Chat"}</span>
-      </button>
-      {chatOpen&&<aside className="chat-drawer" aria-label="Live BlockBet chat">
-        <header className="chat-drawer-head"><div><strong>✦ BlockBet Chat</strong><small>Live chat · Rain · @ai</small></div>
+      </button>}
+      {showChat&&<aside className="chat-drawer" aria-label="Live BlockBet chat">
+        <header className="chat-drawer-head"><div><strong>Live Chat</strong><small>BlockBet community</small></div>
           <button type="button" aria-label="Close chat" onClick={()=>setChatOpen(false)}>✕</button>
         </header>
         <Community compact/>

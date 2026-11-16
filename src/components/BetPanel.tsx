@@ -65,7 +65,7 @@ export function BetPanel({
             inputMode="decimal"
             value={text}
             disabled={locked}
-            aria-label="Bet amount in US dollars"
+            aria-label="Bet amount in Play USD"
             onFocus={() => setFocused(true)}
             onBlur={() => {
               setFocused(false);

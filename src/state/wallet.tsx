@@ -49,7 +49,7 @@ type WalletValue = {
   dismissNotification: (id:string) => void;
   syncSocialWallet: () => void;
   debit: (cents: number) => boolean;
-  credit: (cents: number) => void;
+  credit: (cents: number) => number;
   record: (game: string, wager: number, payout: number) => void;
   openCashier: () => void;
   depositFromCard: (cents: number) => string | null;
@@ -313,10 +313,13 @@ export function WalletProvider({ email, children, adjustment }: {
       return true;
     },
     credit: (cents) => {
-      if (!Number.isSafeInteger(cents) || cents <= 0) return;
-      assign(balanceRef.current + cents);
-      queueDelta(cents);
+      if (!Number.isSafeInteger(cents) || cents <= 0) return 0;
+      const credited = Math.min(cents, MAX_BALANCE - balanceRef.current);
+      if (credited <= 0) return 0;
+      assign(balanceRef.current + credited);
+      queueDelta(credited);
       sound.win();
+      return credited;
     },
     record: (game, wager, payout) => {
       if (payout <= 0) sound.lose();

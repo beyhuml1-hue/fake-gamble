@@ -103,7 +103,7 @@ export function Dragon() {
 
   return (
     <GameLayout
-      title="Dragon Tower"
+      title="Towers"
       note="99% RTP"
       panel={
         <BetPanel

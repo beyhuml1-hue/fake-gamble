@@ -14,7 +14,8 @@ const FLIP_MS = 1700;
 
 type Pending = { stake: number; pay: number; win: boolean; heads: boolean };
 
-export function Flip() {
+export function Flip({ game = "Flip" }: { game?: "Flip" | "Coinflip" } = {}) {
+  const multiplier = game === "Coinflip" ? 1.85 : MULT;
   const { balance, debit, credit, record } = useWallet();
   const [amount, setAmount] = useState(1);
   const [side, setSide] = useState<"heads" | "tails">("heads");
@@ -37,11 +38,11 @@ export function Flip() {
     const job = pending.current;
     if (!job) return;
     pending.current = null;
-    if (job.pay) creditRef.current(job.pay);
-    recordRef.current("Flip", job.stake, job.pay);
+    const credited = creditRef.current(job.pay);
+    recordRef.current(game, job.stake, credited);
     setWin(job.win);
     setLanded(job.heads ? "heads" : "tails");
-    setPaid(job.pay);
+    setPaid(credited);
     setLastStake(job.stake);
     setResultId((value) => value + 1);
     setBusy(false);
@@ -53,13 +54,12 @@ export function Flip() {
       const job = pending.current;
       if (!job) return;
       pending.current = null;
-      if (job.pay) creditRef.current(job.pay);
-      recordRef.current("Flip", job.stake, job.pay);
+      recordRef.current(game, job.stake, creditRef.current(job.pay));
     };
-  }, []);
+  }, [game]);
 
   const cents = Math.round(amount * 100);
-  const profit = Math.max(0, payout(Math.max(cents, 0), MULT) - Math.max(cents, 0));
+  const profit = Math.max(0, payout(Math.max(cents, 0), multiplier) - Math.max(cents, 0));
 
   // Choosing TAILS shows the back of the original gold coin immediately.
   // Idle face changes are instant; only an actual bet triggers a spin.
@@ -86,7 +86,7 @@ export function Flip() {
     sound.flip();
     const heads = luckOn() ? side === "heads" : random() < 0.5;
     const didWin = (heads && side === "heads") || (!heads && side === "tails");
-    const pay = didWin ? payout(stake, MULT) : 0;
+    const pay = didWin ? payout(stake, multiplier) : 0;
     pending.current = { stake, pay, win: didWin, heads };
     const turns = 6 + Math.floor(random() * 2);
     const landing = heads ? 0 : 180;
@@ -99,15 +99,15 @@ export function Flip() {
     busy || landed == null
       ? busy
         ? "Flipping…"
-        : `${MULT.toFixed(2)}× if you call it`
+        : `${multiplier.toFixed(2)}× if you call it`
       : win
         ? `${landed === "heads" ? "Heads" : "Tails"} · ${formatUSD(paid)}`
         : `${landed === "heads" ? "Heads" : "Tails"} · miss`;
 
   return (
     <GameLayout
-      title="Flip"
-      note="99% RTP"
+      title={game}
+      note={game === "Coinflip" ? "1.85× payout" : "99% RTP"}
       panel={
         <BetPanel
           amount={amount}

@@ -3,123 +3,52 @@ import { Link, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
 import { GAMES } from "../data/games";
 import { HomeSpotlight } from "./HomeSpotlight";
+import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
-const ART_KEY = "blockbet.cover-style.v2";
-const ARCADE_COVERS = new Set(["plinko", "crash", "cases", "chicken", "darts", "blackjack"]);
+const order = ["mines","cases","case-battles","flip","blackjack","dice","dragon","mines-battles","coinflip","crash","uno","connect-four","poker","pool","chess","floor-is-lava","draw","rps","upgrader","hilo","limbo","plinko","double","roulette","pig-race","stocks","slide","keno","blitz","snakes","chicken","baccarat","diamonds","packs","wheel","pump","darts"];
+const table = new Set(["blackjack","baccarat","roulette","hilo","poker","chess","uno","pool","connect-four"]);
+const groups = ["All games","Instant","Tables"] as const;
 
-function savedArtStyle() {
-  try {
-    return localStorage.getItem(ART_KEY) === "arcade" ? "arcade" : "classic";
-  } catch {
-    return "classic";
-  }
-}
-
-const FEATURED = ["plinko", "mines-battles", "crash", "packs", "cases", "chicken"];
-const GROUPS = [
-  { id: "all", label: "All games" },
-  { id: "instant", label: "Instant" },
-  { id: "table", label: "Tables" },
-  { id: "climb", label: "Climb" },
-] as const;
-const GROUP_IDS: Record<string, string[] | null> = {
-  all: null,
-  instant: ["dice", "mines-battles", "plinko", "crash", "limbo", "keno", "wheel", "flip", "diamonds", "darts"],
-  table: ["blackjack", "roulette", "baccarat", "hilo"],
-  climb: ["mines", "mines-battles", "dragon", "pump", "cases", "packs", "upgrader", "chicken"],
-};
-
-export function Lobby() {
-  const { query, setQuery } = useOutletContext<ShellContext>();
-  const { history } = useWallet();
-  const [artStyle, setArtStyle] = useState(savedArtStyle);
-  const cover = (id: string) => id === "mines-battles" ? "/covers/cover-mines.jpg" : id === "packs" ? "/covers/cover-packs.webp" : artStyle === "arcade" && ARCADE_COVERS.has(id)
-    ? `/covers/arcade/${id}.webp`
-    : `/covers/cover-${id}.jpg`;
-
-  function changeArtStyle(style: "classic" | "arcade") {
-    setArtStyle(style);
-    try { localStorage.setItem(ART_KEY, style); } catch { /* Storage unavailable. */ }
-  }
-
-  const [group, setGroup] = useState<(typeof GROUPS)[number]["id"]>("all");
-  const q = query.trim().toLowerCase();
-  const allowed = GROUP_IDS[group];
-  const games = GAMES.filter((game) => {
-    if (allowed && !allowed.includes(game.id)) return false;
-    if (!q) return true;
-    return game.name.toLowerCase().includes(q) || game.blurb.toLowerCase().includes(q);
-  });
-  const featured = q || group !== "all" ? [] : FEATURED.map((id) => games.find((game) => game.id === id)).filter((game) => game != null);
-  const rest = q || group !== "all" ? games : games.filter((game) => !FEATURED.includes(game.id));
-
-  return (
-    <section className="lobby" data-cover-style={artStyle}>
-      <HomeSpotlight history={history}/>
-      <div className="lobby-tools">
-        <label className="search lobby-search">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <circle cx="10.5" cy="10.5" r="5.5" />
-            <path d="m15 15 4 4" />
-          </svg>
-          <input type="search" aria-label="Search games" placeholder="Search games" value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>
-        <div className="chip-row" role="group" aria-label="Game categories">
-          {GROUPS.map((item) => (
-            <button key={item.id} type="button" aria-pressed={group === item.id} onClick={() => setGroup(item.id)}>
-              {item.label}
-            </button>
-          ))}
+export function Lobby(){
+  const {query,setQuery}=useOutletContext<ShellContext>();
+  const { balance,history,openCashier }=useWallet();
+  const [group,setGroup]=useState<typeof groups[number]>("All games");
+  const q=query.trim().toLowerCase();
+  const games=[...GAMES].sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id)).filter(game=>
+    (group==="All games"||table.has(game.id)===(group==="Tables")) &&
+    (!q||(game.name+" "+game.blurb).toLowerCase().includes(q)));
+  return <section className="lobby arcade-lobby">
+    <div className="arcade-hero">
+      <section className="arcade-hero-card arcade-account">
+        <div className="arcade-art" data-game="account-coins" aria-hidden="true"/>
+        <p className="arcade-kicker">BlockBet</p><h1>Welcome to the arcade</h1>
+        <div className="arcade-wallet-stats">
+          <div><small>Play USD balance</small><strong>{formatUSD(balance)}</strong></div>
+          <div><small>Recent plays</small><strong>{history.length}</strong></div>
         </div>
-        <label className="art-style">
-          Cover style
-          <select value={artStyle} onChange={event => changeArtStyle(event.target.value === "classic" ? "classic" : "arcade")}>
-            <option value="arcade">Arcade</option>
-            <option value="classic">Classic</option>
-          </select>
-        </label>
+        <button type="button" className="bet-btn" onClick={openCashier}>Open demo wallet</button>
+        <p className="arcade-wallet-note">Simulated credits · $100,000,000 balance limit</p>
+      </section>
+      <Link to="/race" className="arcade-hero-card arcade-race-link">
+        <div className="arcade-art" data-game="race" aria-hidden="true"/>
+        <div><p className="arcade-kicker">Daily leaderboard</p><h2>Race</h2><span>View standings →</span></div>
+      </Link>
+    </div>
+    <div className="arcade-toolbar">
+      <h2>Games</h2>
+      <div className="chip-row" role="group" aria-label="Game categories">
+        {groups.map(item=><button type="button" key={item} aria-pressed={item===group} onClick={()=>setGroup(item)}>{item}</button>)}
       </div>
-      {games.length === 0 ? (
-        <p className="empty-row">No games match that search.</p>
-      ) : (
-        <>
-          {featured.length > 0 ? (
-            <>
-              <div className="section-label"><h2>ORIGINALS</h2></div>
-              <div className="feature-grid">
-                {featured.map((game) => (
-                  <Link key={game.id} to={`/game/${game.id}`} className="tile feature">
-                    <span className="tile-art">
-                      <img src={cover(game.id)} alt="" />
-                      <span className="tile-name">
-                        <b>{game.name}</b>
-                        <small>{game.blurb}</small>
-                      </span>
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </>
-          ) : null}
-          <div className="section-label">
-            <h2>{q ? "Search results" : featured.length ? "More games" : GROUPS.find((item) => item.id === group)?.label}</h2>
-            <span>
-              {rest.length} {rest.length === 1 ? "game" : "games"}
-            </span>
-          </div>
-          <div className="tile-grid">
-            {rest.map((game) => (
-              <Link key={game.id} to={`/game/${game.id}`} className="tile">
-                <span className="tile-art">
-                  <img src={cover(game.id)} alt="" loading="lazy" />
-                  <span className="tile-name">{game.name}</span>
-                </span>
-              </Link>
-            ))}
-          </div>
-        </>
-      )}
-    </section>
-  );
+      <label className="search lobby-search"><input type="search" aria-label="Search games" placeholder="Search games" value={query}
+        onChange={event=>setQuery(event.target.value)}/></label>
+    </div>
+    {games.length?<div className="arcade-grid">
+      {games.map(game=><Link key={game.id} to={"/game/"+game.id} className="arcade-tile">
+        <span className="arcade-art" data-game={game.id} aria-hidden="true"/>
+        <strong>{game.name}</strong>
+      </Link>)}
+    </div>:<p className="empty-row">No games found.</p>}
+    <HomeSpotlight history={history} />
+  </section>;
 }

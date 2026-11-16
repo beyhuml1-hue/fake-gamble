@@ -97,6 +97,9 @@ test("Submitted big wins publish once to public chat and weekly rankings reflect
   assert.equal(ranks.resetAt-ranks.startAt,604800000);
   assert.equal(new Date(ranks.startAt).getUTCDay(),1);
   assert.match(ranks.source,/not independently verified/);
+  const daily=await (await worker.fetch(new Request(base+"/api/auth/leaderboard?period=daily"),env)).json();
+  assert.equal(daily.resetAt-daily.startAt,86_400_000);
+  assert.equal(daily.leaders[0].profitCents,9000);
   const c=await worker.fetch(new Request(base+"/api/auth/community",{headers:{Cookie:cookies.bob}}),env);
   assert.equal(c.status,200);
   const board=await c.json();

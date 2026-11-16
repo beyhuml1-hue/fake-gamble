@@ -103,7 +103,7 @@ export function MinesBattles() {
   return (
     <section className="mb-page">
       <div className="mb-heading">
-        <div><small>BLOCKBET ORIGINALS / VERSUS</small><h1>Mines Battles</h1><p>One shared minefield. Take turns opening tiles. Hit a mine and lose.</p></div>
+        <div><small>BLOCKBET ORIGINALS / VERSUS</small><h1>Mines Duel</h1><p>One shared minefield. Take turns opening tiles. Hit a mine and lose.</p></div>
         <span className="mb-mode">PRACTICE · VS COMPUTER</span>
       </div>
       <div className="mb-layout">

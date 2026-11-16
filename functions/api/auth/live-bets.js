@@ -4,6 +4,7 @@ const GAMES = new Set([
   "Dice","Mines","Plinko","Crash","Limbo","Keno","Wheel","Hi-Lo",
   "Blackjack","Roulette","Dragon Tower","Flip","Diamonds","Baccarat",
   "Pump","Cases","Packs","Upgrader","Chicken Road","Darts",
+  "Case Battles","Coinflip","Uno","Connect Four","Poker","8-Ball Pool","Chess","Floor is Lava","Draw","Rock Paper Scissors","Double","Derby","Stocks","Slide","Blitz","Snakes",
 ]);
 const HEADERS = {"Cache-Control":"no-store"};
 
@@ -30,8 +31,8 @@ export async function onRequestPost({ request, env }) {
   const game=typeof body?.game==="string"&&GAMES.has(body.game)?body.game:null;
   const wager=body?.wager;
   const payout=body?.payout;
-  if(!id||!game||!Number.isInteger(wager)||wager<10||wager>100_000_000||
-     !Number.isInteger(payout)||payout<0||payout>500_000_000) {
+  if(!id||!game||!Number.isInteger(wager)||wager<10||wager>10_000_000_000||
+     !Number.isInteger(payout)||payout<0||payout>10_000_000_000) {
     return json({error:"Invalid bet."},400);
   }
   try {

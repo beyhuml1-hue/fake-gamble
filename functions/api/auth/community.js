@@ -117,7 +117,7 @@ export async function onRequestPost({ request, env }) {
       "JOIN playusd_wallets w ON w.user_id=s.user_id "+
       "JOIN playusd_wallets rw ON rw.user_id=r.user_id "+
       "WHERE s.user_id=?2 AND r.public_id=?3 AND s.user_id<>r.user_id "+
-      "AND w.initialized=1 AND w.cents>=?4 AND rw.cents+?4<=100000000 "+
+      "AND w.initialized=1 AND w.cents>=?4 AND rw.cents+?4<=10000000000 "+
       "AND NOT EXISTS (SELECT 1 FROM auth_account_controls c WHERE c.user_id=r.user_id AND c.banned=1)"
     ).bind(id,user.id,recipient,cents),
     env.DB.prepare(

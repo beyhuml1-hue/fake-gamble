@@ -62,6 +62,15 @@ test("The normal Play USD wallet covers game wins, Rain, transfers, and cross-ac
 
   const bobChat=(await (await get("bob",chat)).json());
   const aliceChat=(await (await get("alice",chat)).json());
+  const cap=10_000_000_000;
+  const tooMuch=await post("bob",wallet,{action:"initialize",balance:cap+1});
+  assert.equal(tooMuch.status,400);
+  const edge=crypto.randomUUID();
+  assert.equal((await post("alice",wallet,{action:"game",id:edge,delta:cap-8600})).status,200);
+  assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:10000})).status,200);
+  assert.equal((await (await get("alice",wallet)).json()).balance,cap);
+  assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:-cap+8600})).status,200);
+
   // Bob hasn't imported his main balance. His first $30 gift is held safely.
   const first={action:"transfer",id:crypto.randomUUID(),recipient:bobChat.profile.id,cents:3000};
   assert.equal((await post("alice",chat,first)).status,200);
@@ -101,7 +110,7 @@ test("Main game wallet frontend submits debits and credits, transfers flush, no 
  const wallet=readFileSync(new URL("../src/state/wallet.tsx",import.meta.url),"utf8");
  const chat=readFileSync(new URL("../src/pages/Community.tsx",import.meta.url),"utf8");
  assert.match(wallet,/queueDelta\(-cents\)/);
- assert.match(wallet,/queueDelta\(cents\)/);
+ assert.match(wallet,/queueDelta\(credited\)/);
  assert.match(wallet,/pendingOps/);
  assert.match(wallet,/prepareTransfer/);
  assert.doesNotMatch(chat,/profile\.cents|Only Rain and received-transfer credits/);
