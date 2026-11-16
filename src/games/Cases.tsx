@@ -40,6 +40,7 @@ function fill(drops: CaseDrop[], count: number) {
 export function Cases() {
   const { balance, debit, credit, record } = useWallet();
   const [query, setQuery] = useState("");
+  const [sort,setSort] = useState<"default"|"low"|"high">("default");
   const [band, setBand] = useState<"all" | "low" | "mid" | "high">("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const box = CASES.find((item) => item.id === selectedId) ?? null;
@@ -54,14 +55,17 @@ export function Cases() {
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return CASES.filter((item) => {
+    const matches = CASES.filter((item) => {
       if (q && !item.name.toLowerCase().includes(q)) return false;
       if (band === "low") return item.price < 5;
       if (band === "mid") return item.price >= 5 && item.price < 15;
       if (band === "high") return item.price >= 15;
       return true;
     });
-  }, [query, band]);
+    if (sort==="low") return matches.sort((a,b)=>a.price-b.price);
+    if (sort==="high") return matches.sort((a,b)=>b.price-a.price);
+    return matches;
+  }, [query, band, sort]);
 
   const choose = (item: LootCase) => {
     if (spinning) return;
@@ -131,6 +135,8 @@ export function Cases() {
           amount={box?.price ?? 0}
           onAmount={() => undefined}
           profitCents={profit}
+          amountLabel="Selected case price"
+          showProfit={Boolean(box)}
           label={spinning ? "Opening…" : box ? `Open ${formatUSD(Math.round(box.price * 100))}` : "Pick a case"}
           onAction={open}
           disabled={!box || spinning}
@@ -196,9 +202,13 @@ export function Cases() {
           <div className="case-tools">
             <input
               value={query}
-              placeholder="Search Apple, PS5, Nike"
+              aria-label="Search cases"
+              placeholder="Search cases"
               onChange={(event) => setQuery(event.target.value)}
             />
+            <select aria-label="Sort cases" value={sort} onChange={event=>setSort(event.target.value as typeof sort)}>
+              <option value="default">Featured</option><option value="low">Price: low first</option><option value="high">Price: high first</option>
+            </select>
             <div className="select">
               {(
                 [

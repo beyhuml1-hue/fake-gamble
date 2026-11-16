@@ -22,12 +22,15 @@ import { Plinko } from "../games/Plinko";
 import { Pump } from "../games/Pump";
 import { Roulette } from "../games/Roulette";
 import { Upgrader } from "../games/Upgrader";
+import { Blitz, Snakes } from "../games/CardAndDice";
 import { ArcadeRound } from "../games/ArcadeRound";
 import { BoardArcade } from "../games/BoardArcade";
 import { Wheel } from "../games/Wheel";
 
 const PAGES: Partial<Record<GameId, ComponentType>> = {
   dice: Dice,
+  blitz: Blitz,
+  snakes: Snakes,
   mines: Mines,
   "mines-battles": MinesBattles,
   plinko: Plinko,

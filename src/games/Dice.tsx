@@ -91,7 +91,20 @@ export function Dice() {
           onAction={roll}
           disabled={spinning}
           error={error}
-        />
+          showProfit={false}
+        >
+          <div className="field"><span className="field-label">Condition</span>
+        <div className="select">
+          <button type="button" className={mode === "under" ? "on" : ""} onClick={() => setMode("under")}>
+            Roll under
+          </button>
+          <button type="button" className={mode === "over" ? "on" : ""} onClick={() => setMode("over")}>
+            Roll over
+          </button>
+        </div>
+          </div>
+          <div className="play-stats-pair"><span>Multiplier <b>{mult.toFixed(2)}×</b></span><span>Win chance <b>{chance.toFixed(2)}%</b></span></div>
+        </BetPanel>
       }
     >
       <div className="dice-layout">
@@ -110,6 +123,23 @@ export function Dice() {
         <div className={spinning ? "readout spin" : win == null ? "readout" : win ? "readout win pop" : "readout lose pop"}>
           {shown.toFixed(2)}
         </div>
+        <input
+          className="range dice-range"
+          type="range"
+          min={2}
+          max={98}
+          value={line}
+          disabled={spinning}
+          aria-label="Roll threshold"
+          style={{
+            background:
+              mode === "under"
+                ? `linear-gradient(90deg, #34c783 ${chance}%, #d14f55 ${chance}%)`
+                : `linear-gradient(90deg, #d14f55 ${100 - chance}%, #34c783 ${100 - chance}%)`,
+          }}
+          onChange={(event) => setChance(mode === "under" ? Number(event.target.value) : 100 - Number(event.target.value))}
+        />
+        <div className="dice-ruler" aria-hidden="true">{[0,25,50,75,100].map(mark=><span key={mark}>{mark}</span>)}</div>
         <div className="stat-row">
           <div className="stat">
             <span>Multiplier</span>
@@ -123,29 +153,6 @@ export function Dice() {
             <span>Win chance</span>
             <strong>{chance.toFixed(2)}%</strong>
           </div>
-        </div>
-        <input
-          className="range dice-range"
-          type="range"
-          min={2}
-          max={98}
-          value={chance}
-          aria-label="Win chance"
-          style={{
-            background:
-              mode === "under"
-                ? `linear-gradient(90deg, #00e701 ${chance}%, #2f4553 ${chance}%)`
-                : `linear-gradient(90deg, #2f4553 ${100 - chance}%, #00e701 ${100 - chance}%)`,
-          }}
-          onChange={(event) => setChance(Number(event.target.value))}
-        />
-        <div className="select">
-          <button type="button" className={mode === "under" ? "on" : ""} onClick={() => setMode("under")}>
-            Roll under
-          </button>
-          <button type="button" className={mode === "over" ? "on" : ""} onClick={() => setMode("over")}>
-            Roll over
-          </button>
         </div>
       </div>
     </GameLayout>

@@ -110,12 +110,12 @@ export function MinesBattles() {
         <aside className="mb-controls">
           <div className="mb-controls-head"><h2>Battle setup</h2><span>1v1</span></div>
           <label className="field"><span className="field-label">Mines <b>{mineCount}</b></span>
-            <input className="range" type="range" min={1} max={12} disabled={Boolean(game && !finished)} value={mineCount}
-              onChange={event => setMineCount(Number(event.target.value))} />
+            <div className="select">{[1,3,5,10].map(value=><button key={value} type="button" className={mineCount===value?"on":""}
+              disabled={Boolean(game&&!finished)} onClick={()=>setMineCount(value)}>{value}</button>)}</div>
           </label>
           <p className="mb-rule">Each player uses the same 25 tiles. Opened tiles stay open for both players. Turns alternate after every safe pick.</p>
           <button className="bet-btn mb-start" type="button" disabled={Boolean(game && !finished)} onClick={start}>
-            {!game ? "Start battle" : "Play again"}
+            {!game ? "Create practice game" : "Play again"}
           </button>
           <div className="mb-log"><h3>Battle activity</h3>
             {log.length ? log.map((entry, i) => <p key={round + "-" + i}>{entry}</p>) : <p>Start a battle to see every move.</p>}

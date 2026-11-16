@@ -1,11 +1,12 @@
-import { configured, currentUser, digest, hitRateLimit, json, readBody, sameOrigin } from "../../_shared/auth.js";
+import { configured, currentUser, publicDisplayName, hitRateLimit, json, readBody, sameOrigin } from "../../_shared/auth.js";
 
 const ROUND_MS = 7 * 60_000;
 const RAIN_CENTS = 1_000;
+const named = ({ email, ...row }) => ({ ...row, label:publicDisplayName(email) });
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 
 export async function preparePlayer(env, user, round) {
-  const label = "Player " + (await digest("feed:" + user.id, env.AUTH_PEPPER)).slice(0, 6).toUpperCase();
+  const label = publicDisplayName(user.email);
   await env.DB.batch([
     env.DB.prepare(
       "INSERT OR IGNORE INTO community_profiles (user_id,public_id,label) VALUES (?1,?2,?3)"
@@ -25,7 +26,7 @@ export async function onRequestGet({ request, env }) {
   const queriedPlayer=new URL(request.url).searchParams.get("player");
   if(queriedPlayer!==null){
     if(!UUID.test(queriedPlayer))return json({error:"Invalid player."},400);
-    const target=await env.DB.prepare("SELECT user_id,public_id AS id,label FROM community_profiles WHERE public_id=?1").bind(queriedPlayer).first();
+    const target=await env.DB.prepare("SELECT p.user_id,p.public_id AS id,u.email FROM community_profiles p JOIN auth_users u ON u.id=p.user_id WHERE p.public_id=?1").bind(queriedPlayer).first();
     if(!target)return json({error:"Player not found."},404);
     // These are user-submitted settled bets, not audited casino settlements.
     const stats=await env.DB.prepare(
@@ -37,7 +38,7 @@ export async function onRequestGet({ request, env }) {
       "COALESCE(SUM(CASE WHEN wager>payout THEN 1 ELSE 0 END),0) AS losses "+
       "FROM auth_live_bets WHERE user_id=?1"
     ).bind(target.user_id).first();
-    return json({player:{id:target.id,label:target.label},stats,source:"Reported community bets; records may be incomplete and are not server-audited."});
+    return json({player:{id:target.id,label:publicDisplayName(target.email)},stats,source:"Reported community bets; records may be incomplete and are not server-audited."});
   }
   const [profile, rain, chat, players] = await env.DB.batch([
     env.DB.prepare("SELECT public_id AS id, label FROM community_profiles WHERE user_id = ?1").bind(user.id),
@@ -45,18 +46,18 @@ export async function onRequestGet({ request, env }) {
       "SELECT COUNT(*) AS count, COALESCE(MAX(user_id = ?2), 0) AS joined FROM community_rain WHERE round = ?1"
     ).bind(round, user.id),
     env.DB.prepare(
-      "SELECT m.id, p.public_id AS playerId, p.label, m.body, m.kind, m.at_ms AS at FROM community_messages m " +
-      "JOIN community_profiles p ON p.user_id = m.user_id " +
+      "SELECT m.id, p.public_id AS playerId, u.email, m.body, m.kind, m.at_ms AS at FROM community_messages m " +
+      "JOIN community_profiles p ON p.user_id = m.user_id JOIN auth_users u ON u.id = m.user_id " +
       "WHERE m.at_ms > ?1 AND NOT EXISTS (SELECT 1 FROM auth_account_controls c WHERE c.user_id = m.user_id AND c.banned = 1) " +
       "ORDER BY m.at_ms DESC, m.id DESC LIMIT 40"
     ).bind(now - 24 * 60 * 60_000),
-    env.DB.prepare("SELECT public_id AS id,label FROM community_profiles ORDER BY label LIMIT 80"),
+    env.DB.prepare("SELECT p.public_id AS id,u.email FROM community_profiles p JOIN auth_users u ON u.id=p.user_id ORDER BY label LIMIT 80"),
   ]);
   return json({
-    profile: profile.results[0],
+    profile: { id:profile.results[0].id, label:publicDisplayName(user.email) },
     rain: { ...rain.results[0], round, now, endsAt: (round + 1) * ROUND_MS },
-    messages: chat.results.reverse(),
-    players: players.results || [],
+    messages: chat.results.reverse().map(named),
+    players: (players.results || []).map(named),
   });
 }
 

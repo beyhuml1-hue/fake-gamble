@@ -95,21 +95,27 @@ export function Mines() {
           cashout={active && picked.length > 0}
           locked={active}
           error={error}
+          amountLabel="Bet Amount"
+          showProfit={false}
+          afterAction={<>
+            <button className="ghost-btn" type="button" disabled={!active} onClick={()=>{
+              const tile=shuffle(Array.from({length:TILES},(_,i)=>i).filter(i=>!picked.includes(i)))[0];
+              if(tile!==undefined)reveal(tile);
+            }}>Random pick</button>
+            <div className="field"><span className="field-label">Total profit ({formatMult(picked.length ? liveMult : 1)})</span>
+              <div className="profit-box"><span>$</span><strong>{formatUSD(picked.length ? profit : 0).replace("$","")}</strong></div>
+            </div>
+          </>}
         >
           <label className="field">
             <span className="field-label">
               Mines <b>{mines}</b>
             </span>
-            <input
-              className="range"
-              type="range"
-              min={1}
-              max={24}
-              value={mines}
-              disabled={active}
-              onChange={(event) => setMines(Number(event.target.value))}
-            />
+            <select value={mines} disabled={active} onChange={event=>setMines(Number(event.target.value))}>
+              {Array.from({length:24},(_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}
+            </select>
           </label>
+          <div className="field"><span className="field-label">Gems</span><div className="profit-box"><strong>{TILES-mines}</strong></div></div>
         </BetPanel>
       }
     >
@@ -127,7 +133,7 @@ export function Mines() {
             const bomb = bombs.has(index);
             const cls = open ? (bomb ? "mine bomb" : "mine gem") : "mine";
             return (
-              <button key={index} type="button" className={cls} disabled={!active || open} onClick={() => reveal(index)}>
+              <button key={index} type="button" className={cls} disabled={!active || open} aria-label={`Tile ${index + 1}${open ? bomb ? ", mine" : ", gem" : ""}`} onClick={() => reveal(index)}>
                 {open ? (bomb ? "💣" : <img className="blockbet-revealed-gem" src="/images/gem-green.webp" alt="Safe gem" draggable={false}/>) : ""}
               </button>
             );

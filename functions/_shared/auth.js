@@ -135,12 +135,19 @@ export function isAdmin(user, env) {
   return Boolean(user && validEmail(env.ADMIN_EMAIL) === user.email);
 }
 
+export function publicDisplayName(email) {
+  const local = (email ?? "").split("@", 1)[0].split("+", 1)[0];
+  const first = local.match(/[a-z]{2,}/i)?.[0].slice(0, 24).toLowerCase();
+  return first ? first[0].toUpperCase() + first.slice(1) : "Player";
+}
+
 export async function sessionUser(env, user) {
   const control = await env.DB.prepare(
     "SELECT balance_cents, balance_revision, balance_mode FROM auth_account_controls WHERE user_id = ?1"
   ).bind(user.id).first();
   return {
     email: user.email,
+    displayName: publicDisplayName(user.email),
     admin: isAdmin(user, env),
     balanceAdjustment: control?.balance_revision
       ? { cents: control.balance_cents, revision: control.balance_revision, mode: control.balance_mode || "set" }

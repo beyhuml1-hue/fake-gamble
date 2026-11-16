@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
-import { CASES } from "../data/cases";
+import { CASES, caseImage } from "../data/cases";
 import { betCents, formatUSD, payout } from "../lib/money";
 import { randInt, random, shuffle } from "../lib/random";
 import { useWallet } from "../state/wallet";
@@ -9,20 +9,18 @@ import { useWallet } from "../state/wallet";
 const directions = ["Up", "Down"];
 const choices: Record<string, string[]> = {
   rps: ["Rock", "Paper", "Scissors"],
-  double: ["Red", "Black", "Gold"],
+  double: ["Red", "Green", "Black", "Bait"],
   "pig-race": ["Jade", "Ruby", "Gold", "Slate", "Violet", "Azure"],
   stocks: directions,
-  slide: ["2×", "3×", "5×", "10×"],
-  blitz: ["1", "2", "3", "4", "5", "6"],
+
 };
 const derbyWeights = [28,22,18,14,11,7];
 const derbyPayouts = [3.25,4.13,5.05,6.50,8.27,13];
 const lavaTiles = Array.from({length:49}, (_, i) => i);
 const lavaOdds = [36,31,26,36,31,26,36,31,26].map(count=>count/49);
-const paths: Record<string, number[]> = {
-  "floor-is-lava": lavaOdds,
-  snakes: [0.9, 0.8, 0.8, 0.7, 0.7, 0.6, 0.6, 0.5],
-};
+const doublePayouts = [2,14,2,7];
+const doubleReel = [0,2,0,3,2,0,2,0,2,1,0,2,0,2,3,0,2,0,2,0,2,0,2,0,2,0,2,0,2,0];
+const rpsPayout = (wins:number) => wins > 0 ? 1.85*2**(wins-1) : 1;
 const suits = ["♣", "♦", "♥", "♠"];
 function cardLabel(value: number) {
   return ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"][value % 13] + suits[Math.floor(value / 13)]!;
@@ -71,14 +69,22 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
   const [race,setRace] = useState<number[]>([]);
   const [stone,setStone] = useState<number|null>(null);
   const [sunken,setSunken] = useState<number[]>([]);
-  const board = paths[game.id];
+  const [difficulty,setDifficulty] = useState(1);
+  const [target,setTarget] = useState(2);
+  const [result,setResult] = useState<number|null>(null);
+  const [opening,setOpening] = useState<{you:string;rival:string}|null>(null);
   const isDraw = game.id === "draw";
   const isPoker = game.id === "poker";
   const isRps = game.id === "rps";
   const isLava = game.id === "floor-is-lava";
   const isCase = game.id === "case-battles";
+  const isDouble = game.id === "double";
+  const isSlide = game.id === "slide";
+  const isDerby = game.id === "pig-race";
+  const isStocks = game.id === "stocks";
+  const board = isLava ? lavaOdds.map(odds=>Math.round(odds*49+(1-difficulty)*5)/49) : undefined;
   const options = isCase ? CASES.map(box => box.name) : choices[game.id] ?? [];
-  const total = isRps ? 2**turn : board?.slice(0,turn).reduce((value, chance) => value / chance, 0.97) ?? 0;
+  const total = isRps ? rpsPayout(turn) : board?.slice(0,turn).reduce((value, chance) => value / chance, 0.97) ?? 0;
 
   function finish(wager: number, multiplier: number, result: string) {
     pending.current = null;
@@ -88,12 +94,12 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     setStake(0);
   }
 
-  function play() {
+  function play(selected = choice) {
     if (stake) {
       if (isDraw) {
         if (turn >= 5) return;
         setTurn(turn+1);
-        const next = draw.map(value => value > 0 && random() < 0.63 ? value * 1.45 : 0);
+        const next = draw.map(value => value > 0 && random() < [0.72,0.63,0.52][difficulty]! ? value * [1.3,1.45,1.75][difficulty]! : 0);
         setDraw(next);
         if (next.every(value=>value===0)) finish(stake,claimed,"Draw complete");
         return;
@@ -110,7 +116,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       finish(stake,total,"Cashed out after " + turn + " safe moves");
       return;
     }
-    const wager = betCents(isCase ? CASES[choice]!.price : amount,wallet.balance);
+    const wager = betCents(isCase ? CASES[selected]!.price : amount,wallet.balance);
     if (wager == null || !wallet.debit(wager)) {
       setError("Enter a stake of at least $0.10 within your Play USD balance.");
       return;
@@ -134,7 +140,8 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       return;
     }
     if (isCase) {
-      const me = openCase(choice), rival = openCase(choice);
+      const me = openCase(selected), rival = openCase(selected);
+      setOpening({you:me.id,rival:rival.id});
       finish(wager,me.worth === rival.worth ? 1 : me.worth > rival.worth ? 1.96 : 0,"You opened " + me.name + " · Rival opened " + rival.name);
       return;
     }
@@ -142,22 +149,22 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       const candles = Array.from({length:12},()=> (random() - 0.5) * 2);
       const change = candles.reduce((sum,value)=>sum+value,0);
       setRace(candles.map((_,i)=>50+candles.slice(0,i+1).reduce((sum,value)=>sum+value,0)*7));
-      finish(wager,(change >= 0 ? 0 : 1) === choice ? 1.96 : 0,"Market closed " + (change > 0 ? "+" : "") + change.toFixed(2) + "%");
+      finish(wager,(change >= 0 ? 0 : 1) === selected ? 1.96 : 0,"Market closed " + (change > 0 ? "+" : "") + change.toFixed(2) + "%");
       return;
     }
     if (game.id === "slide") {
-      const target = [2,3,5,10][choice]!;
+      const threshold = Math.min(1000,Math.max(1.01,target));
       const result = Math.max(1, Math.floor(98 / random()) / 100);
-      setRace([Math.min(100,result / 10 * 100)]);
-      finish(wager,result >= target ? target : 0,"Slider stopped at " + result.toFixed(2) + "×");
+      setResult(result);
+      finish(wager,result >= threshold ? threshold : 0,"Slider stopped at " + result.toFixed(2) + "×");
       return;
     }
     let raceRoll = randInt(100);
     const outcome = game.id === "pig-race" ? derbyWeights.findIndex(weight=>(raceRoll-=weight)<0) :
-      game.id === "double" ? [0,0,0,0,0,0,0,1,1,1,1,1,1,1,2][randInt(15)]! : randInt(options.length);
+      isDouble ? doubleReel[randInt(doubleReel.length)]! : randInt(options.length);
     if (game.id === "pig-race") setRace(options.map((_,lane)=> lane === outcome ? 100 : 66 + randInt(29)));
-    const multiplier = choice !== outcome ? 0 : game.id === "pig-race" ? derbyPayouts[choice]! :
-      game.id === "double" ? (choice === 2 ? 14 : 2) : options.length * 0.98;
+    setResult(outcome);
+    const multiplier = selected !== outcome ? 0 : isDerby ? derbyPayouts[selected]! : doublePayouts[selected]!;
     finish(wager,multiplier,"Result: " + options[outcome]);
   }
 
@@ -169,8 +176,8 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       setStone(tile);
       setSunken(sink);
     }
-    if (isLava ? sink.includes(tile) : random()>=chance) {
-      finish(stake,0,game.id === "snakes" ? "You landed on a snake" : "That stone sank");
+    if (sink.includes(tile)) {
+      finish(stake,0,"That stone sank");
       return;
     }
     const next = turn + 1;
@@ -197,42 +204,104 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     if (rival === hand) { setMessage(result + " · Tie. Throw again."); return; }
     if ((hand+2)%3 !== rival) { finish(stake,0,result); return; }
     const won = turn+1;
-    if (won === 12) { finish(stake,2**won,result+" · Streak cleared"); return; }
+    if (won === 12) { finish(stake,rpsPayout(won),result+" · Streak cleared"); return; }
     setTurn(won);
-    setMessage(result + " · " + 2**won + "×. Cash out or throw again.");
+    setMessage(result + " · " + rpsPayout(won).toFixed(2) + "×. Cash out or throw again.");
   }
 
-  return <GameLayout title={game.name} note="Play USD" panel={
+  const label = stake ? isPoker ? "Draw cards" : isDraw ? "Draw again" : "Cash out" :
+    isPoker ? "Deal" : isCase ? "Create battle" : isDerby ? "Race" : isStocks ? "Place order" : "Play";
+  const quote = isSlide ? Math.max(0,target-1) : isDouble ? doublePayouts[choice]!-1 : 0;
+  const profit = stake && (board || isRps) ? Math.max(0,payout(stake,total)-stake) : payout(Math.round(amount*100),quote);
+  return <GameLayout title={game.name} note={isCase ? "VS Computer" : "Play USD"} panel={
     <BetPanel amount={isCase?CASES[choice]!.price:amount} onAmount={setAmount} locked={Boolean(stake)||isCase}
-      profitCents={stake && (board || isRps) ? Math.max(0,payout(stake,total)-stake) : 0} error={error}
-      label={stake ? isPoker ? "Draw cards" : isDraw ? "Draw again" : "Cash out" : isPoker ? "Deal" : "Play"}
-      onAction={play} cashout={Boolean(stake)} disabled={Boolean(stake && ((board || isRps) && !turn || isDraw && turn>=5))}>
-      {options.length>0 && !isRps && <label className="field"><span className="field-label">{isCase?"Case":"Pick"}</span>
+      profitCents={profit} error={error} showProfit={!isCase&&!isPoker&&!isDouble&&!isStocks&&!isDerby}
+      label={label} onAction={()=>play()} cashout={Boolean(stake)}
+      disabled={Boolean(stake && ((board || isRps) && !turn || isDraw && turn>=5))}>
+      {isCase && <label className="field"><span className="field-label">Case</span>
         <select value={choice} onChange={event=>setChoice(Number(event.target.value))}>
-          {options.map((option,i)=><option key={option} value={i}>{option}{game.id==="pig-race"? " · "+derbyWeights[i]+"% · "+derbyPayouts[i]+"×":""}</option>)}
+          {options.map((option,i)=><option key={option} value={i}>{option}</option>)}
         </select>
       </label>}
+      {(isLava||isDraw) && <div className="field"><span className="field-label">Difficulty</span>
+        <div className="select">{["Easy","Medium","Hard"].map((option,i)=>
+          <button key={option} type="button" disabled={!!stake} className={difficulty===i?"on":""} onClick={()=>setDifficulty(i)}>{option}</button>)}</div>
+      </div>}
+      {isDerby && <div className="derby-pick" aria-label="Choose a driver">
+        <div><span>Driver</span><span>Chance</span><span>Payout</span></div>
+        {options.map((option,i)=><button key={option} type="button" aria-pressed={i===choice} onClick={()=>setChoice(i)}>
+          <span>{i+1} · {option}</span><span>{derbyWeights[i]}%</span><b>{derbyPayouts[i]}×</b></button>)}
+      </div>}
+      {(isDouble||isStocks) && <div className="field"><span className="field-label">{isStocks?"Direction":"Color"}</span>
+        <div className="select">{options.map((option,i)=><button key={option} type="button" className={choice===i?"on":""}
+          onClick={()=>setChoice(i)}>{option}</button>)}</div>
+      </div>}
+      {isSlide && <label className="field"><span className="field-label">Target multiplier</span>
+        <div className="game-number-step"><input type="number" min={1.01} max={1000} step={0.1} value={target}
+          onChange={event=>setTarget(event.target.valueAsNumber||1.01)}/></div>
+      </label>}
+      {isRps && <div className="field"><span className="field-label">Throw</span>
+        <div className="select">{options.map((option,i)=><button key={option} type="button" disabled={!stake} onClick={()=>throwHand(i)}>{option}</button>)}</div>
+      </div>}
     </BetPanel>
   }>
     <div className="arcade-round">
-      <div className="arcade-game-art" data-game={game.id} aria-hidden="true" />
       {isLava && <>
         <small>Level {Math.min(3,Math.floor(turn/3)+1)} of 3</small>
         <div className="lava-board" aria-label="Lava stepping stones">{lavaTiles.map(index=>
           <button key={index} type="button" disabled={!stake} data-sunk={sunken.includes(index)} data-chosen={stone===index}
             aria-label={"Stone "+(index+1)} onClick={()=>move(index)} />)}</div>
       </>}
-      {game.id==="snakes" && <button type="button" className="ghost-btn" disabled={!stake} onClick={()=>move(0)}>Roll dice</button>}
-      {isRps && <div className="arcade-moves">{options.map((option,i)=>
-        <button type="button" key={option} className="ghost-btn" disabled={!stake} onClick={()=>throwHand(i)}>{option}</button>)}</div>}
-      {isPoker && <div className="arcade-moves">{cards.map((card,i)=><button className="arcade-playing-card" key={card} disabled={!stake} type="button"
-        aria-pressed={held.includes(i)} onClick={()=>setHeld(held.includes(i)?held.filter(j=>j!==i):[...held,i])}>{cardLabel(card)}</button>)}</div>}
-      {isDraw && <div className="arcade-moves">{draw.map((value,i)=><button className="ghost-btn" key={i} disabled={!stake||!value}
-        type="button" onClick={()=>claim(i)}>{value ? "Claim " + (value/9).toFixed(2) + "×" : "—"}</button>)}</div>}
-      {race.length>0 && <div className="arcade-track" aria-hidden="true">
-        {race.map((value,i)=><span key={i} style={{"--progress":Math.max(0,Math.min(100,value)) + "%"} as React.CSSProperties} />)}
+      {isRps && <div className="rps-stage"><div className="rps-figures" aria-hidden="true"><span>✊</span><span>✋</span><span>✌️</span></div>
+        <div className="play-stats-pair"><span>Win streak <b>{turn}</b></span><span>Next win <b>{rpsPayout(turn+1).toFixed(2)}×</b></span></div>
+        <div className="rps-multipliers">{Array.from({length:6},(_,i)=><span key={i} data-current={i===turn}>{rpsPayout(i+1).toFixed(2)}×</span>)}</div>
       </div>}
-      <p role="status">{message}</p>
+      {isPoker && <div className="draw-poker-table"><div className="poker-seat">Computer <span>◆ ◆ ◆ ◆ ◆</span></div>
+        <div className="arcade-moves">{(cards.length?cards:Array.from({length:5},(_,i)=>i)).map((card,i)=><button
+          className={"arcade-playing-card"+(cards.length?"":" poker-back")} key={card} disabled={!stake} type="button"
+          aria-pressed={held.includes(i)} onClick={()=>setHeld(held.includes(i)?held.filter(j=>j!==i):[...held,i])}>{cards.length?cardLabel(card):"◆"}</button>)}</div>
+        <div className="poker-seat">You</div>
+      </div>}
+      {isDraw && <div className="draw-stage">
+        <div className="rps-multipliers">{[1,1.3,1.7,2.5,4,6.5,10,20,50,150].map(value=><span key={value}>{value}×</span>)}</div>
+        <div className="draw-cards">{(draw.length?draw:Array<number>(9).fill(0)).map((value,i)=><button key={i}
+          type="button" disabled={!stake||!value} onClick={()=>claim(i)} data-live={!!value}>
+          <b>{value?"◆":"♧"}</b><span>{value ? (value/9).toFixed(2) + "×" : "BlockBet"}</span>
+        </button>)}</div>
+      </div>}
+      {isCase && <div className="battle-openings">
+        <figure><figcaption>You</figcaption><img src={caseImage(opening?.you??CASES[choice]!.id)} alt="Your side"/></figure>
+        <b>VS</b>
+        <figure><figcaption>Computer</figcaption><img src={caseImage(opening?.rival??CASES[choice]!.id)} alt="Computer's side"/></figure>
+      </div>}
+      {isDouble && <div className="double-stage">
+        <div className="double-reel" aria-label="Color reel">
+          {Array.from({length:15},(_,i)=>{
+            const index = result===null ? i : i===7 ? result : doubleReel[(i+result)%doubleReel.length]!;
+            return <span key={i} data-color={index} data-center={i===7}>{["◆","●","◆","✦"][index]}</span>;
+          })}
+        </div>
+        <div className="double-picks">{options.map((option,i)=><button key={option} type="button" data-color={i}
+          onClick={()=>{setChoice(i);play(i);}}>{option} <b>{doublePayouts[i]}×</b></button>)}</div>
+      </div>}
+      {isDerby && <div className="derby-stage" aria-label="Derby lanes">
+        {options.map((option,i)=><div key={option} className="derby-lane" data-finish={race[i]===100}>
+          <small>{option}</small><span style={{"--lane-position":(race[i]??0)+"%"} as React.CSSProperties}>🏎</span>
+        </div>)}
+      </div>}
+      {isStocks && <div className="market-stage">
+        <div className="market-header"><b>BlockBet Index</b><span>{race.length?"Round closed":"Awaiting order"}</span></div>
+        <svg viewBox="0 0 600 250" role="img" aria-label="Price movement">
+          {[25,75,125,175,225].map(y=><line key={y} x1="0" x2="600" y1={y} y2={y} stroke="#3b454b" strokeWidth="1"/>)}
+          <polyline points={[50,...(race.length?race:Array<number>(12).fill(50))].map((value,i)=>i*50+","+(250-Math.min(97,Math.max(3,value))*2.5)).join(" ")}
+            fill="none" stroke={race.at(-1)!<50?"#ee6977":"#56d799"} strokeWidth="3" />
+        </svg>
+      </div>}
+      {isSlide && <div className="slide-stage"><span className="slide-indicator" aria-hidden="true"/><strong>{result===null?"—":result.toFixed(2)+"×"}</strong>
+        <div className="slide-strip" aria-label="Multiplier scale">{[1,1.25,1.5,1.75,2,2.5,3,4,5,7.5,10].map(value=>
+          <span key={value} data-hit={result!==null&&result>=value}>{value}×</span>)}</div>
+      </div>}
+      <p role="status" className="arcade-round-status">{message}</p>
     </div>
   </GameLayout>;
 }

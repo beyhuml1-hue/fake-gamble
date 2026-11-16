@@ -113,12 +113,15 @@ export function Flip({ game = "Flip" }: { game?: "Flip" | "Coinflip" } = {}) {
           amount={amount}
           onAmount={setAmount}
           profitCents={profit}
-          label="Flip"
+          label={game==="Flip"?"Create game":"Flip"}
+          showProfit={false}
           onAction={play}
           disabled={busy}
           locked={busy}
           error={error}
         >
+          {game==="Coinflip" && <button className="ghost-btn" type="button" disabled={busy}
+            onClick={()=>chooseSide(random()<0.5?"heads":"tails")}>Random side</button>}
           <div className="field">
             <span className="field-label">Pick a side</span>
             <div className="select">

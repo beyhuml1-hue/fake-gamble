@@ -147,13 +147,21 @@ export function Blackjack() {
           disabled={!done}
           locked={!done}
           error={error}
+          amountLabel="Bet per hand"
+          showProfit={false}
         >
-          <p className="hint">Dealer stands on 17. Blackjack pays 3:2. Double on your first two cards.</p>
+          <div className="bj-actions play-hand-actions">
+            <button type="button" onClick={hit} disabled={done}>Hit</button>
+            <button type="button" onClick={stand} disabled={done}>Stand</button>
+            <button type="button" onClick={double} disabled={done || player.length!==2 || balance<stake}>Double</button>
+          </div>
+          <p className="hint">Dealer stands on 17. Blackjack pays 3:2.</p>
         </BetPanel>
       }
     >
       <div className="bj">
-        <div className="hand">
+        {!dealer.length && <div className="bj-stage-idle">Blackjack pays 3 to 2</div>}
+        {!!dealer.length && <div className="hand">
           <span className="hand-label">Dealer · {hideHole ? value(dealer.slice(0, 1)) : value(dealer)}</span>
           <div className="cards">
             {dealer.map((card, index) =>
@@ -167,9 +175,9 @@ export function Blackjack() {
               ),
             )}
           </div>
-        </div>
+        </div>}
         <p className="result-line">{message}</p>
-        <div className="hand">
+        {!!player.length && <div className="hand">
           <span className="hand-label">You · {player.length ? value(player) : "—"}</span>
           <div className="cards">
             {player.map((card, index) => (
@@ -179,20 +187,7 @@ export function Blackjack() {
               </div>
             ))}
           </div>
-        </div>
-        {!done ? (
-          <div className="bj-actions">
-            <button type="button" onClick={hit}>
-              Hit
-            </button>
-            <button type="button" onClick={stand}>
-              Stand
-            </button>
-            <button type="button" onClick={double} disabled={player.length !== 2 || balance < stake}>
-              Double
-            </button>
-          </div>
-        ) : null}
+        </div>}
       </div>
     </GameLayout>
   );

@@ -160,8 +160,8 @@ export const GAMES = [
   { id: "pig-race", name: "Derby", blurb: "Pick a lane and watch the race.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
   { id: "stocks", name: "Stocks", blurb: "Call the direction of the simulated market.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
   { id: "slide", name: "Slide", blurb: "Chase a target before the slider reaches its limit.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
-  { id: "blitz", name: "Blitz", blurb: "Select a target and reveal the winning tile.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
-  { id: "snakes", name: "Snakes", blurb: "Move across the board and stop before landing on a snake.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "blitz", name: "Blitz", blurb: "Draw unique cards without pulling a repeat.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "snakes", name: "Snakes", blurb: "Roll two dice and cash out before hitting a snake.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
 ] as const;
 
 export type GameId = (typeof GAMES)[number]["id"];

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { GAMES } from "../data/games";
 import { useAuth } from "./AuthProvider";
@@ -50,7 +50,7 @@ export function AppShell() {
     setSiteStyle(style);
     try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
   }
-  const { email: accountEmail, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
+  const { displayName, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
@@ -60,6 +60,11 @@ export function AppShell() {
   const [chatOpen, setChatOpen] = useState(() => window.matchMedia("(min-width: 1080px)").matches);
   const [muted, setMuted] = useState(false);
   const location = useLocation();
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!location.hash && contentRef.current) contentRef.current.scrollTop = 0;
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     setOpen(false);
@@ -72,7 +77,7 @@ export function AppShell() {
   const showChat = chatOpen && location.pathname !== "/chat";
 
   return (
-    <div className={"app arcade-shell" + (showChat ? " with-live-chat" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
+    <div className={"app arcade-shell" + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
       <aside className={open ? "sidebar open" : "sidebar"}>
         <NavLink to="/" className="brand" end>
           <span className="brand-mark">B</span>
@@ -163,14 +168,15 @@ export function AppShell() {
               </svg>
             )}
           </button>
+          {isGuest && canSignIn && <button className="header-sign-in" type="button" onClick={showSignIn}>Sign in</button>}
           <div className="account">
             <button type="button" className="avatar account-trigger" aria-label="Account menu"
               aria-expanded={accountOpen} onClick={() => setAccountOpen((v) => !v)}>
-              {accountEmail ? accountEmail.charAt(0).toUpperCase() : "B"}
+              {displayName?.charAt(0) || "B"}
             </button>
             {accountOpen && (
               <div className="account-menu">
-                <strong>{accountEmail || "Guest profile"}</strong>
+                <strong>{displayName || "Guest profile"}</strong>
                 <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · synced Play USD wallet"}</p>
                 {isAdmin && <NavLink to="/admin" onClick={() => setAccountOpen(false)}>Manage accounts</NavLink>}
                 {isGuest
@@ -183,7 +189,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <div className="content">
+        <div className="content" ref={contentRef}>
           <Outlet context={{ query, setQuery } satisfies ShellContext} />
           {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">

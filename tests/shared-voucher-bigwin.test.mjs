@@ -70,7 +70,7 @@ test("Submitted big wins publish once to public chat and weekly rankings reflect
  try{
   const env={AUTH_PEPPER:"another-test",DB},cookies={};
   for(const name of ["alice","bob"]){
-   const email=name+"@example.com";
+   const email=name==="alice"?"16laith.beyhum@example.com":"bob@example.com";
    db.prepare("INSERT INTO auth_users(id,email,created_ms,last_login_ms,password_hash) VALUES(?,?,1,1,'test')").run(name,email);
    cookies[name]=(await issueSession(env,{id:name,email})).headers.get("Set-Cookie").split(";")[0];
   }
@@ -94,6 +94,11 @@ test("Submitted big wins publish once to public chat and weekly rankings reflect
   const ranks=await feed.json();
   assert.equal(ranks.leaders.length,1);
   assert.equal(ranks.leaders[0].profitCents,9000);
+  assert.equal(ranks.leaders[0].label,"Laith");
+  assert.doesNotMatch(JSON.stringify(ranks),/beyhum|example.com/);
+  const plays=await (await worker.fetch(new Request(base+"/api/auth/live-bets"),env)).json();
+  assert.equal(plays.bets.find(row=>row.id===id).label,"Laith");
+  assert.doesNotMatch(JSON.stringify(plays),/beyhum|example.com/);
   assert.equal(ranks.resetAt-ranks.startAt,604800000);
   assert.equal(new Date(ranks.startAt).getUTCDay(),1);
   assert.match(ranks.source,/not independently verified/);
@@ -105,6 +110,8 @@ test("Submitted big wins publish once to public chat and weekly rankings reflect
   const board=await c.json();
   assert.equal(board.messages.length,1);
   assert.equal(board.messages[0].kind,"bigwin");
+  assert.equal(board.messages[0].label,"Laith");
+  assert.doesNotMatch(JSON.stringify(board),/beyhum|example.com/);
  }finally{db.close();}
 });
 test("Homepage rotates real stats and leaderboard; Plinko has unbiased bounces; wallet has no decorative plastic card",()=>{

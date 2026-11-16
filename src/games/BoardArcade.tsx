@@ -136,5 +136,13 @@ const boards={chess:["Chess","Classic chess against a computer rival.",ChessBoar
 
 export function BoardArcade({game}:{game:keyof typeof boards}){
   const [name,description,Board]=boards[game];
-  return <GameLayout title={name} note="Practice" panel={<p>{description}</p>}><div className="arcade-board-stage"><Board/></div></GameLayout>;
+  const [opened,setOpened] = useState(false);
+  return <GameLayout title={name} note="Practice" panel={<div className="room-setup">
+    <p>{description}</p><button className="bet-btn" type="button" onClick={()=>setOpened(!opened)}>
+      {opened?"Leave practice game":"Create practice game"}
+    </button>
+  </div>}>
+    {opened ? <div className="arcade-board-stage"><Board/></div> :
+      <div className="room-empty"><h2>Open games</h2><p>Create a practice game to get started.</p></div>}
+  </GameLayout>;
 }

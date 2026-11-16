@@ -1,4 +1,4 @@
-import { configured, currentUser, json, readBody, sameOrigin } from "../../_shared/auth.js";
+import { configured, currentUser, publicDisplayName, json, readBody, sameOrigin } from "../../_shared/auth.js";
 import { preparePlayer } from "./community.js";
 
 // Authenticated event cursor: social payouts are issued by D1 triggers,
@@ -14,15 +14,15 @@ export async function onRequestGet({request,env}){
  try{
   await preparePlayer(env,user,Math.floor(Date.now()/420000));
   if(new URL(request.url).searchParams.get("notices")==="1"){
-    const notices=await env.DB.prepare("SELECT n.id,p.label AS sender,n.cents,n.at_ms AS at FROM community_notifications n JOIN community_profiles p ON p.user_id=n.sender_id WHERE n.recipient_id=?1 AND n.seen_ms IS NULL ORDER BY n.at_ms DESC LIMIT 5").bind(user.id).all();
-    return json({notifications:notices.results||[]});
+    const notices=await env.DB.prepare("SELECT n.id,u.email,n.cents,n.at_ms AS at FROM community_notifications n JOIN auth_users u ON u.id=n.sender_id WHERE n.recipient_id=?1 AND n.seen_ms IS NULL ORDER BY n.at_ms DESC LIMIT 5").bind(user.id).all();
+    return json({notifications:(notices.results||[]).map(({email,...row})=>({...row,sender:publicDisplayName(email)}))});
   }
   const [rows,notices]=await Promise.all([
    env.DB.prepare("SELECT seq,delta_cents AS delta,kind,at_ms AS at FROM community_wallet_events WHERE user_id=?1 AND seq>?2 ORDER BY seq ASC LIMIT 101").bind(user.id,after).all(),
-   env.DB.prepare("SELECT n.id,p.label AS sender,n.cents,n.at_ms AS at FROM community_notifications n JOIN community_profiles p ON p.user_id=n.sender_id WHERE n.recipient_id=?1 AND n.seen_ms IS NULL ORDER BY n.at_ms DESC LIMIT 5").bind(user.id).all(),
+   env.DB.prepare("SELECT n.id,u.email,n.cents,n.at_ms AS at FROM community_notifications n JOIN auth_users u ON u.id=n.sender_id WHERE n.recipient_id=?1 AND n.seen_ms IS NULL ORDER BY n.at_ms DESC LIMIT 5").bind(user.id).all(),
   ]);
   const events=(rows.results||[]).slice(0,100);
-  return json({events,hasMore:(rows.results||[]).length>100,notifications:notices.results||[]});
+  return json({events,hasMore:(rows.results||[]).length>100,notifications:(notices.results||[]).map(({email,...row})=>({...row,sender:publicDisplayName(email)}))});
  }catch{
   return json({error:"Wallet sync temporarily unavailable."},503);
  }

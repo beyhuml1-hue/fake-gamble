@@ -11,6 +11,7 @@ type Phase = "idle" | "running" | "crashed" | "cashed";
 export function Crash() {
   const { balance, debit, credit, record } = useWallet();
   const [amount, setAmount] = useState(1);
+  const [autoCashout,setAutoCashout] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [mult, setMult] = useState(1);
   const [error, setError] = useState("");
@@ -81,6 +82,11 @@ export function Crash() {
       setError("Minimum bet is $0.10, and it can't be more than your balance.");
       return;
     }
+    const autoTarget = autoCashout.trim()==="" ? null : Number(autoCashout);
+    if (autoTarget !== null && (!Number.isFinite(autoTarget) || autoTarget < 1.01 || autoTarget > 1000)) {
+      setError("Enter an auto cashout between 1.01× and 1,000×.");
+      return;
+    }
     if (!debit(stake)) return;
     setError("");
     wager.current = stake;
@@ -96,6 +102,13 @@ export function Crash() {
       if (settled.current) return;
       const t = (now - started.current) / 1000;
       const grown = Math.max(1, Math.floor(Math.exp(t * 0.18) * 100) / 100);
+      if (autoTarget !== null && autoTarget < crashAt.current && grown >= autoTarget) {
+        multRef.current = autoTarget;
+        setMult(autoTarget);
+        points.current.push({t,m:autoTarget});
+        settle(payout(wager.current,autoTarget),"cashed");
+        return;
+      }
       if (grown >= crashAt.current) {
         multRef.current = crashAt.current;
         setMult(crashAt.current);
@@ -131,6 +144,7 @@ export function Crash() {
           amount={amount}
           onAmount={setAmount}
           profitCents={profit}
+          showProfit={running}
           label={running ? `Cash out ${formatUSD(payout(wager.current, mult))}` : "Bet"}
           onAction={running ? cashout : bet}
           disabled={running && mult < 1.01}
@@ -138,7 +152,10 @@ export function Crash() {
           locked={running}
           error={error}
         >
-          <p className="hint">Profit before launch assumes a 2.00× cash out.</p>
+          <label className="field"><span className="field-label">Auto cashout (optional)</span>
+            <div className="game-number-step"><input type="number" min={1.01} max={1000} step={0.01}
+              placeholder="e.g. 2.00" value={autoCashout} disabled={running} onChange={event=>setAutoCashout(event.target.value)}/></div>
+          </label>
         </BetPanel>
       }
     >

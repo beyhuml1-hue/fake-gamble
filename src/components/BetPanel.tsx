@@ -13,6 +13,9 @@ type Props = {
   locked?: boolean;
   error?: string;
   children?: ReactNode;
+  amountLabel?: string;
+  afterAction?: ReactNode;
+  showProfit?: boolean;
 };
 
 export function BetPanel({
@@ -26,6 +29,9 @@ export function BetPanel({
   locked,
   error,
   children,
+  amountLabel = "Play Amount",
+  afterAction,
+  showProfit = true,
 }: Props) {
   const { balance, openCashier } = useWallet();
   const [text, setText] = useState(amount.toFixed(2));
@@ -58,7 +64,7 @@ export function BetPanel({
       </div>
 
       <label className="field">
-        <span className="field-label">Bet Amount</span>
+        <span className="field-label">{amountLabel}</span>
         <span className="amount">
           <span className="amount-prefix">$</span>
           <input
@@ -87,30 +93,32 @@ export function BetPanel({
           <button className="step-btn" type="button" disabled={locked} onClick={() => write(Math.min(balance / 100, amount * 2))}>
             2×
           </button>
+          <button className="step-btn step-max" type="button" disabled={locked} onClick={() => write(balance / 100)}>Max</button>
         </span>
       </label>
 
       {children}
 
-      <div className="field">
+      {showProfit && <div className="field">
         <span className="field-label">Profit on Win</span>
         <div className="profit-box">
           <span>$</span>
           <strong>{formatUSD(profitCents).replace("$", "")}</strong>
         </div>
-      </div>
+      </div>}
 
       {error ? <p className="form-error">{error}</p> : null}
 
       {broke ? (
         <button className="bet-btn" type="button" onClick={openCashier}>
-          Deposit
+          Open demo wallet
         </button>
       ) : (
         <button className={cashout ? "bet-btn cashout" : "bet-btn"} type="submit" disabled={disabled}>
           {label}
         </button>
       )}
+      {afterAction}
     </form>
   );
 }

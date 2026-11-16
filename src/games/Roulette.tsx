@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatUSD, payout } from "../lib/money";
@@ -116,7 +116,15 @@ export function Roulette() {
           onAction={spin}
           disabled={busy}
           error={error}
+          amountLabel="Chip value"
+          showProfit={false}
         >
+          <div className="field"><span className="field-label">Chips</span><div className="roulette-chip-picks">
+            {[0.1,0.5,1,5,10,25,100,500,1000,10000,100000,1000000,10000000].map((chip,i)=>
+              <button type="button" key={chip} disabled={busy} aria-label={formatUSD(chip*100)+" chip"}
+                aria-pressed={chip===amount} style={{"--chip-color":["#28659a","#258259","#7651a5","#aa762d","#a5454e"][i%5]} as CSSProperties}
+                onClick={()=>setAmount(chip)}>{chip>=1000000?chip/1000000+"M":chip>=1000?chip/1000+"K":chip}</button>)}
+          </div></div>
           <p className="hint">
             On {label(bet)} · pays {formatUSD(profit)} profit
           </p>
@@ -126,7 +134,10 @@ export function Roulette() {
       <div className="roulette">
         <div className={busy ? "wheel-scene compact spinning" : "wheel-scene compact"}>
           <div className="pointer" />
-          <div className="wheel-disc small" style={{ background: gradient, transform: `rotate(${rotation}deg)` }} />
+          <div className="wheel-disc small" style={{ background: gradient, transform: `rotate(${rotation}deg)` }}>
+            {ORDER.map((n,i)=><span key={n} className="roulette-pocket-label" style={{"--pocket-angle":`${(i+0.5)*slice}deg`} as CSSProperties}>{n}</span>)}
+            <span className="roulette-wheel-hub" aria-hidden="true">◆</span>
+          </div>
           <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>
             {result == null ? "European wheel" : result === 0 ? "0" : `${result} ${RED.has(result) ? "red" : "black"}`}
           </p>

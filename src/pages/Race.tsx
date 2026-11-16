@@ -38,7 +38,7 @@ export function Race(){
       {offline&&<p role="status">Race feed is temporarily unavailable.</p>}
       {!offline&&!feed&&<p role="status">Loading standings…</p>}
       {feed&&!leaders.length&&<p>{secs?"No positive results reported today.":"Today's standings are resetting."}</p>}
-      <ol>{leaders.map(row=><li key={row.label}><span>{row.label}<small>{row.bets} plays</small></span><strong>{formatUSD(row.profitCents)}</strong></li>)}</ol>
+      <ol>{leaders.map((row,index)=><li key={row.label+index}><span>{row.label}<small>{row.bets} plays</small></span><strong>{formatUSD(row.profitCents)}</strong></li>)}</ol>
     </div>
   </section>;
 }

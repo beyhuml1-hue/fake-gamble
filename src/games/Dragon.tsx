@@ -142,6 +142,7 @@ export function Dragon() {
           const current = r === row && active;
           return (
             <div key={r} className={current ? "tower-row active" : "tower-row"}>
+              <b className="tower-level">{r+1}</b>
               {Array.from({ length: dragons ? tiles : config.tiles }, (_, tile) => {
                 const picked = picks[r] === tile;
                 const isDragon = Boolean(dragons?.[r]?.includes(tile));
@@ -149,7 +150,7 @@ export function Dragon() {
                 const showSafe = picked && !isDragon;
                 const cls = showDragon ? "tile-btn dragon" : showSafe ? "tile-btn safe" : "tile-btn";
                 return (
-                  <button key={tile} type="button" className={cls} disabled={!current} onClick={() => choose(tile)}>
+                  <button key={tile} type="button" className={cls} disabled={!current} aria-label={`Level ${r+1}, tile ${tile+1}`} onClick={() => choose(tile)}>
                     {showDragon ? "💣" : showSafe ? <img className="blockbet-revealed-gem" src="/images/gem-green.webp" alt="Safe gem" draggable={false}/> : ""}
                   </button>
                 );

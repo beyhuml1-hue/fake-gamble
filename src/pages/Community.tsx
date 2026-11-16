@@ -118,9 +118,10 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
   },[selected?.id]);
 
   function mention(body:string){
-    const parts=body.split(/(@Player [0-9A-F]{6}|@ai)/gi);
+    const parts=body.split(/(@Player [0-9A-F]{6}|@[a-z]+)/gi);
     return parts.map((fragment,index)=>{
-      const person=board?.players?.find(p=>("@"+p.label).toLowerCase()===fragment.toLowerCase());
+      const matches=board?.players?.filter(p=>("@"+p.label).toLowerCase()===fragment.toLowerCase())??[];
+      const person=matches.length===1?matches[0]:null;
       return person?<button key={index} type="button" className="chat-inline-mention" onClick={()=>setSelected(person)}>{fragment}</button>:fragment;
     });
   }
@@ -266,7 +267,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
       }}>
         <label htmlFor="chat-message">Message</label>
         <div className="chat-mention-input">
-          <input id="chat-message" value={message} maxLength={240} autoComplete="off" placeholder="Message… try @ai or @player"
+          <input id="chat-message" value={message} maxLength={240} autoComplete="off" placeholder="Message… use @ to mention a player"
             onChange={event => {setMessage(event.target.value);setMentionOpen(/@[^\s]*$/.test(event.target.value));}} disabled={busy || aiBusy || offline} />
           {mentionOpen&&<div className="chat-mentions" role="listbox" aria-label="Mention players">
             {["ai",...Array.from(new Set((board.players||[]).map(m=>m.label))).slice(0,25)]
