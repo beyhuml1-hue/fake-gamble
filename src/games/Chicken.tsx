@@ -5,6 +5,7 @@ import { EDGE } from "../lib/math";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { random } from "../lib/random";
 import { sound } from "../lib/sound";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const LANES = 10;
@@ -56,7 +57,7 @@ export function Chicken() {
   const cross = () => {
     if (!active) return;
     const next = step + 1;
-    if (random() > survive) {
+    if (!luckOn() && random() > survive) {
       setStep(next);
       setDead(true);
       sound.bomb();
