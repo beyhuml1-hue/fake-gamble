@@ -218,6 +218,11 @@
 @media(max-width:450px){ .header-sign-in { padding:9px 6px; } }
 .auth-app { height:100%; }
 .play-surface .game-panel { min-width:0; }
+/* Board wagers keep the bet controls above the board on small screens. */
+@media(max-width:850px){
+ .play-surface[data-play="chess"] .game-stage,.play-surface[data-play="uno"] .game-stage{order:0;min-height:340px;}
+ .play-surface[data-play="chess"] .arcade-board-stage,.play-surface[data-play="uno"] .arcade-board-stage{padding:10px;}
+}
 .play-surface .mines-grid { width:min(100%,550px,max(335px,calc(100dvh - 205px))); }
 @media(max-width:850px){
  .play-surface .game-card,.play-room .game-card,.game-shell .mb-layout { grid-template-columns:minmax(0,1fr); }
