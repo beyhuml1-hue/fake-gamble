@@ -41,7 +41,7 @@ test("Packs spin settles with normal game wallet, blocks repeated bets and shows
  assert.match(page,/PACK_LEVELS\.map/);
  assert.match(page,/packRtp\(level\)/);
  assert.match(page,/prize\.weight\/100/);
- assert.match(page,/\/covers\/cover-packs\.webp/);
+ assert.doesNotMatch(page,/packs-header-preview|BLOCKBET ORIGINALS/);
 });
 
 test("Real supplied images are shipped as WebP; successful Mines and Dragon tiles use the green gem",()=>{
