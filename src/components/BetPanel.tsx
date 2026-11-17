@@ -50,7 +50,7 @@ export function BetPanel({
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (disabled || broke || (locked && !cashout) || clickGuard.current) return;
+    if (disabled || broke || clickGuard.current) return;
     if (!cashout && betCents(amount, balance) === null) {
       setLocalError("Enter a bet from $0.10 up to your available balance (maximum $100,000).");
       return;
