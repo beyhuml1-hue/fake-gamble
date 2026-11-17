@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { crashPoint } from "../lib/math";
-import { luckOn } from "../lib/luck";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
@@ -90,7 +89,7 @@ export function Crash() {
     if (!debit(stake)) return;
     setError("");
     wager.current = stake;
-    crashAt.current = luckOn() ? 100 : crashPoint();
+    crashAt.current = crashPoint();
     settled.current = false;
     multRef.current = 1;
     setMult(1);
