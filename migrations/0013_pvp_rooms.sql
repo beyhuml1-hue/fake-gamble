@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS pvp_rooms (
  stake_cents INTEGER NOT NULL CHECK(stake_cents BETWEEN 10 AND 1000000),
  status TEXT NOT NULL DEFAULT 'waiting' CHECK(status IN('waiting','active','finished','cancelled','expired')),
  state_json TEXT NOT NULL,
+ turn_no INTEGER NOT NULL DEFAULT 0,
  turn_id TEXT REFERENCES auth_users(id),
  winner_id TEXT REFERENCES auth_users(id),
  result_text TEXT,
