@@ -5,12 +5,15 @@ import { GameLayout } from "../components/GameLayout";
 import { useAuth } from "../components/AuthProvider";
 import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
+import {sound} from "../lib/sound";
+import "./uno-matches.css";
 import "./multiplayer.css";
 import "./pool-uno.css";
 
-type Game = "pool" | "connect-four" | "mines-battles";
+type Game = "pool" | "connect-four" | "mines-battles" | "uno";
+type UnoCard={id:number;color:string;value:string};
 type Ball = {id:number;x:number;y:number;sunk:boolean};
-type State = {balls?:Ball[];shots?:number;pocketed?:number;board?:number[];
+type State = {hand?:UnoCard[];top?:UnoCard;color?:string;hostCount?:number;guestCount?:number;drawn?:{host:number;guest:number};balls?:Ball[];shots?:number;pocketed?:number;board?:number[];
   revealed?:number[];mines?:number[];hostScore?:number;guestScore?:number;last?:number};
 type Room = {
   id:string;game:Game;stakeCents:number;status:"waiting"|"active"|"finished"|"cancelled"|"expired";
@@ -20,7 +23,7 @@ type Room = {
 };
 type Payload={open?:Room[];mine?:Room|null;match?:Room;error?:string};
 
-const names:Record<Game,string>={"pool":"8-Ball Pool","connect-four":"Connect Four","mines-battles":"Mines Duel"};
+const names:Record<Game,string>={"pool":"8-Ball Pool","connect-four":"Connect Four","mines-battles":"Mines Duel","uno":"Uno"};
 async function request(path:string,body?:object):Promise<Payload>{
   const response=await fetch("/api/auth/matches"+path,{
     method:body?"POST":"GET",
@@ -91,7 +94,7 @@ export function Multiplayer({game}:{game:Game}){
     return()=>window.clearInterval(handle);
   },[refresh,live]);
 
-  return <GameLayout title={names[game]} note="Player vs player · play-money stakes" panel={
+  return <GameLayout title={names[game]} note="Player vs player Â· play-money stakes" panel={
     <div className="pvp-controls">
       {!email?<div className="room-setup">
         <p>Sign in to create a match and play against another player.</p>
@@ -108,11 +111,11 @@ export function Multiplayer({game}:{game:Game}){
           {current.status==="waiting"?"Cancel waiting match":"Forfeit match"}
         </button>
       </div>:<BetPanel amount={amount} onAmount={setAmount} profitCents={Math.round(amount*100)}
-        label={busy?"Creating…":"Create match"} onAction={()=>void act("create",{game,stakeCents:Math.round(amount*100)})}
+        label={busy?"Creatingâ€¦":"Create match"} onAction={()=>void act("create",{game,stakeCents:Math.round(amount*100)})}
         error={error} disabled={!canCreate}>
         <p className="hint">Another player stakes the same amount. Winner takes both stakes; a draw refunds both. No house edge.</p>
         {otherGame&&<p className="form-error">Finish your <Link to={"/game/"+mine.game}>{names[mine.game]}</Link> match first.</p>}
-        {!walletReady&&<p className="hint">Syncing your play-money balance…</p>}
+        {!walletReady&&<p className="hint">Syncing your play-money balanceâ€¦</p>}
       </BetPanel>}
       {working&&error&&<p role="alert" className="form-error">{error}</p>}
       {!working&&<p className="hint">Available: {formatUSD(balance)}</p>}
@@ -123,8 +126,8 @@ export function Multiplayer({game}:{game:Game}){
       <div className="pvp-versus">
         <span>{current.host}</span><strong>VS</strong><span>{current.guest}</span>
       </div>
-      <p className="pvp-turn" role="status">{current.myTurn?"Your turn":(current.turn==="host"?current.host:current.guest)+" is playing"} · Pot {formatUSD(current.stakeCents*2)}</p>
-      {game==="pool"?<PoolMatch room={current} busy={busy} shoot={move=>void act("move",{id:current.id,move})}/>:
+      <p className="pvp-turn" role="status">{current.myTurn?"Your turn":(current.turn==="host"?current.host:current.guest)+" is playing"} Â· Pot {formatUSD(current.stakeCents*2)}</p>
+      {game==="uno"?<UnoMatch room={current} busy={busy} play={move=>void act("move",{id:current.id,move})}/>:game==="pool"?<PoolMatch room={current} busy={busy} shoot={move=>void act("move",{id:current.id,move})}/>:
         game==="connect-four"?<FourMatch room={current} busy={busy} move={column=>void act("move",{id:current.id,move:{column}})}/>:
         <MinesMatch room={current} busy={busy} move={tile=>void act("move",{id:current.id,move:{tile}})}/>}
       <p className="hint">Moves are verified on the server. Refreshing or changing pages will not reset the match.</p>
@@ -198,7 +201,7 @@ function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:{type:"
       <circle cx={ball.x} cy={ball.y} r="11" fill="url(#room-ball)"/>
       </g>)}
     </svg>
-    <p role="status">{room.state.pocketed??0} pocketed · {room.state.shots??0} shots</p>
+    <p role="status">{room.state.pocketed??0} pocketed Â· {room.state.shots??0} shots</p>
     <div className="arcade-moves pvp-shot-controls">
       <label>Power <input type="range" min={15} max={100} value={power} disabled={!playable}
         onChange={e=>setPower(Number(e.target.value))}/></label>
@@ -213,7 +216,7 @@ function FourMatch({room,busy,move}:{room:Room;busy:boolean;move:(column:number)
   return <>
     <div className="connect-choices">{Array.from({length:7},(_,i)=>
       <button type="button" className="ghost-btn" key={i} aria-label={"Drop in column "+(i+1)}
-        disabled={!room.myTurn||busy||Boolean(board[i])} onClick={()=>move(i)}>↓</button>)}</div>
+        disabled={!room.myTurn||busy||Boolean(board[i])} onClick={()=>move(i)}>â†“</button>)}</div>
     <div className="connect-board" aria-label="Shared Connect Four board">
       {board.map((disc,i)=><span key={i} data-disc={disc} aria-label={disc===1?"Host disc":disc===2?"Challenger disc":"Empty"}/>)}
     </div>
@@ -224,7 +227,7 @@ function MinesMatch({room,busy,move}:{room:Room;busy:boolean;move:(tile:number)=
   const shown=room.state.revealed||[];
   const hiddenMines=room.state.mines||[];
   return <>
-    <p className="pvp-turn">Safe gems · {room.host}: {room.state.hostScore||0} · {room.guest}: {room.state.guestScore||0}</p>
+    <p className="pvp-turn">Safe gems Â· {room.host}: {room.state.hostScore||0} Â· {room.guest}: {room.state.guestScore||0}</p>
     <div className="mb-board" aria-label="Shared Mines Duel board">
       {Array.from({length:25},(_,tile)=>{
         const revealed=shown.includes(tile),bomb=hiddenMines.includes(tile);
@@ -239,3 +242,24 @@ function MinesMatch({room,busy,move}:{room:Room;busy:boolean;move:(tile:number)=
   </>;
 }
 
+
+
+function UnoMatch({room,busy,play}:{room:Room;busy:boolean;play:(move:{type:"play";cardId:number;color:string})=>void}){
+ const [color,setColor]=useState("red");const [chosen,setChosen]=useState<UnoCard|null>(null);
+ const state=room.state,hand=state.hand||[],top=state.top;
+ const previous=useRef(room.version);
+ useEffect(()=>{if(previous.current!==room.version){sound.flip();previous.current=room.version;setChosen(null);}},[room.version]);
+ const legal=(card:UnoCard)=>card.value==="wild4"?!hand.some(c=>c.color===state.color):card.color==="wild"||card.color===state.color||card.value===top?.value;
+ const label=(card:UnoCard)=>({skip:"⊘",reverse:"⇄",draw2:"+2",wild:"✦",wild4:"+4"}[card.value]||card.value);
+ const count=room.role==="host"?state.guestCount:state.hostCount;
+ return <div className="uno-table">
+  <div className="uno-opponent" aria-label={"Opponent has "+count+" cards"}>{Array.from({length:Math.min(count||0,20)},(_,i)=><span className="uno-back" key={i}>UNO</span>)}<b>{count} cards</b></div>
+  <div className="uno-centre"><div className="uno-back uno-deck">UNO</div>{top&&<div className="uno-playing-card uno-discard" key={room.version} data-color={top.color}><small>{label(top)}</small><b>{label(top)}</b><small>{label(top)}</small></div>}</div>
+  <p role="status">Current colour: <strong>{state.color}</strong> · {room.myTurn?"Play a highlighted card":"Waiting for your opponent"}</p>
+  {!!state.drawn?.[room.role||"host"]&&<p className="uno-draw-notice">Automatically drew {state.drawn[room.role||"host"]} card(s).</p>}
+  <div className="uno-hand">{hand.map(card=><button type="button" key={card.id} className="uno-playing-card" data-color={card.color} disabled={busy||!room.myTurn||!legal(card)} aria-label={card.color+" "+card.value} onClick={()=>{sound.flip();if(card.color==="wild")setChosen(card);else play({type:"play",cardId:card.id,color:card.color});}}><small>{label(card)}</small><b>{label(card)}</b><small>{label(card)}</small></button>)}</div>
+  {hand.length===1&&<strong className="uno-call">UNO!</strong>}
+  {chosen&&<div className="uno-color-picker"><p>Choose the next colour</p>{["red","yellow","green","blue"].map(c=><button type="button" key={c} data-color={c} aria-pressed={color===c} onClick={()=>{setColor(c);play({type:"play",cardId:chosen.id,color:c});}} disabled={busy}>{c}</button>)}</div>}
+  <p className="hint">No draw button: a card is drawn automatically only when no legal play is available. If it cannot be played, your turn passes. Skip, Reverse, +2 and Wild cards supported.</p>
+ </div>;
+}

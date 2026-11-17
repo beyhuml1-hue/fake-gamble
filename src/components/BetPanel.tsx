@@ -128,7 +128,7 @@ export function BetPanel({
 
       {broke ? (
         <button className="bet-btn" type="button" onClick={openCashier}>
-          Claim free play money
+          Open wallet and Rain
         </button>
       ) : (
         <button className={cashout ? "bet-btn cashout" : "bet-btn"} type="submit" disabled={disabled}>
@@ -139,3 +139,4 @@ export function BetPanel({
     </form>
   );
 }
+

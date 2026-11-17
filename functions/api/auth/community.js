@@ -55,7 +55,7 @@ export async function onRequestGet({ request, env }) {
   ]);
   return json({
     profile: { id:profile.results[0].id, label:publicDisplayName(user.email) },
-    rain: { ...rain.results[0], round, now, endsAt: (round + 1) * ROUND_MS },
+    rain: { ...rain.results[0], cents:(await env.DB.prepare("SELECT cents FROM rain_pots WHERE round=?1").bind(round).first())?.cents??RAIN_CENTS, round, now, endsAt: (round + 1) * ROUND_MS },
     messages: chat.results.reverse().map(named),
     players: (players.results || []).map(named),
   });
@@ -70,7 +70,7 @@ export async function onRequestPost({ request, env }) {
   const action = input?.action;
   const now = Date.now();
   const round = Math.floor(now / ROUND_MS);
-  if (!["message", "join", "transfer"].includes(action)) return json({ error: "Unknown action." }, 400);
+  if (!["message", "join", "transfer", "contribute"].includes(action)) return json({ error: "Unknown action." }, 400);
   if (!await hitRateLimit(env, "community:" + user.id, 60_000, 24, now)) {
     return json({ error: "Wait a moment and try again." }, 429);
   }
@@ -99,6 +99,16 @@ export async function onRequestPost({ request, env }) {
     return entry ? json({ ok: true }) : json({ error: "That round is full or closed." }, 409);
   }
 
+  if(action === "contribute"){
+    const {id,cents}=input;
+    if(typeof id!=="string"||!UUID.test(id)||!Number.isSafeInteger(cents)||cents<1||cents>100_000_000)return json({error:"Enter a valid Rain amount."},400);
+    if(input.round!==round)return json({error:"That round closed. Try the new Rain."},409);
+    const [written,existing]=await env.DB.batch([
+      env.DB.prepare("INSERT OR IGNORE INTO rain_contributions(id,user_id,round,cents,at_ms) SELECT ?1,?2,?3,?4,?5 FROM playusd_wallets w WHERE w.user_id=?2 AND w.initialized=1 AND w.cents>=?4 AND CAST(unixepoch()/420 AS INTEGER)=?3 AND COALESCE((SELECT cents FROM rain_pots WHERE round=?3),1000)+?4<=10000000000 AND NOT EXISTS(SELECT 1 FROM community_rain WHERE round=?3 AND paid=1)").bind(id,user.id,round,cents,now),
+      env.DB.prepare("SELECT 1 FROM rain_contributions WHERE id=?1 AND user_id=?2 AND cents=?3 AND round=?4").bind(id,user.id,cents,round)
+    ]);
+    return written.meta.changes||existing.results.length?json({ok:true}):json({error:"Insufficient balance or Rain has closed."},409);
+  }
   const { id, recipient, cents } = input;
   if (typeof id !== "string" || !UUID.test(id) || typeof recipient !== "string" ||
       !UUID.test(recipient) || !Number.isInteger(cents) || cents < 1 || cents > 100_000_000) {

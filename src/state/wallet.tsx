@@ -338,23 +338,7 @@ export function WalletProvider({ email, children, adjustment }: {
       }
     },
     openCashier: () => setCashierNonce((n) => n + 1),
-    depositFromCard: (cents) => {
-      if (cents < 100) return "Minimum deposit is $1.00.";
-      if (cardRef.current < cents) return "Declined. Insufficient funds.";
-      const row: LedgerRow = { id: crypto.randomUUID(), kind: "deposit", cents, at: Date.now(), ref: reference() };
-      const nextBalance = clamp(balanceRef.current + cents);
-      const nextCard = cardRef.current - cents;
-      balanceRef.current = nextBalance;
-      cardRef.current = nextCard;
-      setSaved((prev) => ({
-        ...prev,
-        balance: nextBalance,
-        card: nextCard,
-        ledger: [row, ...prev.ledger].slice(0, 40),
-      }));
-      sound.cash();
-      return null;
-    },
+    depositFromCard: (_cents) => "Top-ups are disabled. Receive a transfer or join Rain.",
     withdrawToCard: (cents) => {
       if (cents < 100) return "Minimum withdrawal is $1.00.";
       if (balanceRef.current < cents) return "Insufficient balance.";

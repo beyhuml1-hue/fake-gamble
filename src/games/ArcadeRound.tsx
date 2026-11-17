@@ -45,6 +45,8 @@ function openCase(index: number) {
   return (drops.find(drop => (roll -= drop.weight) <= 0) ?? drops[drops.length - 1]!).item;
 }
 
+import "./uno-matches.css";
+
 export function ArcadeRound({game}: {game: {id: string; name: string; blurb: string}}) {
   const wallet = useWallet();
   const currentWallet = useRef(wallet);
@@ -55,6 +57,8 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
   const frame = useRef(0);
   const [animating,setAnimating] = useState(false);
   const [animationId,setAnimationId] = useState(0);
+  const [doubleCards,setDoubleCards]=useState<number[]>(doubleReel);
+  const [doubleRunning,setDoubleRunning]=useState(false);
   const [slideCards,setSlideCards] = useState<number[]>([]);
   const [slideRunning,setSlideRunning] = useState(false);
   const [recentSlides,setRecentSlides] = useState<number[]>([]);
@@ -218,13 +222,17 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     const multiplier = selected !== outcome ? 0 : isDerby ? derbyPayouts[selected]! : doublePayouts[selected]!;
     pending.current={stake:wager,claimed:multiplier};
     setResult(null);
+    if(isDouble){
+      const strip=Array.from({length:65},()=>doubleReel[randInt(doubleReel.length)]!);strip[55]=outcome;setDoubleCards(strip);setDoubleRunning(false);
+      frame.current=requestAnimationFrame(()=>requestAnimationFrame(()=>setDoubleRunning(true)));setMessage("Spinning…");
+    }
     if(isDerby) {
       setRaceNumber(previous=>previous+1);
       setRace(Array<number>(options.length).fill(0));
       setMessage("Cars on the grid…");
       frame.current=requestAnimationFrame(()=>setRace(options.map((_,lane)=>lane===outcome?100:73+randInt(23))));
     }
-    pause(isDerby?4700:1800,()=>{
+    pause(isDouble?4300:isDerby?4700:1800,()=>{
       setResult(outcome);
       finish(wager,multiplier,(isDerby?"Winner: ":"Result: ")+options[outcome]);
     });
@@ -341,12 +349,9 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
         <figure><figcaption>Computer</figcaption><img src={caseImage(opening?.rival??CASES[choice]!.id)} alt="Computer's side"/></figure>
       </div>}
       {isDouble && <div className="double-stage">
-        <div className="double-reel" aria-label="Color reel">
-          {Array.from({length:15},(_,i)=>{
-            const index = result===null ? i : i===7 ? result : doubleReel[(i+result)%doubleReel.length]!;
-            return <span key={i} data-color={index} data-center={i===7}>{["◆","●","◆","✦"][index]}</span>;
-          })}
-        </div>
+        <div className="double-window"><div className={"double-strip"+(doubleRunning?" running":"")} key={animationId} aria-label="Spinning colour reel">
+          {doubleCards.map((index,i)=><span key={i} data-color={index}>{["◆","●","◆","✦"][index]}</span>)}
+        </div><i className="double-pointer" aria-hidden="true"/></div>
         <div className="double-picks">{options.map((option,i)=><button key={option} type="button" data-color={i} disabled={animating}
           onClick={()=>{setChoice(i);play(i);}}>{option} <b>{doublePayouts[i]}×</b></button>)}</div>
       </div>}
@@ -387,4 +392,3 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     </div>
   </GameLayout>;
 }
-

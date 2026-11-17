@@ -36,6 +36,54 @@ function setup(){
   return {db,env};
 }
 
+test("Uno rooms share only each player's hand; Rain donations debit once and pay the full pot",async()=>{
+ const {db,env}=setup();const cookies={};const origin="https://playblockbet.com";
+ try{
+  for(const id of ["host","guest"]){
+   const email=id+"@example.com";
+   db.prepare("INSERT INTO auth_users(id,email,created_ms,last_login_ms,password_hash) VALUES(?,?,1,1,'test')").run(id,email);
+   cookies[id]=(await issueSession(env,{id,email})).headers.get("Set-Cookie").split(";")[0];
+  }
+  async function call(id,path,body){
+   const res=await worker.fetch(new Request(origin+"/api/auth/"+path,{method:body?"POST":"GET",headers:{Cookie:cookies[id],Origin:origin,"Content-Type":"application/json"},...(body?{body:JSON.stringify(body)}:{})}),env);
+   return {status:res.status,data:await res.json()};
+  }
+  for(const id of ["host","guest"]){
+   assert.equal((await call(id,"playusd",{action:"initialize",balance:999999999})).data.balance,100000);
+   db.prepare("UPDATE playusd_wallets SET cents=99000 WHERE user_id=?").run(id);
+   assert.equal((await call(id,"playusd",{action:"initialize",balance:100000000})).data.balance,99000,"No refill");
+  }
+  const created=await call("host","matches",{action:"create",game:"uno",stakeCents:100});
+  assert.equal(created.status,201);const id=created.data.match.id;
+  const listed=await call("guest","matches?game=uno");
+  assert.equal(listed.data.open[0].state.hand.length,0);
+  const joined=await call("guest","matches",{action:"join",id});assert.equal(joined.status,200);
+  assert.equal(joined.data.match.state.hand.length>=7,true);assert.equal(joined.data.match.state.hands,undefined);
+  const row=db.prepare("SELECT * FROM pvp_rooms WHERE id=?").get(id);const state=JSON.parse(row.state_json);
+  const who=state.turn;const hand=state.hands[who];
+  const card=hand.find(c=>c.color!=="wild"&&(c.color===state.color||c.value===state.top.value))||hand.find(c=>c.value==="wild")||hand.find(c=>c.value==="wild4");
+  assert.ok(card);
+  assert.equal((await call(who,"matches",{action:"move",id,move:{type:"draw"}})).status,422);
+  assert.equal((await call(who,"matches",{action:"move",id,move:{type:"play",cardId:card.id,color:"blue"}})).status,200);
+  await call("host","matches",{action:"leave",id});
+  const board=await call("host","community");const round=board.data.rain.round;
+  await call("guest","community",{action:"join",round});
+  const before=db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='host'").get().cents;
+  const donation={action:"contribute",id:crypto.randomUUID(),round,cents:1200};
+  assert.equal((await call("host","community",donation)).status,200);
+  assert.equal((await call("host","community",donation)).status,200);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='host'").get().cents,before-1200);
+  assert.equal((await call("guest","community")).data.rain.cents,2200);
+  assert.equal((await call("host","community",{...donation,id:crypto.randomUUID(),cents:100000000})).status,409);
+  db.prepare("UPDATE community_rain SET round=? WHERE round=?").run(round-1,round);
+  db.prepare("UPDATE rain_pots SET round=? WHERE round=?").run(round-1,round);
+  await call("host","community");await call("guest","community");
+  const total=db.prepare("SELECT SUM(delta_cents) AS cents FROM community_wallet_events WHERE kind='rain'").get().cents;
+  assert.equal(total,2200);await call("host","community");
+  assert.equal(db.prepare("SELECT SUM(delta_cents) AS cents FROM community_wallet_events WHERE kind='rain'").get().cents,2200);
+ }finally{db.close();}
+});
+
 test("Two players see waiting rooms, escrow their play money and settle exactly once",async()=>{
   const {db,env}=setup();
   const cookies={};
@@ -58,6 +106,7 @@ test("Two players see waiting rooms, escrow their play money and settle exactly 
     for(const player of ["host","guest"]){
       assert.equal((await call(player,"playusd",{action:"initialize",balance:10_000})).status,200);
     }
+    db.exec("UPDATE playusd_wallets SET cents=10000"); // Existing account fixture.
     assert.equal((await call("host","matches",{action:"create",game:"connect-four",stakeCents:2500})).status,201);
     assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='host'").get().cents,7500);
     const listed=await call("guest","matches?game=connect-four");
@@ -125,3 +174,4 @@ test("Two players see waiting rooms, escrow their play money and settle exactly 
     assert.equal(cancelled.data.match.status,"cancelled");
   }finally{db.close();}
 });
+

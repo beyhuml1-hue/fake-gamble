@@ -50,6 +50,7 @@ test("Rain and transfers issue idempotent normal-wallet events, notify recipient
   assert.equal((await post("alice",playusd,{action:"initialize",balance:9000})).status,200);
   assert.equal((await post("bob",playusd,{action:"initialize",balance:3000})).status,200);
   assert.equal((await post("cam",playusd,{action:"initialize",balance:0})).status,200);
+  db.exec("UPDATE playusd_wallets SET cents=CASE user_id WHEN 'alice' THEN 9000 WHEN 'bob' THEN 3000 ELSE 0 END");
   assert.equal((await (await get("alice",chat)).json()).players.length,3);
   assert.equal((await post("alice",chat,{action:"message",body:"hello everyone"})).status,201);
   assert.equal((await post("cam",chat,{action:"message",body:"hello alice"})).status,201);

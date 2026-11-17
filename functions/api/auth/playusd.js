@@ -28,9 +28,9 @@ export async function onRequestPost({request,env}){
  const now=Date.now();
  try{
   if(input?.action==="initialize"){
-   // One-time migration of the browser's existing normal balance. If Rain
-   // or a transfer arrived first, preserve those credits when importing it.
-   const balance=input.balance;
+   // One starter grant per account; browser input never controls its size.
+   // Gifts and Rain already received are preserved.
+   const balance=100_000;
    if(!Number.isSafeInteger(balance)||balance<0||balance>LIMIT)
     return json({error:"Invalid Play USD balance."},400);
    await env.DB.batch([

@@ -26,7 +26,7 @@ function setup(){
  return {db,DB};
 }
 const base="https://playblockbet.com";
-test("Simulated card details redeem from one $125 shared pool with exactly-once receipts",async()=>{
+test("Retired simulated card funding cannot add money",async()=>{
  const {db,DB}=setup();
  try{
   const env={AUTH_PEPPER:"test-secret",DB,ADMIN_EMAIL:"owner@example.com"};
@@ -50,18 +50,10 @@ test("Simulated card details redeem from one $125 shared pool with exactly-once 
   assert.equal((await (await get("owner")).json()).remainingCents,12500);
   assert.equal((await post("alice",payload(100),"https://other.example")).status,403);
   assert.equal((await post("",payload(100))).status,401);
-  assert.equal((await post("alice",{...payload(100),cvc:"000"})).status,409);
-  const first=payload(5000);
-  assert.equal((await post("alice",first)).status,200);
-  assert.equal((await post("alice",first)).status,200,"A repeated receipt cannot debit twice");
-  assert.equal(db.prepare("SELECT balance_cents FROM demo_shared_voucher").get().balance_cents,7500);
-  assert.equal((await post("bob",payload(7500))).status,200);
-  assert.equal(db.prepare("SELECT balance_cents FROM demo_shared_voucher").get().balance_cents,0);
-  assert.equal((await post("owner",payload(100))).status,409);
-  assert.equal(db.prepare("SELECT COALESCE(SUM(cents),0) AS total FROM demo_voucher_redemptions").get().total,12500);
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM demo_voucher_redemptions").get().n,2);
-  assert.deepEqual(db.prepare("SELECT delta_cents,kind FROM community_wallet_events WHERE user_id='alice'").all().map(row=>({...row})),[{delta_cents:5000,kind:"received"}]);
-  assert.deepEqual(db.prepare("SELECT delta_cents,kind FROM community_wallet_events WHERE user_id='bob'").all().map(row=>({...row})),[{delta_cents:7500,kind:"received"}]);
+  assert.equal((await post("alice",payload(100))).status,410);
+  assert.equal((await post("alice",payload(100))).status,410);
+  assert.equal(db.prepare("SELECT balance_cents FROM demo_shared_voucher").get().balance_cents,12500);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM demo_voucher_redemptions").get().n,0);
   assert.doesNotMatch(JSON.stringify(await (await get("alice")).json()),/card_hash|9433426241988600|767/);
  }finally{db.close();}
 });
@@ -127,6 +119,8 @@ test("Homepage retains stats; Plinko has independent normal paths; free wallet n
  const cashier=source("../src/components/Cashier.tsx");
  assert.doesNotMatch(cashier,/className="plastic"|withdrawToCard|depositFromCard/);
  assert.doesNotMatch(cashier,/Card number|Expiry date|Security code|demo-card/);
- assert.match(cashier,/credit\(missing\)/);
- assert.match(cashier,/Claim/);
+ assert.doesNotMatch(cashier,/credit\(/);
+ assert.match(cashier,/Top-ups are disabled/);
+ assert.match(cashier,/join Rain/);
 });
+

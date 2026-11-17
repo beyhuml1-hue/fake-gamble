@@ -66,6 +66,7 @@ test("chat authenticates requests, Rain splits exactly $10, and transfers are at
       }),env);
       assert.equal(response.status,200);
     }
+    db.exec("UPDATE playusd_wallets SET cents=CASE WHEN user_id='alice' THEN 2000 ELSE 0 END"); // Existing account fixtures.
     assert.equal((await post(cookies[0], {action:"join",round:round-1})).status,409);
     assert.equal((await post(cookies[0], {action:"message",body:"Hello"}, "https://other.example")).status,403);
     for (const cookie of cookies) assert.equal((await post(cookie,{action:"join",round})).status,200);

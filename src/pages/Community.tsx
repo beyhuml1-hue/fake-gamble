@@ -1,3 +1,5 @@
+import {createPortal} from "react-dom";
+import "../games/uno-matches.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { formatUSD } from "../lib/money";
@@ -7,7 +9,7 @@ type Player = { id: string; label: string };
 type Message = { id: string; playerId: string; label: string; body: string; kind?: "chat" | "bigwin"; at: number };
 type Board = {
   profile: Player;
-  rain: { round: number; count: number; joined: 0 | 1; now: number; endsAt: number };
+  rain: { cents:number; round: number; count: number; joined: 0 | 1; now: number; endsAt: number };
   messages: Message[];
   players: Player[];
 };
@@ -29,6 +31,8 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
   const [playerStats,setPlayerStats]=useState<PublicStats|null>(null);
   const [statsLoading,setStatsLoading]=useState(false);
   const [amount, setAmount] = useState("");
+  const [rainAmount,setRainAmount]=useState("");
+  const rainReceipt=useRef<{id:string;round:number;cents:number}|null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -117,6 +121,14 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
     return()=>{disposed=true;};
   },[selected?.id]);
 
+  useEffect(()=>{
+    if(!selected)return;
+    const prior=document.activeElement as HTMLElement|null;
+    const close=(event:KeyboardEvent)=>{if(event.key==="Escape")setSelected(null);};
+    document.addEventListener("keydown",close);
+    const timer=window.setTimeout(()=>document.querySelector<HTMLButtonElement>(".chat-profile-overlay button")?.focus(),0);
+    return()=>{window.clearTimeout(timer);document.removeEventListener("keydown",close);prior?.focus();};
+  },[selected?.id]);
   function mention(body:string){
     const parts=body.split(/(@Player [0-9A-F]{6}|@[a-z]+)/gi);
     return parts.map((fragment,index)=>{
@@ -191,22 +203,33 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
       {!compact && <header className="community-heading"><h1>Live Chat</h1></header>}
       <section className="community-rain" aria-labelledby="rain-title">
         <div>
-          <h2 id="rain-title"><span aria-hidden="true" className="arcade-art chat-rain-art" data-game="rain"/>$10 Rain</h2>
+          <h2 id="rain-title"><span aria-hidden="true" className="arcade-art chat-rain-art" data-game="rain"/>{formatUSD(board.rain.cents)} Rain</h2>
           <p>{countdown} left · {board.rain.count} joined</p>
         </div>
         <button className="bet-btn" type="button" disabled={busy || offline || !!board.rain.joined || !seconds}
           onClick={() => void action({ action: "join", round: board.rain.round })}>
           {board.rain.joined ? "Joined" : seconds ? "Join Rain" : "Round closed"}
         </button>
-        <p className="rain-details">Every 7 minutes, joined players split $10. Rewards go into your normal Play USD wallet automatically.</p>
+        <p className="rain-details">Every 7 minutes, joined players split the Rain pot. Add your own play money to grow it. Rewards go into your normal Play USD wallet automatically.</p>
+        <form className="rain-contribute" onSubmit={async event=>{
+          event.preventDefault();if(busy)return;
+          const cents=Math.round(Number(rainAmount)*100);
+          if(!/^\d+(\.\d{1,2})?$/.test(rainAmount)||!Number.isSafeInteger(cents)||cents<1||cents>100_000_000){setError("Enter $0.01 to $1,000,000.");return;}
+          setBusy(true);const available=await prepareTransfer();setBusy(false);
+          if(available===null||cents>available){setError("Not enough available play money, or wallet is syncing.");return;}
+          const prior=rainReceipt.current;
+          const id=prior?.round===board.rain.round&&prior.cents===cents?prior.id:crypto.randomUUID();
+          rainReceipt.current={id,round:board.rain.round,cents};
+          void action({action:"contribute",id,round:board.rain.round,cents},()=>{rainReceipt.current=null;setRainAmount("");syncSocialWallet();setNotice("Added "+formatUSD(cents)+" to Rain. You are entered in this round.");});
+        }}><input aria-label="Amount to add to Rain" placeholder="Amount" inputMode="decimal" value={rainAmount} onChange={e=>setRainAmount(e.target.value)} disabled={busy}/><button type="submit" className="ghost-btn" disabled={busy||offline||!walletReady||!rainAmount}>Add to Rain</button></form>
       </section>
 
       {offline && <p role="status">Chat disconnected. Trying again…</p>}
       {error && <p className="neg" role="alert">{error}</p>}
       {notice && <p className="pos" role="status">{notice}</p>}
 
-      {selected && (
-        <section className="chat-profile" aria-label={selected.label}>
+      {selected && createPortal(
+        <div className="chat-profile-overlay" onClick={()=>setSelected(null)}><section className="chat-profile" role="dialog" aria-modal="true" aria-label={selected.label} onClick={e=>e.stopPropagation()}>
           <header>
             <h2>{selected.label}</h2>
             <button type="button" className="ghost-btn" disabled={busy} onClick={() => setSelected(null)}>Close profile</button>
@@ -232,8 +255,9 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
               <button className="bet-btn" type="submit" disabled={busy || offline || !walletReady}>Send Play USD</button>
             </form>
           )}
+          {error&&<p role="alert" className="form-error">{error}</p>}
           <p className="chat-stats-note">Send from your normal Play USD balance, including your game winnings and Rain rewards. No separate chat currency.</p>
-        </section>
+        </section></div>, document.body
       )}
 
       <div className="chat-thread" role="log" aria-label="Community messages" tabIndex={0} ref={thread}

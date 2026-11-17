@@ -3,7 +3,8 @@ import { newPoolRack, shootPool } from "../../_shared/pool-engine.js";
 
 // Only authenticated players can stake play money. All PvP logic is enforced
 // here; the browser never determines match winners or requests match payouts.
-const GAMES = new Set(["pool", "connect-four", "mines-battles"]);
+import {newUno,playUno,unoView} from "../../_shared/uno-engine.js";
+const GAMES = new Set(["pool", "connect-four", "mines-battles", "uno"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const WAIT_MS = 15*60_000, TURN_MS = 10*60_000;
 const detailSql = "SELECT r.*,h.email AS host_email,g.email AS guest_email FROM pvp_rooms r "+
@@ -20,12 +21,14 @@ function shuffle25() {
   return values;
 }
 function initial(game) {
+  if(game==="uno")return newUno();
   if(game==="pool")return newPoolRack();
   if(game==="connect-four")return {board:Array(42).fill(0),moves:0};
   return {mines:shuffle25().slice(0,3),revealed:[],hostScore:0,guestScore:0,last:null};
 }
 function view(row,user) {
-  const state=JSON.parse(row.state_json);
+  let state=JSON.parse(row.state_json);
+  if(row.game==="uno")state=unoView(state,user.id===row.host_id?"host":user.id===row.guest_id?"guest":null);
   // Hidden mines must never be shipped to the opposing browser mid-game.
   if(row.game==="mines-battles" && !["finished","cancelled","expired"].includes(row.status))
     delete state.mines;
@@ -57,6 +60,10 @@ function legalMove(row,move) {
   const state=JSON.parse(row.state_json);
   const hostTurn=row.turn_id===row.host_id;
   const other=hostTurn?row.guest_id:row.host_id;
+  if(row.game==="uno"){
+    const result=playUno(state,hostTurn?"host":"guest",move);if(!result)return null;
+    return {state:result.state,next:result.state.turn==="host"?row.host_id:row.guest_id,winner:result.winner?row.turn_id:null,status:result.winner||result.state.draw?"finished":"active",reason:result.winner?"Last card played!":"Card played; automatic draws applied when needed."};
+  }
   if(row.game==="pool"){
     if(move?.type!=="shoot")return null;
     const result=shootPool(state,move.x,move.y,move.power);
@@ -160,7 +167,7 @@ export async function onRequestPost({request,env}) {
     const id=input?.id;
     if(typeof id!=="string"||!UUID.test(id))return json({error:"Invalid match ID."},400);
     if(action==="join"){
-      const wrote=await env.DB.prepare("UPDATE pvp_rooms SET guest_id=?1,status='active',turn_id=host_id,updated_ms=?2 "+
+      const wrote=await env.DB.prepare("UPDATE pvp_rooms SET guest_id=?1,status='active',turn_id=CASE WHEN game='uno' AND json_extract(state_json,'$.turn')='guest' THEN ?1 ELSE host_id END,updated_ms=?2 "+
         "WHERE id=?3 AND status='waiting' AND guest_id IS NULL AND host_id<>?1 "+
         "AND EXISTS(SELECT 1 FROM playusd_wallets w WHERE w.user_id=?1 AND w.initialized=1 AND w.cents>=pvp_rooms.stake_cents) "+
         "AND NOT EXISTS(SELECT 1 FROM pvp_rooms r WHERE (r.host_id=?1 OR r.guest_id=?1) AND r.status IN ('waiting','active'))")
@@ -197,3 +204,4 @@ export async function onRequestPost({request,env}) {
     return json({error:"Multiplayer action unavailable. Check the server and match database."},503);
   }
 }
+
