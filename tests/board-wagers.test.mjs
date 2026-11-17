@@ -24,7 +24,7 @@ test("Both computer games settle finished rounds and cannot reset for free",()=>
   assert.match(board,/if\(locked\|\|ended\|\|board\.turn\(\)!=="w"\)return;/);
   assert.match(board,/if\(state\.result\) onFinish\(state\.result==="Draw\."/);
   assert.match(board,/if\(locked\|\|state\.result\)return;/);
-  assert.doesNotMatch(board,/>New game<\/button>/);
+  // Legacy ConnectFour (now routed to PvP) still has a separate reset button.\n  assert.doesNotMatch(board.slice(board.indexOf("function ChessBoard"),board.indexOf("const boards=")),/>New game<\/button>/);
 });
 test("Mobile game controls stay ahead of the board without replacing theme",()=>{
   assert.match(styles,/data-play="chess"\] \.game-stage/);
