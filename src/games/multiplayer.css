@@ -30,6 +30,10 @@
 .pvp-match .mb-board{max-width:440px;margin:auto}
 .pvp-match .hint{margin:0;text-align:center}
 .pvp-match .pvp-ball circle{transition:cx .45s ease,cy .45s ease}
+.pvp-match .connect-board span[data-disc="1"],.pvp-match .connect-board span[data-disc="2"]{animation:disc-drop .32s cubic-bezier(.2,.8,.2,1)}
+.pvp-match .mb-tile.just{animation:tile-pop .35s ease}
+@keyframes disc-drop{from{transform:translateY(-140%)}to{transform:translateY(0)}}
+@keyframes tile-pop{from{transform:scale(.82)}to{transform:scale(1)}}
 @media(max-width:600px){
  .pvp-room{grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:11px}
  .pvp-room .bet-btn{grid-column:1/-1;width:100%}
@@ -38,4 +42,7 @@
  .pvp-shot-controls label{flex:1 1 100%}
  .pvp-shot-controls .bet-btn{width:100%}
 }
-@media(prefers-reduced-motion:reduce){.pvp-match .pvp-ball circle{transition:none}}
+@media(prefers-reduced-motion:reduce){
+ .pvp-match .pvp-ball circle{transition:none}
+ .pvp-match .connect-board span[data-disc="1"],.pvp-match .connect-board span[data-disc="2"],.pvp-match .mb-tile.just{animation:none}
+}

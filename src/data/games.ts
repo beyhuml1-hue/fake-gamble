@@ -17,7 +17,7 @@ export const GAMES = [
     id: "mines-battles",
     name: "Mines Duel",
     blurb: "One shared board. Take turns opening gems.",
-    note: "Turn-based 1v1 practice",
+    note: "Player vs player",
     gradient: "linear-gradient(160deg,#102b27 0%,#167445 60%,#81edb4 140%)",
   },
   {
@@ -138,6 +138,13 @@ export const GAMES = [
     blurb: "Walk the lanes. Cash out before a car.",
     note: "99% RTP",
     gradient: "linear-gradient(160deg,#422006 0%,#eab308 55%,#fef9c3 140%)",
+  },
+  {
+    id: "stripmine",
+    name: "Stripmine",
+    blurb: "Dig the tunnel. Cash out before lava.",
+    note: "99% RTP",
+    gradient: "linear-gradient(160deg,#3f2a16 0%,#b45309 55%,#fde68a 140%)",
   },
   {
     id: "darts",

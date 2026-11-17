@@ -113,6 +113,7 @@
 [data-game="pig-race"] { --art-x:60%; --art-y:100%; }
 [data-game="race"] { --art-x:80%; --art-y:100%; }
 [data-game="chicken"] { --art-x:100%; --art-y:100%; }
+[data-game="stripmine"] { --art-x:0%; --art-y:0%; }
 .arcade-art[data-game="snakes"], .arcade-game-art[data-game="snakes"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:0%; --art-y:5.5%; }
 .arcade-art[data-game="slide"], .arcade-game-art[data-game="slide"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:33.333333333333336%; --art-y:5.5%; }
 .arcade-art[data-game="blitz"], .arcade-game-art[data-game="blitz"] { background-image:url('/covers/arcade/blockbet-atlas-2.webp'); background-size:400% 400%; --art-x:66.66666666666667%; --art-y:5.5%; }

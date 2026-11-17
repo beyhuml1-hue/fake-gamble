@@ -185,6 +185,15 @@
 .slide-strip span { padding:6px; background:#333c43; border-radius:4px; font-size:11px; }
 .slide-strip [data-hit=true] { background:#316d50; }
 .arcade-round-status { margin:4px 0 0; color:#bbcbd1; }
+.strip-stage{display:grid;gap:14px;justify-items:center;width:min(100%,720px);margin:auto}
+.strip-mult{margin:0;font-size:32px;font-weight:800;font-variant-numeric:tabular-nums}
+.strip-tunnel{position:relative;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;width:100%;padding:28px 8px 8px;background:#24180f;border-radius:12px}
+.strip-tunnel span{aspect-ratio:1;border-radius:6px;background:#5c4632}
+.strip-tunnel .ore{background:linear-gradient(160deg,#3f6212,#84cc16);animation:strip-pop .28s ease}
+.strip-tunnel .lava{background:linear-gradient(160deg,#7f1d1d,#f97316);animation:strip-pop .28s ease}
+@keyframes strip-pop{from{transform:scale(.8)}to{transform:scale(1)}}
+.strip-tunnel [data-here="true"]{outline:2px solid #fde68a}
+.strip-miner{position:absolute;top:6px;left:0;width:calc((100% - 66px) / 12);height:16px;border-radius:99px;background:#f8fafc;transition:transform .28s ease}
 .lava-board { width:min(100%,470px); background:#562d2b; }
 .lava-board button { background:#404952; border-color:#535e66; }
 @media(max-width:560px){

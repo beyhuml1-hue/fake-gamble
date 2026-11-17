@@ -117,6 +117,13 @@ export function Icon({ name }: { name: string }) {
         <circle cx="12" cy="12" r="1.4" fill="currentColor" />
       </>
     ),
+    stripmine: (
+      <>
+        <path d="M4 18h16" />
+        <path d="M6 18V9l4 3 3-5 5 2" />
+        <path d="M14 8l4-3" />
+      </>
+    ),
     chicken: (
       <>
         <circle cx="12" cy="12" r="5" />

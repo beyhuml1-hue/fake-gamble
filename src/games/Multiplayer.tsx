@@ -62,11 +62,6 @@ export function Multiplayer({game}:{game:Game}){
     }
   },[email,game]);
 
-  useEffect(()=>{
-    void refresh();
-    const handle=window.setInterval(()=>{if(!document.hidden)void refresh();},2500);
-    return()=>window.clearInterval(handle);
-  },[refresh]);
 
   const act=async(action:"create"|"join"|"move"|"leave",extra:object)=>{
     if(pending.current)return;
@@ -87,6 +82,13 @@ export function Multiplayer({game}:{game:Game}){
   const otherGame=mine&&mine.game!==game&&["waiting","active"].includes(mine.status);
   const canCreate=Boolean(email&&walletReady&&!busy&&!working&&!otherGame);
   const waiting=rooms.filter(room=>room.status==="waiting");
+  const live=Boolean(working);
+
+  useEffect(()=>{
+    void refresh();
+    const handle=window.setInterval(()=>{if(!document.hidden)void refresh();},live?800:2500);
+    return()=>window.clearInterval(handle);
+  },[refresh,live]);
 
   return <GameLayout title={names[game]} note="Player vs player · play-money stakes" panel={
     <div className="pvp-controls">
@@ -204,7 +206,7 @@ function MinesMatch({room,busy,move}:{room:Room;busy:boolean;move:(tile:number)=
     <div className="mb-board" aria-label="Shared Mines Duel board">
       {Array.from({length:25},(_,tile)=>{
         const revealed=shown.includes(tile),bomb=hiddenMines.includes(tile);
-        return <button key={tile} type="button" className={"mb-tile"+(revealed?" safe":"")+(bomb?" bomb":"")}
+        return <button key={tile} type="button" className={"mb-tile"+(revealed?" safe":"")+(bomb?" bomb":"")+(tile===room.state.last&&revealed?" just":"")}
           disabled={!room.myTurn||busy||revealed} aria-label={"Tile "+(tile+1)+(revealed?", opened":"")}
           onClick={()=>move(tile)}>
           {revealed?<img src="/images/gem-green.webp" alt="Gem"/>:<span className="mb-tile-shine"/>}
