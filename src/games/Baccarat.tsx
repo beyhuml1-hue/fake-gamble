@@ -3,7 +3,6 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents } from "../lib/money";
 import { shuffle } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 type Card = { rank: string; suit: string };
@@ -63,30 +62,9 @@ export function Baccarat() {
     if (!debit(stake)) return;
     setError("");
     setBusy(true);
-    let p: Card[];
-    let b: Card[];
-    if (luckOn()) {
-      const nine: Card = { rank: "9", suit: "♠" };
-      const king: Card = { rank: "K", suit: "♥" };
-      const queen: Card = { rank: "Q", suit: "♦" };
-      const ten: Card = { rank: "10", suit: "♣" };
-      if (side === "tie") {
-        p = [nine, king];
-        b = [
-          { rank: "9", suit: "♣" },
-          queen,
-        ];
-      } else if (side === "player") {
-        p = [nine, king];
-        b = [ten, queen];
-      } else {
-        b = [nine, king];
-        p = [ten, queen];
-      }
-    } else {
-      p = [draw(), draw()];
-      b = [draw(), draw()];
-    }
+    // Six-deck baccarat: all cards are drawn from the shuffled shoe.
+    const p: Card[] = [draw(), draw()];
+    const b: Card[] = [draw(), draw()];
     let pt = total(p);
     let bt = total(b);
     if (pt < 8 && bt < 8) {
