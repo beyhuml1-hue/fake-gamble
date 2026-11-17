@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router-dom";
 import { formatMult, formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
-const rooms = new Set(["flip", "mines-battles", "uno", "connect-four", "poker", "pool", "chess", "case-battles"]);
 const historicalNames: Record<string, string> = { dragon: "Dragon Tower", diamonds: "Diamonds" };
 
 export function GameLayout({ title, note, panel, children }: {
