@@ -164,7 +164,7 @@ export const GAMES = [
   { id: "draw", name: "Draw", blurb: "Draw to improve cards, then claim them before they bust.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
   { id: "rps", name: "Rock Paper Scissors", blurb: "Make your move against the computer.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
   { id: "double", name: "Double", blurb: "Pick red, black, or the rare gold result.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
-  { id: "pig-race", name: "Derby", blurb: "Pick a lane and watch the race.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
+  { id: "pig-race", name: "Car Racing", blurb: "Pick a lane and watch the race.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
   { id: "stocks", name: "Stocks", blurb: "Call the direction of the simulated market.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
   { id: "slide", name: "Slide", blurb: "Chase a target before the slider reaches its limit.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
   { id: "blitz", name: "Blitz", blurb: "Draw unique cards without pulling a repeat.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },

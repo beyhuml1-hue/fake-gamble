@@ -6,6 +6,7 @@ import { useAuth } from "../components/AuthProvider";
 import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
 import "./multiplayer.css";
+import "./pool-uno.css";
 
 type Game = "pool" | "connect-four" | "mines-battles";
 type Ball = {id:number;x:number;y:number;sunk:boolean};
@@ -158,7 +159,7 @@ function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:{type:"
   const cue=balls.find(ball=>ball.id===0);
   const playable=room.myTurn&&!busy&&Boolean(cue);
   return <>
-    <svg className="pool-table pvp-pool" viewBox="-14 -14 728 378" role="img" aria-label="Pool table. Tap to aim a shot."
+    <svg className="pool-table pvp-pool" viewBox="-35 -35 770 420" role="img" aria-label="Pool table. Tap to aim a shot."
       onPointerDown={event=>{
         if(!playable)return;
         const transform=event.currentTarget.getScreenCTM()?.inverse();
@@ -166,14 +167,35 @@ function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:{type:"
         const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(transform);
         setAim({x:Math.max(0,Math.min(700,point.x)),y:Math.max(0,Math.min(350,point.y))});
       }}>
-      <rect x={0} y={0} width={700} height={350} rx={12} fill="#176048"/>
-      {pockets.map(([x,y],i)=><circle key={i} cx={x} cy={y} r={18} fill="#0c1917"/>)}
+      <defs>
+        <linearGradient id="room-wood" x2=".25" y2="1"><stop stopColor="#9b6339"/><stop offset=".3" stopColor="#412718"/><stop offset=".65" stopColor="#825333"/><stop offset="1" stopColor="#492a1c"/></linearGradient>
+        <radialGradient id="room-felt"><stop stopColor="#179656"/><stop offset="1" stopColor="#07532e"/></radialGradient>
+        <radialGradient id="room-ball" cx=".3" cy=".2" r=".8"><stop stopColor="#fff" stopOpacity=".8"/><stop offset=".3" stopColor="#fff" stopOpacity=".1"/><stop offset=".6" stopColor="#000" stopOpacity="0"/><stop offset="1" stopColor="#000" stopOpacity=".6"/></radialGradient>
+        <pattern id="room-grain" width="70" height="8" patternUnits="userSpaceOnUse"><path d="M0 2Q32 -1 70 3M0 6Q40 10 70 5" stroke="#241408" strokeWidth=".5" opacity=".5" fill="none"/></pattern>
+        <pattern id="room-cloth" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 0h4M0 2h4" stroke="#d4ffe9" strokeOpacity=".04"/></pattern>
+      </defs>
+      <rect x="-32" y="-32" width="764" height="414" rx="25" fill="url(#room-wood)" stroke="#b49a67" strokeWidth="2"/>
+      <rect x="-31" y="-31" width="762" height="412" rx="24" fill="url(#room-grain)"/>
+      <rect x="-10" y="-10" width="720" height="370" rx="14" fill="#103c24" stroke="#24965b" strokeWidth="6"/>
+      <rect width="700" height="350" rx="9" fill="url(#room-felt)"/>
+      <rect width="700" height="350" rx="9" fill="url(#room-cloth)"/>
+      {[85,175,265,435,525,615].flatMap(x=>[-22,372].map(y=><path key={x+"/"+y} d={`M${x} ${y-4}l3 4-3 4-3-4z`} fill="#eedaa9"/>))}
+      {[87,175,263].flatMap(y=>[-22,722].map(x=><path key={x+"/"+y} d={`M${x} ${y-4}l3 4-3 4-3-4z`} fill="#eedaa9"/>))}
+
+      {pockets.map(([x,y],i)=><circle key={i} cx={x} cy={y} r={18} fill="#030807" stroke="#625f42" strokeWidth="2"/>)}
       {cue&&playable&&<line x1={cue.x} y1={cue.y} x2={aim.x} y2={aim.y} stroke="#f6f8db" strokeDasharray="6 7"/>}
+      {cue&&playable&&<g transform={`translate(${cue.x} ${cue.y}) rotate(${Math.atan2(aim.y-cue.y,aim.x-cue.x)*180/Math.PI})`}>
+        <path d="M-190 -3L-23 -1L-23 1L-190 3Z" fill="#dec08b" stroke="#674f29"/>
+        <path d="M-190 -3v6l65-1v-4Z" fill="#6c3523"/>
+      </g>}
       {balls.filter(ball=>!ball.sunk).map(ball=><g key={ball.id} className="pvp-ball">
+        <ellipse cx={ball.x+2} cy={ball.y+3} rx="12" ry="9" fill="#00180a" opacity=".4"/>
         <circle cx={ball.x} cy={ball.y} r={11} stroke="#1d2e29" strokeWidth={1.2}
           fill={tableColors[ball.id>8?ball.id-8:ball.id]}/>
+        {ball.id>8&&<rect x={ball.x-9} y={ball.y-5} width="18" height="10" rx="4" fill="#fff8e5"/>}
         {ball.id!==0&&<><circle cx={ball.x} cy={ball.y} r={7} fill="#fff4df"/>
           <text x={ball.x} y={ball.y+3} textAnchor="middle" fill="#18221d" fontSize={8}>{ball.id}</text></>}
+      <circle cx={ball.x} cy={ball.y} r="11" fill="url(#room-ball)"/>
       </g>)}
     </svg>
     <p role="status">{room.state.pocketed??0} pocketed · {room.state.shots??0} shots</p>
@@ -216,3 +238,4 @@ function MinesMatch({room,busy,move}:{room:Room;busy:boolean;move:(tile:number)=
     <p className="hint">Take turns opening tiles. Hit a mine and the other player wins.</p>
   </>;
 }
+

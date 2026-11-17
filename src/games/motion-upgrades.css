@@ -1,0 +1,105 @@
+/* Shared motion and board presentation for the instant games. */
+.limbo-flight{position:relative;isolation:isolate;min-height:430px;width:100%;padding-top:10px;overflow:hidden}
+.limbo-flight .readout{position:relative;z-index:2;align-self:center;margin:5px 0 110px}
+.limbo-sky{position:absolute;inset:0 0 95px;z-index:-1;overflow:hidden}
+.limbo-target-line{position:absolute;top:34%;left:0;right:0;border-top:1px dashed #d2a534}
+.limbo-target-line>span{position:absolute;right:9px;top:-24px;color:#ebc84b;font-size:12px;font-weight:800}
+.limbo-rocket{position:absolute;left:50%;bottom:8%;width:30px;height:70px;transform:translateX(-50%);filter:drop-shadow(0 5px 10px #0005)}
+.rocket-body{position:absolute;inset:13px 5px 10px;background:linear-gradient(90deg,#a32d3a,#f4f1e7 30% 47%,#de4c53 47% 75%,#9c2132);border-radius:9px 9px 3px 3px}
+.rocket-nose{position:absolute;left:6px;top:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:19px solid #ecebe2}
+.rocket-fin{position:absolute;bottom:6px;width:13px;height:22px;background:#b72d40;border-radius:9px 9px 0 0}
+.rocket-fin.left{left:0;transform:skewY(-28deg)}.rocket-fin.right{right:0;transform:skewY(28deg)}
+.rocket-flame{position:absolute;bottom:-20px;left:9px;width:12px;height:28px;border-radius:0 0 80% 80%;background:linear-gradient(#fff4a4,#ffae30,transparent);transform-origin:top}
+.limbo-flight.is-flying .limbo-rocket{animation:limbo-launch .9s cubic-bezier(.22,.5,.2,1) both}
+.limbo-flight.is-flying .rocket-flame{animation:flame-pulse .12s infinite alternate}
+.limbo-flight.flight-won .limbo-rocket{bottom:59%}.limbo-flight.flight-lost .limbo-rocket{opacity:.25;bottom:20%;transform:translateX(-50%) rotate(35deg)}
+.limbo-sky>i{position:absolute;width:3px;height:3px;border-radius:50%;background:#a3bbc8;opacity:.35;left:20%;top:25%}
+.limbo-sky>i:nth-child(2){left:73%;top:14%}.limbo-sky>i:nth-child(3){left:55%;top:65%}.limbo-sky>i:nth-child(4){left:85%;top:73%}.limbo-sky>i:nth-child(5){left:9%;top:59%}
+.limbo-bottom-controls{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#2b3136;padding:12px;border-radius:6px}
+.play-surface .limbo-bottom-controls .limbo-field{padding:0!important;width:100%;background:none}
+.limbo-flight>.range{display:none}
+@keyframes limbo-launch{from{bottom:8%;transform:translateX(-50%) rotate(-5deg)}to{bottom:59%;transform:translateX(-50%) rotate(2deg)}}
+@keyframes flame-pulse{to{transform:scaleY(.7);opacity:.6}}
+.hilo-enhanced{width:100%;gap:14px!important}
+.hilo-table-label{text-transform:uppercase;letter-spacing:.15em;font-size:11px;color:#8ea6ad}
+.hilo-enhanced .hilo-card{width:142px;height:195px;position:relative;box-shadow:0 10px 25px #0005;border:3px solid #f7f5e8}
+.hilo-enhanced .hilo-card>span:first-child{display:grid;line-height:.8}.hilo-card>span>small{font-size:19px;margin-top:8px}
+.hilo-enhanced .hilo-card>strong{font-size:62px}
+.hilo-card-bottom{position:absolute;bottom:12px;right:11px;transform:rotate(180deg);font-size:23px}
+.hilo-enhanced .hilo-card.back{display:grid;place-content:center;background:repeating-linear-gradient(45deg,#28553f,#28553f 5px,#214733 5px,#214733 10px);color:#c8e3d6}
+.hilo-card.back>b{font-size:65px}
+.hilo-enhanced.is-dealing .hilo-card{animation:playing-card-deal .45s ease-out both}
+.hilo-multiplier{font-size:26px;font-weight:850;color:#eef6ed}
+.hilo-panel-choices{display:grid;gap:6px}.hilo-panel-choices button{display:flex;align-items:center;justify-content:space-between;padding:11px;border:1px solid #3c474c;border-radius:5px;background:#2c3539;color:#f1f5f4}
+.hilo-panel-choices button span{text-transform:capitalize}.hilo-panel-choices button:disabled{opacity:.45}.hilo-panel-choices button:not(:disabled):hover{background:#325849}
+.hilo-history{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;min-height:38px}
+.hilo-history span{display:grid;place-items:center;width:34px;height:44px;background:#f1eee1;color:#263834;border-radius:4px;box-shadow:0 3px #0003;font-size:13px;font-weight:800}
+.hilo-history span[data-red=true]{color:#b73f4b}
+@keyframes playing-card-deal{from{transform:translateY(-16px) rotateY(90deg);opacity:.3}to{transform:none;opacity:1}}
+.chicken-road-world{width:100%;min-width:0;display:grid;gap:18px;padding:10px}
+.chicken-road-world>header{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#a6babc;font-size:12px}
+.chicken-road-world>header>b{font-size:25px;color:#f5e49f}
+.chicken-road-viewport{width:100%;overflow-x:auto;border:5px solid #344449;border-radius:12px;background:#263238;scrollbar-color:#637d74 #1d252b}
+.chicken-highway{display:flex;width:calc(var(--lanes) * 80px);height:300px;position:relative;background:#343c42}
+.highway-curb,.highway-lane{position:relative;flex:0 0 80px;overflow:hidden;border-right:2px dashed #c3c2a866;background:linear-gradient(90deg,#2f363c,#3c464b,#2e383d)}
+.highway-curb{background:repeating-linear-gradient(0deg,#69786c,#69786c 28px,#4e6359 29px,#4e6359 30px);border-right:4px solid #d7d2b4}
+.highway-curb>span{position:absolute;bottom:15px;left:14px;color:#dce7d5;font-size:10px;letter-spacing:.12em}
+.highway-lane.crossed{background:linear-gradient(#31534755,#2c483a55),#303a3b}
+.lane-return{position:absolute;bottom:12px;left:3px;right:3px;color:#eff5d7;text-align:center;font-size:12px;font-weight:850;z-index:2}
+.lane-check{position:absolute;top:9px;left:27px;color:#5ce398;font-size:24px;z-index:3}
+.traffic-car{position:absolute;top:-115px;left:14px;width:45px;height:88px;border-radius:12px;background:linear-gradient(90deg,#87242a,#d65053 18% 82%,#87242a);box-shadow:0 4px 10px #0007;animation:traffic-drive var(--traffic-duration) linear infinite;animation-delay:var(--traffic-offset)}
+.traffic-car[data-color="1"]{background:linear-gradient(90deg,#91701b,#e8ba45 18% 82%,#91701b)}.traffic-car[data-color="2"]{background:linear-gradient(90deg,#1e557c,#4b9acb 18% 82%,#1e557c)}.traffic-car[data-color="3"]{background:linear-gradient(90deg,#654477,#ab77b5 18% 82%,#654477)}
+.traffic-car.second{animation-delay:calc(var(--traffic-offset) - 1.3s);transform:rotate(180deg)}
+.traffic-car i{position:absolute;top:18px;left:5px;right:5px;height:20px;background:linear-gradient(#a9ccdb,#344d59);border:3px solid #28383f;border-radius:6px 6px 2px 2px}
+.traffic-car i:nth-child(2){top:auto;bottom:12px;height:14px;border-radius:2px 2px 5px 5px}
+.traffic-car b,.traffic-car em{position:absolute;left:-3px;width:5px;height:16px;background:#12171c;border-radius:2px;top:14px;box-shadow:46px 0 #12171c}
+.traffic-car em{top:auto;bottom:13px}
+.chicken-actor{position:absolute;bottom:58px;width:40px;height:51px;transform:translateX(-50%);z-index:4;transition:left .5s cubic-bezier(.25,.7,.3,1);filter:drop-shadow(0 5px 3px #0007)}
+.chicken-body{position:absolute;width:30px;height:29px;left:2px;bottom:6px;background:#f4eee0;border-radius:48% 45% 40% 50%;box-shadow:inset 4px -5px #d2cdbf}
+.chicken-head{position:absolute;right:0;top:5px;background:#fff8e7;width:22px;height:25px;border-radius:50%}
+.chicken-eye{position:absolute;right:5px;top:12px;width:4px;height:4px;background:#17262b;border-radius:50%}
+.chicken-beak{position:absolute;right:-8px;top:16px;border-left:10px solid #f2b23c;border-top:4px solid transparent;border-bottom:4px solid transparent}
+.chicken-comb{position:absolute;right:6px;top:0;background:#e64d4b;width:12px;height:10px;border-radius:70% 70% 0 0}
+.chicken-feet{position:absolute;bottom:0;left:10px;width:5px;height:10px;background:#e7a142;box-shadow:14px 0 #e7a142}
+.chicken-actor.hopping{animation:chicken-hop .5s ease-out}.chicken-actor.hit{filter:grayscale(.8) drop-shadow(0 5px 3px #0007);transform:translateX(-50%) rotate(80deg)}.chicken-actor.safe{filter:drop-shadow(0 0 11px #58ea9f)}
+@keyframes traffic-drive{to{top:340px}}@keyframes chicken-hop{50%{margin-bottom:22px}}
+.motion-round{position:relative;min-width:0}
+.motion-round.is-animating .lava-board button:not([data-sunk=true]){animation:lava-rumble .3s ease-in-out infinite alternate}
+.motion-round .lava-board [data-sunk=true]{animation:lava-fall .8s ease-in both}
+.motion-round .lava-board [data-chosen=true]:not([data-sunk=true]){outline:3px solid #f5d989;box-shadow:0 0 15px #ffbe6b55}
+@keyframes lava-rumble{to{transform:translateY(2px)}}@keyframes lava-fall{to{transform:translateY(14px) scale(.75);opacity:.2;background:#f4712c}}
+.motion-round.is-animating .draw-cards button,.motion-round.is-animating .battle-openings figure{animation:playing-card-deal .5s ease-out both}
+.motion-round.is-animating .rps-figures [data-picked=true]{animation:hand-shake .15s ease-in-out 3 alternate;outline:2px solid #5be298}
+@keyframes hand-shake{to{transform:translateY(-8px) rotate(-8deg)}}
+.slide-reel-game{width:100%;min-width:0;display:grid;gap:20px}
+.slide-recent{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;min-height:28px}
+.slide-recent span{font-size:11px;font-weight:850;background:#343c43;border-radius:5px;padding:7px 9px;color:#e2ebef}.slide-recent [data-rare=true]{background:#f4ca4d;color:#29200c}
+.slide-reel-window{position:relative;overflow:hidden;width:100%;height:355px;mask-image:linear-gradient(90deg,transparent,#000 12% 88%,transparent)}
+.slide-reel-track{display:flex;gap:6px;position:absolute;left:50%;top:25px;transform:translateX(-385px);will-change:transform}
+.slide-reel-track.running{transform:translateX(-4350px);transition:transform 3.8s cubic-bezier(.1,.64,.12,1)}
+.slide-prize-card{flex:0 0 145px;width:145px;height:245px;border:1px solid #3a4147;background:linear-gradient(150deg,#323a41,#1b2227);border-radius:9px;display:grid;place-items:center;position:relative;overflow:hidden}
+.slide-prize-card::before{content:"";position:absolute;inset:0 28px auto;height:7px;border-radius:0 0 5px 5px;background:#53616c}
+.slide-prize-card strong{margin:20px 12px 0;padding:11px 8px;width:calc(100% - 24px);text-align:center;background:#11181c;border:1px solid #46515a;border-radius:4px;font-size:24px;z-index:1}
+.slide-prize-card .slide-gem{display:grid;place-items:center;width:80px;height:90px;font-size:86px;line-height:1;color:#738796;text-shadow:4px 4px #26323d,-2px -2px #b9c4cc;filter:drop-shadow(0 10px 7px #0006)}
+.slide-prize-card[data-tier=blue]{background:linear-gradient(150deg,#30435d,#1b2538)}.slide-prize-card[data-tier=blue]::before{background:#447bef}.slide-prize-card[data-tier=blue] .slide-gem{color:#426cda;text-shadow:4px 4px #152c76,-2px -2px #85adff}
+.slide-prize-card[data-tier=gold]{background:linear-gradient(150deg,#635733,#29251c)}.slide-prize-card[data-tier=gold]::before{background:#f0ce59}.slide-prize-card[data-tier=gold] .slide-gem{color:#e5b63e;text-shadow:4px 4px #806113,-2px -2px #ffe195}
+.slide-prize-card[data-winner=true]{border-color:#66d898;box-shadow:inset 0 0 22px #54d69d30}
+.slide-reel-pointer{position:absolute;top:155px;bottom:10px;left:50%;width:2px;background:#eef6f4;box-shadow:0 0 6px #0007}
+.slide-reel-pointer::after{content:"";position:absolute;bottom:-5px;left:-6px;width:10px;height:10px;border:3px solid #f3faf7;border-radius:50%;background:#20282b}
+.slide-status{display:flex;justify-content:space-between;gap:12px;padding:15px 3px;border-top:2px solid #343d42;color:#c8d5db;font-size:13px}.slide-status>span::before{content:"";display:inline-block;width:7px;height:7px;background:#50cf8a;border-radius:50%;margin-right:7px}
+.racing-world{width:100%;min-width:0}
+.racing-world>header{display:flex;justify-content:space-between;align-items:center;gap:9px;margin-bottom:12px;font-size:11px;color:#8fa8b1;letter-spacing:.08em}.racing-world>header>b{font-size:12px;color:#e5f1f5;letter-spacing:0}
+.racing-world .derby-stage{padding:14px 8px;background:linear-gradient(#1a252b,#111b20);gap:9px;border:1px solid #3b484f}
+.racing-world .racing-lane{height:57px;background:linear-gradient(90deg,#2c363b 0 89%,transparent 89%),repeating-conic-gradient(#e3e8db 0 25%,#263036 0 50%) 94% 0/12px 12px;border:1px solid #3f4b50;border-bottom:2px dashed #69777d;overflow:visible}
+.racing-lane>small{font-size:10px;color:#c4d2d6}.racing-lane>small>b{color:#f4dc8f}
+.racing-car{position:absolute;width:43px;height:20px;left:calc(var(--lane-position) * .9);bottom:5px;background:linear-gradient(#3eab86,#1e6f59 45% 55%,#3eab86);border-radius:9px 12px 8px 8px;transition:left 4.3s cubic-bezier(.2,.48,.63,1);box-shadow:0 3px 5px #0008;z-index:2}
+.racing-car[data-color="1"]{background:linear-gradient(#ec606d,#ad2b3c 45% 55%,#ec606d)}.racing-car[data-color="2"]{background:linear-gradient(#eac65b,#ad842a 45% 55%,#eac65b)}.racing-car[data-color="3"]{background:linear-gradient(#9cabb6,#546773 45% 55%,#9cabb6)}.racing-car[data-color="4"]{background:linear-gradient(#b986e4,#754baf 45% 55%,#b986e4)}.racing-car[data-color="5"]{background:linear-gradient(#79bfe7,#347da9 45% 55%,#79bfe7)}
+.racing-car>b{position:absolute;left:13px;top:3px;bottom:3px;width:14px;background:linear-gradient(90deg,#27424f,#9bc0cb,#284756);border-radius:4px;transform:skew(-10deg)}
+.racing-car>i,.racing-car>em{position:absolute;left:5px;top:-3px;width:7px;height:5px;background:#0a1116;border-radius:2px;box-shadow:25px 0 #0a1116}.racing-car>em{top:auto;bottom:-3px}
+.racing-car>span{position:absolute;right:-2px;top:3px;width:3px;height:5px;background:#fff3a8;border-radius:2px}.racing-car>span:last-child{top:auto;bottom:3px}
+.race-result-podium{margin-top:10px;padding:10px;border-radius:6px;background:#29373d;color:#d6e3e6;font-size:13px;text-align:center}
+.market-chart.chart-growing{animation:chart-unfold 2.8s linear both}@keyframes chart-unfold{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
+.motion-round.is-animating .double-reel{animation:double-roll .15s linear infinite}@keyframes double-roll{to{transform:translateX(4px);filter:brightness(1.2)}}
+@media(max-width:650px){.limbo-bottom-controls{grid-template-columns:1fr}.hilo-enhanced .hilo-card{width:120px;height:170px}.slide-reel-window{height:315px}.slide-prize-card{height:225px}.racing-car{left:calc(var(--lane-position) * .79)}.racing-world .racing-lane{height:55px}}
+@media(prefers-reduced-motion:reduce){.limbo-flight.is-flying .limbo-rocket,.rocket-flame,.hilo-enhanced.is-dealing .hilo-card,.traffic-car,.chicken-actor,.motion-round *, .market-chart.chart-growing{animation:none!important}.slide-reel-track.running,.racing-car,.chicken-actor{transition-duration:.01s!important}}
+

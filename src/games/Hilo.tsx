@@ -1,162 +1,166 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { EDGE } from "../lib/math";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { shuffle } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
+import "./motion-upgrades.css";
 
-type Card = { rank: string; suit: string };
+type Card = { rank: string; suit: string; id: number };
 const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const SUITS = ["♠", "♥", "♦", "♣"];
 
 function freshShoe(): Card[] {
-  const deck: Card[] = [];
-  for (let i = 0; i < 4; i++) for (const suit of SUITS) for (const rank of RANKS) deck.push({ rank, suit });
-  return shuffle(deck);
+  return shuffle(Array.from({length:52},(_,id)=>({rank:RANKS[id%13]!,suit:SUITS[Math.floor(id/13)]!,id})));
 }
-
-function rankOf(card: Card) {
-  return RANKS.indexOf(card.rank);
-}
+function rankOf(card: Card) { return RANKS.indexOf(card.rank); }
+type Guess = "higher" | "lower" | "same";
 
 export function Hilo() {
-  const { balance, debit, credit, record } = useWallet();
-  const [amount, setAmount] = useState(1);
-  const [shoe, setShoe] = useState<Card[]>(() => freshShoe());
-  const [card, setCard] = useState<Card | null>(null);
-  const [mult, setMult] = useState(1);
-  const [stake, setStake] = useState(0);
-  const [active, setActive] = useState(false);
-  const [note, setNote] = useState("Start a ladder");
-  const [win, setWin] = useState<boolean | null>(null);
-  const [error, setError] = useState("");
+  const wallet = useWallet();
+  const walletRef = useRef(wallet);
+  walletRef.current = wallet;
+  const [amount,setAmount] = useState(1);
+  const [shoe,setShoe] = useState<Card[]>(freshShoe);
+  const [card,setCard] = useState<Card|null>(null);
+  const [trail,setTrail] = useState<Card[]>([]);
+  const [mult,setMult] = useState(1);
+  const [active,setActive] = useState(false);
+  const [note,setNote] = useState("Draw your first card.");
+  const [win,setWin] = useState<boolean|null>(null);
+  const [error,setError] = useState("");
+  const [busy,setBusy] = useState(false);
+  const [turn,setTurn] = useState(0);
+  const actionLocked = useRef(false);
+  const timer = useRef(0);
+  const round = useRef<{stake:number;mult:number;wins:number}|null>(null);
 
-  const odds = useMemo(() => {
-    if (!card) return { higher: 0, lower: 0, same: 0 };
-    const total = shoe.length || 1;
-    const r = rankOf(card);
-    const higher = shoe.filter((item) => rankOf(item) > r).length;
-    const lower = shoe.filter((item) => rankOf(item) < r).length;
-    const same = shoe.filter((item) => rankOf(item) === r).length;
-    const price = (count: number) => (count ? ((1 - EDGE) * total) / count : 0);
-    return { higher: price(higher), lower: price(lower), same: price(same) };
-  }, [card, shoe]);
-
-  const pull = (source: Card[], want?: (card: Card) => boolean) => {
-    const next = source.length < 10 ? freshShoe() : [...source];
-    if (want && luckOn()) {
-      const index = next.findIndex(want);
-      if (index >= 0) {
-        const [picked] = next.splice(index, 1);
-        next.push(picked!);
-      }
+  useEffect(()=>()=> {
+    window.clearTimeout(timer.current);
+    const saved = round.current;
+    round.current = null;
+    if (saved) {
+      const paid=walletRef.current.credit(payout(saved.stake,saved.mult));
+      walletRef.current.record("Hi-Lo",saved.stake,paid);
     }
-    const drawn = next.pop()!;
-    setShoe(next);
+  },[]);
+
+  const odds = useMemo(()=>{
+    if (!card) return {higher:0,lower:0,same:0};
+    const total=shoe.length;
+    const price=(count:number)=>count?((1-EDGE)*total)/count:0;
+    return {
+      higher:price(shoe.filter(item=>rankOf(item)>rankOf(card)).length),
+      lower:price(shoe.filter(item=>rankOf(item)<rankOf(card)).length),
+      same:price(shoe.filter(item=>rankOf(item)===rankOf(card)).length),
+    };
+  },[shoe,card]);
+
+  function animate(){
+    actionLocked.current=true;
+    setBusy(true);
+    setTurn(previous=>previous+1);
+    window.clearTimeout(timer.current);
+    timer.current=window.setTimeout(()=>{
+      actionLocked.current=false;
+      setBusy(false);
+    },450);
+  }
+
+  function show(next:Card[],drawn:Card) {
+    // Refill before calculating the NEXT action's odds. Never replace the
+    // advertised draw population between a quote and the corresponding draw.
+    setShoe(next.length?next:freshShoe());
     setCard(drawn);
-    return drawn;
-  };
+    setTrail(previous=>[...previous,drawn].slice(-9));
+    animate();
+  }
 
-  const start = () => {
-    const bet = betCents(amount, balance);
-    if (bet == null) {
-      setError("Minimum bet is $0.10, and it can't be more than your balance.");
+  function start(){
+    if(actionLocked.current||round.current)return;
+    const stake=betCents(amount,wallet.balance);
+    if(stake===null||!wallet.debit(stake)){
+      setError("Choose a bet from $0.10 within your balance.");
       return;
     }
-    if (!debit(bet)) return;
-    setError("");
-    setStake(bet);
-    setMult(1);
+    const next=freshShoe();
+    const first=next.pop()!;
+    round.current={stake,mult:1,wins:0};
     setActive(true);
+    setMult(1);
+    setTrail([]);
+    setError("");
+    setNote("Ace is low. Choose higher, lower, same, or skip.");
     setWin(null);
-    setNote("Higher, lower, or skip");
-    pull(shoe);
-  };
+    show(next,first);
+  }
 
-  const guess = (dir: "higher" | "lower" | "same") => {
-    if (!active || !card) return;
-    const step = odds[dir];
-    if (!step) return;
-    const drawn = pull(shoe, (item) => {
-      const diff = rankOf(item) - rankOf(card);
-      return dir === "higher" ? diff > 0 : dir === "lower" ? diff < 0 : diff === 0;
-    });
-    const diff = rankOf(drawn) - rankOf(card);
-    const ok = dir === "higher" ? diff > 0 : dir === "lower" ? diff < 0 : diff === 0;
-    if (!ok) {
+  function guess(direction:Guess){
+    const saved=round.current;
+    if(actionLocked.current||!saved||!card||!odds[direction])return;
+    const next=[...shoe];
+    const drawn=next.pop()!;
+    const difference=rankOf(drawn)-rankOf(card);
+    const correct=direction==="higher"?difference>0:direction==="lower"?difference<0:difference===0;
+    show(next,drawn);
+    setWin(correct);
+    if(!correct){
+      round.current=null;
       setActive(false);
-      setWin(false);
-      setNote("Wrong card");
-      record("Hi-Lo", stake, 0);
+      wallet.record("Hi-Lo",saved.stake,0);
+      setNote("Wrong card. Start a new round.");
       return;
     }
-    setMult(mult * step);
-    setWin(true);
-    setNote("Cash out or keep going");
-  };
+    saved.mult*=odds[direction];
+    saved.wins++;
+    setMult(saved.mult);
+    setNote("Correct. Cash out or keep going.");
+  }
 
-  const cashout = () => {
-    if (!active || mult <= 1) return;
-    const pay = payout(stake, mult);
-    if (pay) credit(pay);
-    record("Hi-Lo", stake, pay);
+  function cashout(){
+    const saved=round.current;
+    if(actionLocked.current||!saved||!saved.wins)return;
+    round.current=null;
+    const paid=wallet.credit(payout(saved.stake,saved.mult));
+    wallet.record("Hi-Lo",saved.stake,paid);
     setActive(false);
-    setNote(`Cashed ${formatUSD(pay)}`);
-  };
+    setNote("Cashed out "+formatUSD(paid));
+  }
+  function skip(){
+    if(actionLocked.current||!round.current)return;
+    const next=[...shoe];
+    show(next,next.pop()!);
+    setNote("Card skipped. Your multiplier stays the same.");
+    setWin(null);
+  }
 
-  const cents = Math.round(amount * 100);
-  const profit = active ? Math.max(0, payout(stake, mult) - stake) : Math.max(0, payout(Math.max(cents, 0), odds.higher || 1.5) - Math.max(cents, 0));
-
-  return (
-    <GameLayout
-      title="Hi-Lo"
-      note="99% RTP"
-      panel={
-        <BetPanel
-          amount={amount}
-          onAmount={setAmount}
-          profitCents={profit}
-          label={active ? `Cash out ${formatUSD(payout(stake, Math.max(mult, 1)))}` : "Bet"}
-          onAction={active ? cashout : start}
-          disabled={active && mult <= 1}
-          cashout={active && mult > 1}
-          locked={active}
-          error={error}
-        />
-      }
-    >
-      <div className="hilo">
-        {card ? (
-          <div key={`${card.rank}${card.suit}`} className={card.suit === "♥" || card.suit === "♦" ? "hilo-card red" : "hilo-card"}>
-            <span>{card.rank}</span>
-            <strong>{card.suit}</strong>
-          </div>
-        ) : (
-          <div className="hilo-card back" />
-        )}
-        <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>
-          {note} · {formatMult(mult)}
-        </p>
-        <div className="hilo-actions">
-          <button type="button" disabled={!active || !odds.higher} onClick={() => guess("higher")}>
-            Higher
-            <small>{odds.higher ? formatMult(odds.higher) : "—"}</small>
-          </button>
-          <button type="button" disabled={!active || !odds.lower} onClick={() => guess("lower")}>
-            Lower
-            <small>{odds.lower ? formatMult(odds.lower) : "—"}</small>
-          </button>
-          <button type="button" disabled={!active || !odds.same} onClick={() => guess("same")}>
-            Same
-            <small>{odds.same ? formatMult(odds.same) : "—"}</small>
-          </button>
-          <button type="button" disabled={!active} onClick={() => pull(shoe)}>
-            Skip
-          </button>
-        </div>
+  const stake=round.current?.stake??Math.round(amount*100);
+  const profit=active?Math.max(0,payout(stake,mult)-stake):0;
+  return <GameLayout title="Hi-Lo" note="Ace low · strict higher/lower" panel={
+    <BetPanel amount={amount} onAmount={setAmount} profitCents={profit}
+      label={busy?"Dealing…":active?"Cash out "+formatUSD(payout(stake,mult)):"Deal first card"}
+      onAction={active?cashout:start} disabled={busy||(active&&!round.current?.wins)}
+      cashout={active} locked={active||busy} error={error}>
+      <div className="hilo-panel-choices">
+        {(["higher","lower","same"] as Guess[]).map(direction=><button key={direction} type="button"
+          disabled={!active||busy||!odds[direction]} onClick={()=>guess(direction)}>
+          <span>{direction==="higher"?"↑":direction==="lower"?"↓":"="} {direction}</span>
+          <strong>{odds[direction]?formatMult(odds[direction]):"—"}</strong>
+        </button>)}
       </div>
-    </GameLayout>
-  );
+    </BetPanel>
+  }>
+    <div className={"hilo hilo-enhanced"+(busy?" is-dealing":"")}>
+      <div className="hilo-table-label">Next card</div>
+      {card?<div key={turn} className={"hilo-card "+(["♥","♦"].includes(card.suit)?"red":"")} aria-label={card.rank+card.suit}>
+        <span>{card.rank}<small>{card.suit}</small></span><strong>{card.suit}</strong><span className="hilo-card-bottom">{card.rank}</span>
+      </div>:<div className="hilo-card back"><b>?</b></div>}
+      <div className="hilo-multiplier">{formatMult(mult)}</div>
+      <p role="status" className={"result-line"+(win===true?" win":win===false?" lose":"")}>{note}</p>
+      <button className="ghost-btn" type="button" disabled={!active||busy} onClick={skip}>Skip card</button>
+      <div className="hilo-history" aria-label="Card history">{trail.map((item,i)=><span key={turn+"-"+i} data-red={["♥","♦"].includes(item.suit)}>{item.rank}{item.suit}</span>)}</div>
+    </div>
+  </GameLayout>;
 }
+

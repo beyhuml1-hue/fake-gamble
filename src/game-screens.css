@@ -237,3 +237,28 @@
  .play-surface .game-card,.play-room .game-card,.game-shell .mb-layout { grid-template-columns:minmax(0,1fr); }
  .play-surface .mines-grid { width:min(100%,475px); }
 }
+
+/* Motion keeps each board's controls readable during play. */
+@media(prefers-reduced-motion:no-preference){
+ .game-stage { animation:stage-enter .25s ease-out; }
+ .draw-cards [data-live=true],.blitz-deck [data-revealed=true] { animation:card-turn .35s ease-out both; }
+ .lava-board [data-sunk=true] { animation:lava-sink .6s ease-in both; }
+ .lava-board [data-chosen=true]:not([data-sunk=true]) { animation:tile-land .35s ease-out; }
+ .uno-card { transition:transform .2s,box-shadow .2s; }
+ .uno-card:not(:disabled):hover { transform:translateY(-12px) rotate(-2deg);box-shadow:0 9px 16px #0006; }
+ .arcade-chess button { transition:background .2s; }
+ .connect-board [data-disc="1"],.connect-board [data-disc="2"] { animation:disc-drop .35s ease-out; }
+}
+@keyframes stage-enter{from{opacity:.5;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes card-turn{from{transform:rotateY(85deg);opacity:.4}to{transform:rotateY(0);opacity:1}}
+@keyframes lava-sink{to{transform:scale(.65) translateY(12px);opacity:.25}}
+@keyframes tile-land{50%{transform:scale(.9)}}
+@keyframes disc-drop{from{transform:translateY(-80px);opacity:0}to{transform:none;opacity:1}}
+.play-surface[data-play="limbo"] .center-stage{width:100%;gap:35px}
+.play-surface[data-play="limbo"] .readout{font-size:clamp(48px,8vw,100px)}
+.play-surface[data-play="limbo"] .limbo-field{width:100%;padding:14px;background:#2b3136;border-radius:7px}
+.pool-table{box-shadow:0 12px 25px #0008,inset 0 0 0 5px #947341!important;border:16px solid #66432a!important;border-radius:25px!important;background:#164b32!important}
+.uno-card{border-radius:10px;border:3px solid #faf7e4;box-shadow:0 3px 0 #0005,inset 0 0 0 3px #ffffff20;font-family:Arial,sans-serif;font-style:italic}
+.uno-top{width:100px;box-shadow:0 7px 18px #0008;transform:rotate(-7deg)}
+.play-surface[data-play="uno"] .arcade-board-stage{background:radial-gradient(ellipse,#294f44,#192526 70%);border-radius:30px;padding:28px}
+.play-surface[data-play="chess"] .arcade-chess{border:10px solid #5b4431;box-shadow:0 8px 20px #0008}

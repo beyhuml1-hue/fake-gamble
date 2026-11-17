@@ -17,6 +17,7 @@ export function ReferenceGoldCoin({ degrees, spinning }: ReferenceGoldCoinProps)
       aria-label={spinning ? "Gold coin flipping" : `Gold coin showing ${Math.round(degrees / 180) % 2 === 0 ? "heads" : "tails"}`}
     >
       <div className="reference-coin-body" style={{ transform: `rotateY(${degrees}deg)` }}>
+        <div className="reference-coin-rim" aria-hidden="true" />
         <div className="reference-coin-face reference-coin-heads" aria-hidden="true">
           <span>HEADS</span>
         </div>

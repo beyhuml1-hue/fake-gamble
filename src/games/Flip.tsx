@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import "../premium-games.css";
 import { ReferenceGoldCoin } from "../components/ReferenceGoldCoin";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
@@ -73,6 +74,7 @@ export function Flip({ game = "Flip" }: { game?: "Flip" | "Coinflip" } = {}) {
   };
 
   const play = () => {
+    if (pending.current) return;
     const stake = betCents(amount, balance);
     if (stake == null) {
       setError("Minimum bet is $0.10, and it can't be more than your balance.");
@@ -124,12 +126,12 @@ export function Flip({ game = "Flip" }: { game?: "Flip" | "Coinflip" } = {}) {
             onClick={()=>chooseSide(random()<0.5?"heads":"tails")}>Random side</button>}
           <div className="field">
             <span className="field-label">Pick a side</span>
-            <div className="select">
+            <div className="select coin-side-picks">
               <button type="button" className={side === "heads" ? "on" : ""} disabled={busy} onClick={() => chooseSide("heads")}>
-                Heads
+                <span className="coin-side-icon" data-side="heads" aria-hidden="true">H</span><span>Heads</span>
               </button>
               <button type="button" className={side === "tails" ? "on" : ""} disabled={busy} onClick={() => chooseSide("tails")}>
-                Tails
+                <span className="coin-side-icon" data-side="tails" aria-hidden="true">T</span><span>Tails</span>
               </button>
             </div>
           </div>
@@ -139,6 +141,11 @@ export function Flip({ game = "Flip" }: { game?: "Flip" | "Coinflip" } = {}) {
       <div className="center-stage">
         <div className="flip-coin-display">
           <ReferenceGoldCoin degrees={deg} spinning={busy} />
+          {game === "Coinflip" && <div className="coin-payout-choice">
+            <strong>{multiplier.toFixed(2)}× Payout</strong>
+            <div><button type="button" disabled={busy} aria-label="Select heads" aria-pressed={side === "heads"} onClick={() => chooseSide("heads")}><span className="coin-side-icon" data-side="heads">H</span><small>Heads</small></button>
+              <button type="button" disabled={busy} aria-label="Select tails" aria-pressed={side === "tails"} onClick={() => chooseSide("tails")}><span className="coin-side-icon" data-side="tails">T</span><small>Tails</small></button></div>
+          </div>}
           <div className="flip-feedback-slot" aria-live="polite" aria-atomic="true">
             {win !== null && landed !== null && !busy && (
               <div key={resultId} className={win ? "flip-outcome flip-win" : "flip-outcome flip-loss"}>

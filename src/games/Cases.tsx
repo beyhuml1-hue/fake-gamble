@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { CASES, caseImage, type CaseDrop, type LootCase } from "../data/cases";
@@ -40,6 +40,15 @@ function fill(drops: CaseDrop[], count: number) {
 export function Cases() {
   const { balance, debit, credit, record } = useWallet();
   const [query, setQuery] = useState("");
+  const [quantity,setQuantity] = useState(1);
+  const [quick,setQuick] = useState(false);
+  const [maxPrice,setMaxPrice] = useState(1000000);
+  const [risk,setRisk] = useState(100);
+  const [batch,setBatch] = useState<CaseDrop[]>([]);
+  const opening = useRef(false);
+  const pending = useRef<{stake:number;pay:number;drops:CaseDrop[]}|null>(null);
+  const wallet = useRef({credit,record});
+  wallet.current={credit,record};
   const [sort,setSort] = useState<"default"|"low"|"high">("default");
   const [band, setBand] = useState<"all" | "low" | "mid" | "high">("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -57,6 +66,9 @@ export function Cases() {
     const q = query.trim().toLowerCase();
     const matches = CASES.filter((item) => {
       if (q && !item.name.toLowerCase().includes(q)) return false;
+      if (item.price>maxPrice) return false;
+      const losingChance=item.drops.filter(drop=>drop.item.worth<item.price).reduce((sum,drop)=>sum+drop.weight,0);
+      if (losingChance>risk) return false;
       if (band === "low") return item.price < 5;
       if (band === "mid") return item.price >= 5 && item.price < 15;
       if (band === "high") return item.price >= 15;
@@ -65,7 +77,7 @@ export function Cases() {
     if (sort==="low") return matches.sort((a,b)=>a.price-b.price);
     if (sort==="high") return matches.sort((a,b)=>b.price-a.price);
     return matches;
-  }, [query, band, sort]);
+  }, [query, band, sort, maxPrice, risk]);
 
   const choose = (item: LootCase) => {
     if (spinning) return;
@@ -76,51 +88,57 @@ export function Cases() {
     setError("");
   };
 
-  const open = () => {
-    if (!box || spinning) return;
-    const stake = betCents(box.price, balance);
-    if (stake == null) {
-      setError("That case costs more than your balance.");
-      return;
-    }
-    if (!debit(stake)) return;
-    setError("");
-    const won = pickDrop(box.drops);
-    const next = fill(box.drops, 48);
-    next[LAND] = won;
-    setStrip(next);
-    setResult(null);
-    setShift(0);
+  const complete = () => {
+    const due=pending.current;
+    if (!due) return;
+    pending.current=null;
+    const paid=wallet.current.credit(due.pay);
+    wallet.current.record("Cases",due.stake,paid);
+    setBatch(due.drops);
+    setResult(due.drops[0]!);
+    opening.current=false;
     setSpinning(false);
+  };
+  useEffect(()=>()=> {
     window.clearTimeout(timer.current);
     window.cancelAnimationFrame(ticks.current);
-    window.setTimeout(() => {
-      const width = frame.current?.clientWidth ?? 640;
-      const target = LAND * CARD - (width - 124) / 2;
-      setSpinning(true);
+    const due=pending.current;
+    pending.current=null;
+    if (due) wallet.current.record("Cases",due.stake,wallet.current.credit(due.pay));
+  },[]);
+  const open = () => {
+    if (!box || opening.current) return;
+    const stake = betCents(box.price*quantity, balance);
+    if (stake == null) {setError("The selected cases cost more than your balance.");return;}
+    if (!debit(stake)) return;
+    opening.current=true;
+    setError("");
+    const won=Array.from({length:quantity},()=>pickDrop(box.drops));
+    pending.current={stake,pay:won.reduce((sum,drop)=>sum+Math.round(drop.item.worth*100),0),drops:won};
+    const next=fill(box.drops,48);
+    next[LAND]=won[0]!;
+    setStrip(next);
+    setBatch([]);
+    setResult(null);
+    setShift(0);
+    setSpinning(true);
+    const duration=quick?550:SPIN_MS;
+    timer.current=window.setTimeout(()=>{
+      const width=frame.current?.clientWidth??640;
+      const target=LAND*CARD-(width-124)/2;
       setShift(target);
-      const started = performance.now();
-      let last = -1;
-      const watch = (now: number) => {
-        const t = Math.min(1, (now - started) / SPIN_MS);
-        const eased = 1 - (1 - t) ** 3.4;
-        const index = Math.round((target * eased + (width - 124) / 2) / CARD);
-        if (index !== last) {
-          last = index;
-          sound.tick();
-        }
-        if (t < 1) ticks.current = requestAnimationFrame(watch);
+      const began=performance.now();
+      let last=-1;
+      const watch=(now:number)=>{
+        const t=Math.min(1,(now-began)/duration);
+        const eased=1-(1-t)**3.4;
+        const index=Math.round((target*eased+(width-124)/2)/CARD);
+        if(index!==last){last=index;sound.tick();}
+        if(t<1)ticks.current=requestAnimationFrame(watch);
       };
-      ticks.current = requestAnimationFrame(watch);
-    }, 40);
-    timer.current = window.setTimeout(() => {
-      window.cancelAnimationFrame(ticks.current);
-      const pay = Math.round(won.item.worth * 100);
-      if (pay) credit(pay);
-      record("Cases", stake, pay);
-      setResult(won);
-      setSpinning(false);
-    }, SPIN_MS + 80);
+      ticks.current=requestAnimationFrame(watch);
+      timer.current=window.setTimeout(complete,duration+40);
+    },40);
   };
 
   const best = box ? Math.max(...box.drops.map((drop) => drop.item.worth)) : 0;
@@ -132,17 +150,21 @@ export function Cases() {
       note={`${CASES.length} cases`}
       panel={
         <BetPanel
-          amount={box?.price ?? 0}
+          amount={(box?.price ?? 0)*quantity}
           onAmount={() => undefined}
           profitCents={profit}
           amountLabel="Selected case price"
           showProfit={Boolean(box)}
-          label={spinning ? "Opening…" : box ? `Open ${formatUSD(Math.round(box.price * 100))}` : "Pick a case"}
+          label={spinning ? "Opening…" : box ? "Open " + quantity + " · " + formatUSD(Math.round(box.price * quantity * 100)) : "Pick a case"}
           onAction={open}
           disabled={!box || spinning}
           locked
           error={error}
         >
+          {box && <div className="selected-case"><img src={caseImage(box.id)} alt=""/><b>{box.name}</b><span>{formatUSD(Math.round(box.price*100))}</span></div>}
+          <div className="field"><span className="field-label">Quantity</span><div className="select case-quantity">{[1,2,3,4,5].map(n=>
+            <button type="button" key={n} disabled={spinning} className={quantity===n?"on":""} onClick={()=>setQuantity(n)}>{n}</button>)}</div></div>
+          <label className="case-quick"><span>Quick unbox</span><input type="checkbox" checked={quick} disabled={spinning} onChange={event=>setQuick(event.target.checked)}/></label>
           {box ? (
             <button className="text-btn" type="button" disabled={spinning} onClick={() => setSelectedId(null)}>
               All cases
@@ -162,7 +184,7 @@ export function Cases() {
               <span>{formatUSD(Math.round(box.price * 100))} to open</span>
             </div>
           </div>
-          <div className="case-window" ref={frame}>
+          <div className={"case-window"+(quick?" case-window-quick":"")} ref={frame}>
             <div className={spinning ? "case-reel spin" : "case-reel"} style={{ transform: `translateX(${-shift}px)` }}>
               {strip.map((drop, index) => (
                 <div key={`${drop.item.id}-${index}`} className={result && index === LAND ? "case-item hit" : "case-item"}>
@@ -174,6 +196,7 @@ export function Cases() {
             </div>
             <span className="case-mark" />
           </div>
+          {batch.length>1 && <div className="case-batch" aria-label="All opened items">{batch.map((drop,i)=><article key={i}><img src={caseImage(drop.item.id)} alt=""/><b>{drop.item.name}</b><span>{formatUSD(Math.round(drop.item.worth*100))}</span></article>)}</div>}
           <div className="drops">
             {box.drops.map((drop) => (
               <div key={drop.item.id} className="drop-card">
@@ -224,12 +247,16 @@ export function Cases() {
               ))}
             </div>
           </div>
+          <div className="case-filter-sliders">
+            <label>Maximum losing-drop chance <b>{risk}%</b><input type="range" min={0} max={100} value={risk} onChange={event=>setRisk(Number(event.target.value))}/></label>
+            <label>Maximum price <b>{formatUSD(Math.round(Math.min(maxPrice,Math.max(...CASES.map(item=>item.price)))*100))}</b><input type="range" min={0} max={Math.max(...CASES.map(item=>item.price))} step={0.01} value={Math.min(maxPrice,Math.max(...CASES.map(item=>item.price)))} onChange={event=>setMaxPrice(Number(event.target.value))}/></label>
+          </div>
           <div className="case-grid">
             {shown.map((item) => (
               <button key={item.id} type="button" className="case-card" onClick={() => choose(item)}>
                 <img src={caseImage(item.id)} alt="" />
                 <b>{item.name}</b>
-                <span>{formatUSD(Math.round(item.price * 100))}</span>
+                <span>{formatUSD(Math.round(item.price * 100))}</span><small>{(Math.max(...item.drops.map(drop=>drop.item.worth))/item.price).toFixed(1)}× top</small>
               </button>
             ))}
           </div>

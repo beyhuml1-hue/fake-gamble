@@ -1,0 +1,71 @@
+.arcade-shell .play-surface[data-play="coinflip"] .reference-coin-scene{height:250px;width:min(100%,320px);perspective:950px;margin:auto}
+.arcade-shell .play-surface[data-play="coinflip"] .reference-coin-body{width:190px;height:190px;transform-style:preserve-3d;position:relative}
+.arcade-shell .play-surface[data-play="coinflip"] .reference-coin-face{inset:0;width:100%;height:100%;border:0;border-radius:50%;background:#f6c83f;box-shadow:inset 0 0 0 4px #d9a41d,inset 0 0 30px #ffe57b70;backface-visibility:hidden;display:grid;place-items:center}
+.arcade-shell .play-surface[data-play="coinflip"] .reference-coin-heads{transform:translateZ(7px)}
+.arcade-shell .play-surface[data-play="coinflip"] .reference-coin-tails{background:#64aff8;transform:rotateY(180deg) translateZ(7px);box-shadow:inset 0 0 0 4px #397ad5,inset 0 0 24px #b1d7ff50}
+.arcade-shell .play-surface[data-play="coinflip"] .reference-coin-face span{font-size:0;text-shadow:none}
+.arcade-shell .play-surface[data-play="coinflip"] .reference-coin-face span:before{font-family:Arial,sans-serif;font-size:62px;font-weight:800;color:#272b20}
+.arcade-shell .play-surface[data-play="coinflip"] .reference-coin-rim{position:absolute;inset:0;border-radius:50%;background:#c7991c;transform:translateZ(0);box-shadow:0 0 0 2px #d4aa38}
+.coin-side-picks{gap:5px!important;background:transparent!important}
+.coin-side-picks button{display:grid!important;justify-items:center;align-content:center;gap:8px;height:108px!important;background:#2b3035!important;border:1px solid transparent!important;border-radius:5px!important;font-size:11px!important}
+.coin-side-picks button.on{background:#343a40!important;border-color:#54636b!important}
+.coin-side-icon{display:grid;place-items:center;background:#facb42;width:48px;height:48px;border-radius:50%;color:#1e281c;font-family:Arial,sans-serif;font-weight:800;font-size:23px;box-shadow:inset 0 -3px #c49625}
+.coin-side-icon[data-side="tails"]{background:#68b5fb;box-shadow:inset 0 -3px #397ad5;color:#182b42}
+.coin-payout-choice{display:grid;gap:20px;justify-items:center;margin:5px auto 0}
+.coin-payout-choice>strong{font-size:14px;color:#aebac0}
+.coin-payout-choice>div{display:flex;gap:40px}
+.coin-payout-choice button{display:grid;justify-items:center;gap:8px;background:none;border:0;color:#aab7bd;opacity:.58;padding:0;cursor:pointer}
+.coin-payout-choice button[aria-pressed="true"]{opacity:1}
+.coin-payout-choice button small{font-size:11px}
+.arcade-shell .play-surface[data-play="coinflip"] .flip-feedback-slot{min-height:50px}
+.premium-roulette{gap:18px!important;align-items:flex-start!important;position:relative}
+.roulette-history{display:flex;gap:5px;align-items:center;justify-content:center;width:100%;min-height:29px;flex-wrap:wrap;color:#84939b;font-size:11px}
+.roulette-history span{display:grid;place-items:center;min-width:27px;height:27px;padding:0 4px;border-radius:4px;background:#303940;color:#f1f6f8;font-weight:800}
+.roulette-history span[data-red="true"]{background:#c83848}
+.roulette-history span[data-zero="true"]{background:#25895c}
+.arcade-shell .play-surface .premium-roulette .wheel-scene{position:relative;width:100%;gap:8px}
+.arcade-shell .play-surface .premium-roulette .wheel-disc.small{width:min(100%,430px);height:auto;aspect-ratio:1;border:16px double #384047;box-shadow:0 0 0 8px #14191c,0 0 0 11px #30383d,inset 0 0 0 4px #14191c;position:relative}
+.arcade-shell .play-surface .premium-roulette .roulette-pocket-label{top:50%;left:50%;font-size:clamp(10px,1.5vw,17px);width:24px;margin:-10px 0 0 -12px;transform:rotate(var(--pocket-angle)) translateY(calc(clamp(100px,14vw,177px) * -1));color:#f6f8fa;font-weight:900;z-index:2;line-height:22px}
+.arcade-shell .play-surface .premium-roulette .roulette-pocket-label[data-winner="true"]{color:#ffe795;background:#99751f;outline:2px solid #eac449;border-radius:4px;box-shadow:0 0 15px #f7c44380}
+.arcade-shell .play-surface .premium-roulette .roulette-wheel-hub{position:absolute;inset:23%;transform:none;margin:0;width:auto;height:auto;background:#1b2024;border:2px solid #8f793c;border-radius:50%;display:flex;flex-direction:column;gap:10px;justify-content:center;align-items:center;color:#fff}
+.roulette-wheel-hub small{font-size:11px!important;text-transform:uppercase;color:#9aaab4;letter-spacing:.07em}
+.roulette-wheel-hub b{font-size:clamp(30px,5vw,62px);line-height:1}
+.roulette-ball{position:absolute;top:20px;left:calc(50% - 6px);height:12px;width:12px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff,#f4eee2 35%,#939b9c 80%);box-shadow:0 3px 4px #0007;z-index:4}
+.roulette-ball.is-rolling{animation:ball-orbit .5s linear infinite}
+.premium-roulette .felt{width:100%;max-width:830px;padding:10px;border-radius:8px}
+.premium-roulette .pocket[data-winner="true"]{outline:2px solid #70db9f;outline-offset:-2px;box-shadow:inset 0 0 15px #66c68a40}
+.selected-case{display:grid;grid-template-columns:55px 1fr;align-items:center;gap:3px 10px;padding:10px;background:#30363b;border-radius:5px;font-size:12px}
+.selected-case img{width:55px;height:55px;object-fit:contain;grid-row:span 2}
+.selected-case span{color:#f6c44e;font-size:13px}
+.case-quick{display:flex;align-items:center;justify-content:space-between;padding:12px;background:#2e353a;border-radius:5px;color:#b3c3cb;font-size:12px}
+.case-quick input{accent-color:#40bd7d;width:17px;height:17px}
+.case-filter-sliders{display:grid;grid-template-columns:1fr 1fr;gap:15px;width:100%;padding:7px 2px 10px}
+.case-filter-sliders label{display:grid;gap:7px;color:#aab7c0;font-size:11px}
+.case-filter-sliders label b{font-size:12px;color:#fff}
+.case-filter-sliders input{width:100%;accent-color:#40bd7d}
+.case-batch{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin:10px 0}
+.case-batch article{display:grid;justify-items:center;gap:4px;background:#26373a;border:1px solid #3e7763;padding:8px;border-radius:5px;font-size:11px}
+.case-batch img{width:65px;height:65px;object-fit:contain}
+.case-batch span{color:#80dfae}
+.case-window-quick .case-reel.spin{transition-duration:.55s!important}
+.arcade-shell .play-surface .case-grid .case-card{border:1px solid #303c40;border-radius:7px;padding-bottom:11px;transition:border-color .18s,transform .18s}
+.arcade-shell .play-surface .case-grid .case-card:hover{border-color:#42bc85;transform:translateY(-3px)}
+.case-card>small{display:block;color:#e9c44c;font-size:10px;margin-top:6px}
+.arcade-shell .play-surface[data-play="dragon"] .tower{padding:13px 12px;background:#151a1d;border:10px solid #2b3238;border-radius:8px;gap:7px}
+.arcade-shell .play-surface[data-play="dragon"] .tile-btn:not(.safe):not(.dragon){background-color:#292f34;background-image:repeating-linear-gradient(45deg,transparent 0 5px,#171d2080 5px 7px),repeating-linear-gradient(-45deg,transparent 0 5px,#171d2080 5px 7px);border:1px solid #383e42;box-shadow:0 3px 0 #11181b}
+.arcade-shell .play-surface[data-play="dragon"] .tile-btn.safe{background:#1c9f58;border:2px solid #57e096;box-shadow:0 3px #116f3b}
+.arcade-shell .play-surface[data-play="dragon"] .tile-btn.dragon{background:#c5353d;border:1px solid #f06363;box-shadow:0 3px #781e26}
+.arcade-shell .play-surface[data-play="dragon"] .tower-level{background:none;color:#82919a;font-size:12px;flex-basis:20px}
+.arcade-shell .play-surface .mine.gem .blockbet-revealed-gem{filter:drop-shadow(0 5px 5px #031f16b0);width:80%;height:80%;object-fit:contain}
+@keyframes ball-orbit{0%{translate:-70px 15px}50%{translate:70px 15px}100%{translate:-70px 15px}}
+@media(max-width:650px){
+ .arcade-shell .play-surface .premium-roulette .wheel-disc.small{max-width:310px;border-width:11px}
+ .arcade-shell .play-surface .premium-roulette .roulette-pocket-label{font-size:11px;transform:rotate(var(--pocket-angle)) translateY(calc(clamp(95px,33vw,126px) * -1))}
+ .case-filter-sliders{gap:8px}
+ .coin-payout-choice>div{gap:28px}
+}
+@media(prefers-reduced-motion:reduce){
+ .roulette-ball.is-rolling{animation:none}
+ .case-grid .case-card,.case-reel.spin{transition:none!important}
+ .reference-coin-scene.is-flipping .reference-coin-body{animation:none!important;transition-duration:.01ms!important}
+}

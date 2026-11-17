@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatUSD, payout } from "../lib/money";
@@ -58,6 +58,10 @@ export function Roulette() {
   const [win, setWin] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [recent,setRecent] = useState<number[]>([]);
+  const spinLock = useRef(false);
+  const timer = useRef(0);
+  useEffect(()=>()=>window.clearTimeout(timer.current),[]);
 
   const slice = 360 / ORDER.length;
   const gradient = useMemo(
@@ -74,6 +78,7 @@ export function Roulette() {
   const profit = Math.max(0, payout(Math.max(cents, 0), mult) - Math.max(cents, 0));
 
   const spin = () => {
+    if (spinLock.current) return;
     if (!bet) {
       setError("Choose a bet on the table.");
       return;
@@ -85,7 +90,9 @@ export function Roulette() {
     }
     if (!debit(stake)) return;
     setError("");
+    spinLock.current=true;
     setBusy(true);
+    setResult(null);
     const n = luckOn() ? forcedNumber(bet) : ORDER[randInt(ORDER.length)]!;
     const didWin = wins(bet, n);
     const pay = didWin ? payout(stake, multFor(bet)) : 0;
@@ -94,9 +101,11 @@ export function Roulette() {
     const index = ORDER.indexOf(n);
     const center = index * slice + slice / 2;
     setRotation((prev) => Math.ceil(prev / 360) * 360 + 360 * 5 + (360 - center));
-    window.setTimeout(() => {
+    timer.current = window.setTimeout(() => {
       setResult(n);
       setWin(didWin);
+      setRecent(prior=>[n,...prior].slice(0,20));
+      spinLock.current=false;
       setBusy(false);
     }, 3100);
   };
@@ -115,6 +124,7 @@ export function Roulette() {
           label="Bet"
           onAction={spin}
           disabled={busy}
+          locked={busy}
           error={error}
           amountLabel="Chip value"
           showProfit={false}
@@ -131,12 +141,14 @@ export function Roulette() {
         </BetPanel>
       }
     >
-      <div className="roulette">
+      <div className="roulette premium-roulette">
+        <div className="roulette-history" aria-label="Recent roulette results">{recent.length?recent.map((n,i)=><span key={i} data-red={RED.has(n)} data-zero={n===0}>{n}</span>):<small>No recent rounds</small>}</div>
         <div className={busy ? "wheel-scene compact spinning" : "wheel-scene compact"}>
           <div className="pointer" />
+          <span className={busy?"roulette-ball is-rolling":"roulette-ball"} aria-hidden="true" />
           <div className="wheel-disc small" style={{ background: gradient, transform: `rotate(${rotation}deg)` }}>
-            {ORDER.map((n,i)=><span key={n} className="roulette-pocket-label" style={{"--pocket-angle":`${(i+0.5)*slice}deg`} as CSSProperties}>{n}</span>)}
-            <span className="roulette-wheel-hub" aria-hidden="true">◆</span>
+            {ORDER.map((n,i)=><span key={n} className="roulette-pocket-label" data-winner={result===n&&!busy} style={{"--pocket-angle":`${(i+0.5)*slice}deg`} as CSSProperties}>{n}</span>)}
+            <span className="roulette-wheel-hub" aria-live="polite"><small>{busy?"Rolling":result!==null?"Round over":"Place your bet"}</small><b>{busy?"●":result!==null?result:"—"}</b></span>
           </div>
           <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>
             {result == null ? "European wheel" : result === 0 ? "0" : `${result} ${RED.has(result) ? "red" : "black"}`}
@@ -155,6 +167,8 @@ export function Roulette() {
               <button
                 key={n}
                 type="button"
+                disabled={busy}
+                data-winner={result===n&&!busy}
                 className={`pocket ${RED.has(n) ? "red" : "black"} ${bet?.kind === "straight" && bet.n === n ? "on" : ""}`}
                 onClick={() => setBet({ kind: "straight", n })}
               >
