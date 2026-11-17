@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { BetPanel } from "../components/BetPanel";
+import { betCents, formatUSD, payout } from "../lib/money";
+import { useWallet } from "../state/wallet";
 import { Chess, type Square } from "chess.js";
 import { GameLayout } from "../components/GameLayout";
 import { randInt, shuffle } from "../lib/random";
@@ -48,9 +51,12 @@ function ConnectFour(){
   </>;
 }
 
+type BoardOutcome = "win" | "loss" | "draw";
+type BoardProps = { onFinish: (result: BoardOutcome) => void; locked: boolean };
+
 const glyph:Record<string,string>={wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"};
 const value:Record<string,number>={p:1,n:3,b:3,r:5,q:9,k:0};
-function ChessBoard(){
+function ChessBoard({onFinish,locked}:BoardProps){
   const [movesPlayed,setMovesPlayed]=useState<string[]>([]);
   const [from,setFrom]=useState<Square|null>(null);
   const [promotion,setPromotion]=useState<"q"|"r"|"b"|"n">("q");
@@ -59,18 +65,21 @@ function ChessBoard(){
   const possible=from?board.moves({square:from,verbose:true}):[];
   const ended=board.isGameOver();
   useEffect(()=>{
+    if(ended) onFinish(board.isCheckmate() ? (board.turn()==="w"?"loss":"win") : "draw");
+  },[ended,movesPlayed]);
+  useEffect(()=>{
     const current=new Chess();
     movesPlayed.forEach(move=>current.move(move));
-    if(current.turn()!=="b"||current.isGameOver())return;
+    if(locked||current.turn()!=="b"||current.isGameOver())return;
     const timer=window.setTimeout(()=>{
       const moves=shuffle(current.moves({verbose:true}));
       moves.sort((a,b)=>(value[b.captured??""]??0)-(value[a.captured??""]??0));
       setMovesPlayed([...movesPlayed,moves[0]!.san]);
     },400);
     return ()=>window.clearTimeout(timer);
-  },[movesPlayed]);
+  },[movesPlayed,locked]);
   function move(square:Square){
-    if(ended||board.turn()!=="w")return;
+    if(locked||ended||board.turn()!=="w")return;
     const legal=possible.find(option=>option.to===square && (!option.promotion||option.promotion===promotion));
     if(legal){setMovesPlayed([...movesPlayed,legal.san]);setFrom(null);return;}
     setFrom(board.get(square)?.color==="w"?square:null);
@@ -78,16 +87,15 @@ function ChessBoard(){
   return <>
     <div className="arcade-chess">{board.board().flatMap((row,r)=>row.map((piece,c)=>{
       const square=("abcdefgh"[c]+String(8-r)) as Square;
-      return <button type="button" key={square} aria-label={square+(piece?" "+piece.color+piece.type:"")} aria-pressed={from===square}
+      return <button type="button" key={square} disabled={locked} aria-label={square+(piece?" "+piece.color+piece.type:"")} aria-pressed={from===square}
         data-dark={(r+c)%2===1} data-legal={possible.some(option=>option.to===square)} onClick={()=>move(square)}>
         {piece ? glyph[piece.color+piece.type] : ""}
       </button>;
     }))}</div>
     <p role="status">{board.isCheckmate()?(board.turn()==="w"?"Checkmate · rival wins":"Checkmate · you win"):ended?"Draw":board.turn()==="w"?board.inCheck()?"White to move · check":"White to move":"Rival thinking…"}</p>
-    <label>Promote to <select value={promotion} onChange={event=>setPromotion(event.target.value as typeof promotion)}>
+    <label>Promote to <select disabled={locked} value={promotion} onChange={event=>setPromotion(event.target.value as typeof promotion)}>
       <option value="q">Queen</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option>
     </select></label>
-    <button type="button" className="ghost-btn" onClick={()=>{setMovesPlayed([]);setFrom(null);}}>New game</button>
   </>;
 }
 const colors=["Red","Green","Blue","Gold"];
@@ -100,10 +108,13 @@ function unoStart(){
   return {deck:deck.slice(15),you:deck.slice(0,7),bot:deck.slice(7,14),pile:[deck[14]!],result:"",turns:0};
 }
 function usable(card:Card,top:Card){return card.color===top.color||card.rank===top.rank;}
-function Uno(){
+function Uno({onFinish,locked}:BoardProps){
   const [state,setState]=useState(unoStart);
+  useEffect(()=>{
+    if(state.result) onFinish(state.result==="Draw."?"draw":state.result.startsWith("You ")?"win":"loss");
+  },[state.result]);
   function turn(card?:Card){
-    if(state.result)return;
+    if(locked||state.result)return;
     const next={...state,deck:[...state.deck],you:[...state.you],bot:[...state.bot],pile:[...state.pile],turns:state.turns+1};
     function take(){
       if(!next.deck.length&&next.pile.length>1){const top=next.pile.pop()!;next.deck=shuffle(next.pile);next.pile=[top];}
@@ -125,9 +136,8 @@ function Uno(){
     <div className="uno-card uno-top" data-color={top.color} aria-label={colors[top.color]+" "+top.rank}>{top.rank}</div>
     <p role="status">{state.result||"Match "+colors[top.color]+" or "+top.rank+" · Rival: "+state.bot.length+" cards"}</p>
     <div className="arcade-moves">{state.you.map(card=><button type="button" className="uno-card" data-color={card.color} key={card.id}
-      aria-label={colors[card.color]+" "+card.rank} disabled={Boolean(state.result)||!usable(card,top)} onClick={()=>turn(card)}>{card.rank}</button>)}</div>
-    <div className="arcade-moves"><button type="button" className="ghost-btn" disabled={Boolean(state.result)} onClick={()=>turn()}>Draw and pass</button>
-      <button type="button" className="ghost-btn" onClick={()=>setState(unoStart())}>New game</button></div>
+      aria-label={colors[card.color]+" "+card.rank} disabled={locked||Boolean(state.result)||!usable(card,top)} onClick={()=>turn(card)}>{card.rank}</button>)}</div>
+    <div className="arcade-moves"><button type="button" className="ghost-btn" disabled={locked||Boolean(state.result)} onClick={()=>turn()}>Draw and pass</button></div>
   </>;
 }
 const boards={chess:["Chess","Classic chess against a computer rival.",ChessBoard],
@@ -138,18 +148,55 @@ const boards={chess:["Chess","Classic chess against a computer rival.",ChessBoar
 export function BoardArcade({game}:{game:keyof typeof boards}){
   return game === "pool" || game === "connect-four"
     ? <Multiplayer game={game} />
-    : <PracticeBoard game={game} />;
+    : <WagerBoard game={game} />;
 }
 
-function PracticeBoard({game}:{game:"chess"|"uno"}){
+function WagerBoard({game}:{game:"chess"|"uno"}){
   const [name,description,Board]=boards[game];
-  const [opened,setOpened] = useState(false);
-  return <GameLayout title={name} note="Practice" panel={<div className="room-setup">
-    <p>{description}</p><button className="bet-btn" type="button" onClick={()=>setOpened(!opened)}>
-      {opened?"Leave practice game":"Create practice game"}
-    </button>
-  </div>}>
-    {opened ? <div className="arcade-board-stage"><Board/></div> :
-      <div className="room-empty"><h2>Open games</h2><p>Create a practice game to get started.</p></div>}
+  const wallet=useWallet();
+  const [amount,setAmount]=useState(1);
+  const [round,setRound]=useState<{id:number;stake:number;result:BoardOutcome|null}|null>(null);
+  const [error,setError]=useState("");
+  const [message,setMessage]=useState("Set your stake to play against the computer.");
+  // A stake is debited only once; even repeated game-over effects cannot pay twice.
+  const activeStake=useRef(0);
+  const playing=Boolean(round && !round.result);
+
+  function start(){
+    if(activeStake.current||playing)return;
+    const stake=betCents(amount,wallet.balance);
+    if(stake===null||!wallet.debit(stake)){
+      setError("Enter an amount of at least $0.10 within your Play USD balance.");
+      return;
+    }
+    activeStake.current=stake;
+    setRound(previous=>({id:(previous?.id??0)+1,stake,result:null}));
+    setMessage("Playing for "+formatUSD(stake)+" · win 1.96×, draw refunds the stake.");
+    setError("");
+  }
+  function finish(result:BoardOutcome){
+    const stake=activeStake.current;
+    if(!stake)return;
+    activeStake.current=0;
+    const paid=wallet.credit(result==="win"?payout(stake,1.96):result==="draw"?stake:0);
+    wallet.record(name,stake,paid);
+    setRound(previous=>previous?{...previous,result}:previous);
+    setMessage(result==="win"?"You won "+formatUSD(paid)+"!":
+      result==="draw"?"Draw · "+formatUSD(paid)+" returned.":"You lost "+formatUSD(stake)+".");
+  }
+  const cents=Math.round(amount*100);
+  return <GameLayout title={name} note="VS Computer · Play USD" panel={
+    <BetPanel amount={amount} onAmount={setAmount}
+      profitCents={Math.max(0,payout(cents,1.96)-cents)}
+      label={round?"Bet again":"Start game"} onAction={start}
+      disabled={playing} locked={playing} error={error}
+      afterAction={playing?<button type="button" className="ghost-btn" onClick={()=>finish("loss")}>Forfeit · lose stake</button>:null}>
+      <p className="hint">{description} Win 1.96× · Draw 1.00× · Loss 0×</p>
+    </BetPanel>
+  }>
+    <div className="arcade-board-stage">
+      {round?<><Board key={round.id} onFinish={finish} locked={!playing}/><p role="status" className="arcade-round-status">{message}</p></>:
+        <p className="arcade-round-status">Choose a Play USD stake and select Start game.</p>}
+    </div>
   </GameLayout>;
 }
