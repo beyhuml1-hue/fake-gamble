@@ -18,3 +18,18 @@ jobs:
         run: npm test
       - name: Build casino and standalone LARP assets
         run: npm run build
+      - name: Audit forbidden game and community references
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Bracketed letters prevent the audit from matching its own script.
+          pattern='d[i]scord|m[i]necraft|cr[e]eper|pick[a]xe|diamond[-_ ]?ore'
+          if git grep -nIiE "$pattern" -- .; then
+            echo "Forbidden wording remains in repository text." >&2
+            exit 1
+          fi
+          if git ls-files | grep -iE "$pattern"; then
+            echo "Forbidden names remain in repository paths." >&2
+            exit 1
+          fi
+          echo "Audit clean: no forbidden text or filenames."
