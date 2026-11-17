@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { PACK_LEVELS,PACK_ODDS,packMax,packRtp,pickPackPrize,type PackDifficulty,type PackPrize } from "../data/packs";
 import { betCents,formatUSD,MAX_BALANCE,payout } from "../lib/money";
 import { sound } from "../lib/sound";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 import "./packs.css";
 
@@ -65,7 +66,7 @@ export function Packs(){
    if(bet>maxBet){setError("Maximum "+level+" bet is "+formatUSD(maxBet)+" so all prizes can be paid in full.");return;}
    active.current=true;
    if(!debit(bet)){active.current=false;setError("Insufficient Play USD.");return;}
-   const prize=pickPackPrize(level);
+   const prize=luckOn() ? PACK_ODDS[level].reduce((best, item)=>item.mult>best.mult?item:best) : pickPackPrize(level);
    const pay=payout(bet,prize.mult);
    unsettled.current={stake:bet,pay};
    const next=Array.from({length:REEL_COUNT},()=>pickPackPrize(level));
