@@ -123,11 +123,10 @@ test("Homepage retains stats; Plinko has independent normal paths; free wallet n
  assert.match(source("../src/pages/Lobby.tsx"),/HomeSpotlight history/);
  assert.match(source("../src/games/Plinko.tsx"),/sway/);
  assert.match(source("../src/games/Plinko.tsx"),/random\(\) < \.5/);
-  assert.match(source("../src/games/Plinko.tsx"),/hotBin/);
+ assert.match(source("../src/games/Plinko.tsx"),/hotBin/);
  const cashier=source("../src/components/Cashier.tsx");
  assert.doesNotMatch(cashier,/className="plastic"|withdrawToCard|depositFromCard/);
- assert.match(cashier,/\/api\/auth\/demo-card/);
- assert.match(cashier,/Card number/);
- assert.match(cashier,/Expiry date/);
- assert.match(cashier,/Security code/);
+ assert.doesNotMatch(cashier,/Card number|Expiry date|Security code|demo-card/);
+ assert.match(cashier,/credit\(missing\)/);
+ assert.match(cashier,/Claim/);
 });
