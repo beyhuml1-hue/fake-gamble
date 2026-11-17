@@ -8,6 +8,6 @@ Set a newly rotated NanoGPT key as the Cloudflare Worker secret NANOGPT_API_KEY,
 
 Deploy only to an independent test Worker and D1 database first. Run all migrations, including 0008_ai_owner_sandbox.sql. Tests mock the NanoGPT HTTP response; they do not verify the external provider.
 
-Not implemented or enabled in this stage: Discord bot, autonomous giveaways, scheduled reports, loyalty bonuses, and live balance adjustments. Existing game wallets are browser-local and are not authoritative server balances. The production Worker is intentionally unchanged until separate test deployment and verification.
+Not implemented or enabled in this stage: external chat bot, autonomous giveaways, scheduled reports, loyalty bonuses, and live balance adjustments. Existing game wallets are browser-local and are not authoritative server balances. The production Worker is intentionally unchanged until separate test deployment and verification.
 
 A key pasted into chat should be revoked and replaced before use.

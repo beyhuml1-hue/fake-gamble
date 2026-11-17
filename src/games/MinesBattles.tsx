@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { betCents, formatCoins, payout } from "../lib/money";
 import { shuffle } from "../lib/random";
 import { sound } from "../lib/sound";
+import { useWallet } from "../state/wallet";
 import "./mines-battles.css";
 
 const SIZE = 25;
@@ -49,12 +51,40 @@ function openTile(game: Battle, tile: number, by: Turn): Battle {
 }
 
 export function MinesBattles() {
+  const { balance, debit, credit, record } = useWallet();
+  const [amount, setAmount] = useState(1);
   const [mineCount, setMineCount] = useState(3);
   const [game, setGame] = useState<Battle | null>(null);
   const [round, setRound] = useState(0);
   const [log, setLog] = useState<string[]>([]);
+  const [error, setError] = useState("");
+  const stakeRef = useRef(0);
+  const settled = useRef(true);
+  const creditRef = useRef(credit);
+  const recordRef = useRef(record);
+  creditRef.current = credit;
+  recordRef.current = record;
+
+  const settle = (outcome: Battle["outcome"]) => {
+    if (settled.current || outcome === "playing") return;
+    settled.current = true;
+    const wager = stakeRef.current;
+    const mult = outcome === "won" ? 1.96 : outcome === "draw" ? 1 : 0;
+    const pay = mult ? creditRef.current(payout(wager, mult)) : 0;
+    recordRef.current("Mines Duel", wager, pay);
+    setLog(lines => [(outcome === "won" ? "Paid " + formatCoins(pay) + " coins." : outcome === "draw" ? "Stake returned." : "Stake lost."), ...lines].slice(0, 6));
+  };
 
   const start = () => {
+    if (game && game.outcome === "playing") return;
+    const wager = betCents(amount, balance);
+    if (wager == null || !debit(wager)) {
+      setError("Minimum bet is 0.10 coins, and it can't be more than your balance.");
+      return;
+    }
+    stakeRef.current = wager;
+    settled.current = false;
+    setError("");
     setGame(fresh(mineCount));
     setLog(["Battle started. You reveal the first tile."]);
     setRound(v => v + 1);
@@ -93,6 +123,17 @@ export function MinesBattles() {
     return () => window.clearTimeout(timer);
   }, [game, round]);
 
+  useEffect(() => {
+    if (game && game.outcome !== "playing") settle(game.outcome);
+  }, [game]);
+
+  useEffect(() => () => {
+    if (!settled.current) {
+      settled.current = true;
+      recordRef.current("Mines Duel", stakeRef.current, 0);
+    }
+  }, []);
+
   const finished = game !== null && game.outcome !== "playing";
   const label = !game ? "Ready to battle" :
     game.outcome === "won" ? "You won the battle!" :
@@ -103,24 +144,29 @@ export function MinesBattles() {
   return (
     <section className="mb-page">
       <div className="mb-heading">
-        <div><small>BLOCKBET ORIGINALS / VERSUS</small><h1>Mines Duel</h1><p>One shared minefield. Take turns opening tiles. Hit a mine and lose.</p></div>
+        <div><h1>Mines Duel</h1><p>One shared minefield. Take turns opening tiles. Hit a mine and lose the stake.</p></div>
         <span className="mb-mode">PRACTICE · VS COMPUTER</span>
       </div>
       <div className="mb-layout">
         <aside className="mb-controls">
           <div className="mb-controls-head"><h2>Battle setup</h2><span>1v1</span></div>
+          <label className="field"><span className="field-label">Amount</span>
+            <input inputMode="decimal" aria-label="Bet amount in coins" value={amount} disabled={Boolean(game && !finished)}
+              onChange={(event) => setAmount(Number(event.target.value))} />
+          </label>
           <label className="field"><span className="field-label">Mines <b>{mineCount}</b></span>
             <div className="select">{[1,3,5,10].map(value=><button key={value} type="button" className={mineCount===value?"on":""}
               disabled={Boolean(game&&!finished)} onClick={()=>setMineCount(value)}>{value}</button>)}</div>
           </label>
           <p className="mb-rule">Each player uses the same 25 tiles. Opened tiles stay open for both players. Turns alternate after every safe pick.</p>
+          {error && <p className="form-error" role="alert">{error}</p>}
           <button className="bet-btn mb-start" type="button" disabled={Boolean(game && !finished)} onClick={start}>
-            {!game ? "Create practice game" : "Play again"}
+            {!game ? "Play" : finished ? "Play again" : "In round"}
           </button>
           <div className="mb-log"><h3>Battle activity</h3>
             {log.length ? log.map((entry, i) => <p key={round + "-" + i}>{entry}</p>) : <p>Start a battle to see every move.</p>}
           </div>
-          <p className="mb-rule">Practice uses no Play USD. The computer picks randomly from unopened tiles and never sees hidden mines.</p>
+          <p className="mb-rule">A win pays 1.96×. A draw returns the stake. The computer picks randomly and never sees hidden mines. Coins have no cash value.</p>
         </aside>
         <main className="mb-arena">
           <div className="mb-scoreboard">

@@ -1,14 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { GAMES } from "../data/games";
-import { useAuth } from "./AuthProvider";
-import { formatAmount } from "../lib/money";
+import { formatCoins } from "../lib/money";
+import { DAILY_COINS_CENTS, REFERRAL_COINS_CENTS, dailyReady, markDaily, markReferral, referralReady } from "../lib/rewards";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
+import { Community } from "../pages/Community";
 import { BetsTable } from "./BetsTable";
 import { Cashier } from "./Cashier";
-import { Icon } from "./Icons";
-import { Community } from "../pages/Community";
+import { SiteFooter } from "./SiteFooter";
+import { CoinMark, Icon } from "./Icons";
+import { useAuth } from "./AuthProvider";
 
 export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>> };
 
@@ -42,23 +44,20 @@ function useRollingBalance(cents: number) {
   return { shown, dir };
 }
 
+const GRANTS = [100, 1_000, 10_000];
+
 export function AppShell() {
-  const [siteStyle, setSiteStyle] = useState<"classic" | "studio">(() => {
-    try { return localStorage.getItem("blockbet.site-style") === "studio" ? "studio" : "classic"; } catch { return "classic"; }
-  });
-  function updateSiteStyle(style: "classic" | "studio") {
-    setSiteStyle(style);
-    try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
-  }
   const { displayName, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
-  const [accountOpen, setAccountOpen] = useState(false);
-  const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
+  const { balance, cashierNonce, openCashier, notifications, dismissNotification, grant } = useWallet();
   const rolling = useRollingBalance(balance);
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const [walletOpen, setWalletOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(() => window.matchMedia("(min-width: 1080px)").matches);
+  const [menu, setMenu] = useState<"" | "games" | "rewards" | "lang" | "funds" | "account">("");
+  const [chatOpen, setChatOpen] = useState(() => window.matchMedia("(min-width: 980px)").matches);
   const [muted, setMuted] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
+  const [rewardNote, setRewardNote] = useState("");
+  const [dailyOn, setDailyOn] = useState(dailyReady);
+  const [referralOn, setReferralOn] = useState(referralReady);
   const location = useLocation();
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -66,157 +65,174 @@ export function AppShell() {
     if (!location.hash && contentRef.current) contentRef.current.scrollTop = 0;
   }, [location.pathname, location.hash]);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [location.pathname]);
+  useEffect(() => { setMenu(""); }, [location.pathname]);
+  useEffect(() => { if (cashierNonce > 0) { setWalletOpen(true); setMenu(""); } }, [cashierNonce]);
 
   useEffect(() => {
-    if (cashierNonce > 0) setWalletOpen(true);
-  }, [cashierNonce]);
+    const close = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest(".df-pop, .df-signin")) setMenu("");
+    };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
 
-  const showChat = chatOpen && location.pathname !== "/chat";
+  function claimDaily() {
+    if (!dailyReady()) { setRewardNote("Daily reward already claimed."); return; }
+    const got = grant(DAILY_COINS_CENTS);
+    if (!got) { setRewardNote("Balance is at the play-money cap."); return; }
+    markDaily();
+    setDailyOn(false);
+    setRewardNote("Claimed " + formatCoins(got) + " play coins.");
+  }
+
+  function claimReferral() {
+    if (!referralReady()) { setRewardNote("Referral reward already claimed."); return; }
+    const got = grant(REFERRAL_COINS_CENTS);
+    if (!got) { setRewardNote("Balance is at the play-money cap."); return; }
+    markReferral();
+    setReferralOn(false);
+    setRewardNote("Referral claimed: " + formatCoins(got) + " play coins.");
+  }
+
+  function addFunds(coins: number) {
+    const got = grant(coins * 100);
+    setRewardNote(got ? "Added " + formatCoins(got) + " play coins." : "Balance is at the play-money cap.");
+  }
 
   return (
-    <div className={"app arcade-shell" + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
-      <aside className={open ? "sidebar open" : "sidebar"}>
-        <NavLink to="/" className="brand" end>
-          <span className="brand-mark">B</span>
-          <span>
-            <strong>BlockBet</strong>
-            <small>Play USD</small>
-          </span>
-        </NavLink>
-
-        <p className="nav-label">Play</p>
-        <NavLink to="/" end className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}>
-          <Icon name="casino" />
-          Casino
-        </NavLink>
-        <NavLink to="/stats" className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}>
-          <Icon name="stats" />
-          Stats
-        </NavLink>
-        <NavLink to="/race" className={({isActive}) => isActive?"nav-item active":"nav-item"}>Race</NavLink>
-        <a className="nav-item" href="/#live-bets">
-          <span className="live-nav-dot" aria-hidden="true" />
-          Live Bets
-        </a>
-
-        <NavLink to="/chat" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-          <span className="live-nav-dot" aria-hidden="true" /> Chat
-        </NavLink>
-
-        <p className="nav-label">Originals</p>
-        <nav className="game-nav">
-          {GAMES.map((game) => (
-            <NavLink
-              key={game.id}
-              to={`/game/${game.id}`}
-              className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
-            >
-              <Icon name={game.id} />
-              {game.name}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="site-style-control"><label htmlFor="site-style-select">Appearance</label><select id="site-style-select" value={siteStyle} onChange={event => updateSiteStyle(event.target.value === "studio" ? "studio" : "classic")}><option value="classic">Classic BlockBet</option><option value="studio">Dark studio</option></select></div><p className="side-note">18+</p>
-      </aside>
-      {open ? <button className="scrim" type="button" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
-
-      <div className="main">
-        <header className="header">
-          <button className="menu-btn" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
+    <div className={"app df-shell" + (chatOpen ? " chat-open" : "")}>
+      <header className="df-nav">
+        <div className="df-nav-left">
+          <button className="df-icon-btn df-chat-toggle" type="button" aria-expanded={chatOpen} aria-label={chatOpen ? "Hide live chat" : "Show live chat"} onClick={() => setChatOpen((open) => !open)}>
             <span />
             <span />
             <span />
           </button>
-          <NavLink to="/" className="mobile-brand" end>BlockBet</NavLink>
-          <nav className="head-links">
-            <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : "")}>
-              Games
-            </NavLink>
-            <NavLink to="/stats" className={({ isActive }) => (isActive ? "on" : "")}>
-              Stats
-            </NavLink>
-            <NavLink to="/race">Race</NavLink>
-            <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
-          </nav>
-          <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
-            <span className="usd-mark">$</span>
-            <span className="bal">
-              <strong>{formatAmount(rolling.shown)}</strong>
-              <small>Simulated Play USD</small>
-            </span>
-            <button type="button" className="wallet-btn" aria-label="Open demo wallet" onClick={openCashier}>
-              Wallet
+          <NavLink to="/" className="df-logo" end>
+            <Icon name="dice" />
+            <span>DonutFlip</span>
+          </NavLink>
+          <div className="df-pop">
+            <button type="button" className={"df-menu-btn df-games" + (menu === "games" ? " on" : "")} aria-expanded={menu === "games"} onClick={() => setMenu((m) => m === "games" ? "" : "games")}>
+              Games <small>v</small>
             </button>
-          </div>
-          <button
-            type="button"
-            className="sound-btn"
-            aria-label={muted ? "Unmute" : "Mute"}
-            onClick={() => setMuted(sound.toggle())}
-          >
-            {muted ? (
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M4 10v4h3l4 3V7L7 10H4zM16 9l5 6M21 9l-5 6" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M4 10v4h3l4 3V7L7 10H4zM16 9a4 4 0 0 1 0 6M18.5 7a7 7 0 0 1 0 10" />
-              </svg>
-            )}
-          </button>
-          {isGuest && canSignIn && <button className="header-sign-in" type="button" onClick={showSignIn}>Sign in</button>}
-          <div className="account">
-            <button type="button" className="avatar account-trigger" aria-label="Account menu"
-              aria-expanded={accountOpen} onClick={() => setAccountOpen((v) => !v)}>
-              {displayName?.charAt(0) || "B"}
-            </button>
-            {accountOpen && (
-              <div className="account-menu">
-                <strong>{displayName || "Guest profile"}</strong>
-                <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · synced Play USD wallet"}</p>
-                {isAdmin && <NavLink to="/admin" onClick={() => setAccountOpen(false)}>Manage accounts</NavLink>}
-                {isGuest
-                  ? (canSignIn
-                      ? <button type="button" onClick={showSignIn}>Log in or sign up</button>
-                      : <p className="account-menu-note">Email sign-in is not configured yet.</p>)
-                  : <button type="button" onClick={() => { setAccountOpen(false); void logout(); }}>Sign out</button>}
+            {menu === "games" && (
+              <div className="df-dropdown df-game-menu" role="menu">
+                {GAMES.map((game) => (
+                  <NavLink key={game.id} to={"/game/" + game.id} role="menuitem" onClick={() => setMenu("")}>
+                    <Icon name={game.id} />
+                    {game.name}
+                  </NavLink>
+                ))}
               </div>
             )}
           </div>
-        </header>
+          <div className="df-pop">
+            <button type="button" className={"df-menu-btn df-rewards" + (menu === "rewards" ? " on" : "")} aria-expanded={menu === "rewards"} onClick={() => setMenu((m) => m === "rewards" ? "" : "rewards")}>
+              Rewards <small>v</small>
+            </button>
+            {menu === "rewards" && (
+              <div className="df-dropdown df-reward-menu" role="menu">
+                <button type="button" disabled={!dailyOn} onClick={claimDaily}>{dailyOn ? "Claim daily reward" : "Daily reward claimed"}</button>
+                <button type="button" disabled={!referralOn} onClick={claimReferral}>{referralOn ? "Claim referral" : "Referral claimed"}</button>
+                <NavLink to="/race" onClick={() => setMenu("")}>Daily leaderboard</NavLink>
+                <p>Play coins only. No cash value.</p>
+                {rewardNote && <p role="status">{rewardNote}</p>}
+              </div>
+            )}
+          </div>
+        </div>
 
-        <div className="content" ref={contentRef}>
-          <Outlet context={{ query, setQuery } satisfies ShellContext} />
-          {location.pathname !== "/chat" && <BetsTable />}
-          <footer className="site-foot">
-            <p>18+ · If gambling is a problem, visit ncpgambling.org or call 1-800-GAMBLER.</p>
-          </footer>
+        <div className="df-pop df-balance-wrap">
+          <div className={rolling.dir ? `df-balance ${rolling.dir}` : "df-balance"}>
+            <CoinMark />
+            <strong>{formatCoins(rolling.shown)}</strong>
+            <span>coins</span>
+            <button type="button" className="df-plus" aria-label="Add play coins" aria-expanded={menu === "funds"} onClick={() => setMenu((m) => m === "funds" ? "" : "funds")}>+</button>
+          </div>
+          {menu === "funds" && (
+            <div className="df-dropdown df-funds">
+              <strong>Add play coins</strong>
+              <p>Looks like a balance top-up. These coins cannot be withdrawn and have no cash value.</p>
+              <div>
+                {GRANTS.map((coins) => (
+                  <button key={coins} type="button" onClick={() => addFunds(coins)}>{formatCoins(coins * 100)}</button>
+                ))}
+              </div>
+              <button type="button" className="df-text" onClick={openCashier}>Use demo card</button>
+              {rewardNote && <p role="status">{rewardNote}</p>}
+            </div>
+          )}
+        </div>
+
+        <div className="df-nav-right">
+          <button type="button" className="df-icon-btn" aria-label={muted ? "Unmute" : "Mute"} onClick={() => setMuted(sound.toggle())}>
+            {muted ? "🔇" : "🔊"}
+          </button>
+          {isGuest ? (
+            <button className="df-signin" type="button" onClick={() => { if (canSignIn) showSignIn(); else setRewardNote("Local play-money profile is already active."); setMenu("funds"); }}>
+              Sign In
+            </button>
+          ) : (
+            <div className="df-pop">
+              <button type="button" className="df-signin" aria-expanded={menu === "account"} onClick={() => setMenu((m) => m === "account" ? "" : "account")}>
+                {displayName || "Account"}
+              </button>
+              {menu === "account" && (
+                <div className="df-dropdown df-account">
+                  <strong>{displayName || "Player"}</strong>
+                  <p>Verified profile · play coins</p>
+                  {isAdmin && <NavLink to="/admin" onClick={() => setMenu("")}>Manage accounts</NavLink>}
+                  <button type="button" onClick={() => { setMenu(""); void logout(); }}>Sign out</button>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="df-pop">
+            <button type="button" className="df-flag" aria-label="Language" aria-expanded={menu === "lang"} onClick={() => setMenu((m) => m === "lang" ? "" : "lang")}>
+              <svg viewBox="0 0 24 16" width="22" height="15" aria-hidden="true">
+                <rect width="24" height="16" rx="2" fill="#1d4ed8" />
+                <rect y="6" width="24" height="4" fill="#fff" />
+                <rect x="10" width="4" height="16" fill="#fff" />
+                <rect y="7" width="24" height="2" fill="#ef4444" />
+                <rect x="11" width="2" height="16" fill="#ef4444" />
+              </svg>
+            </button>
+            {menu === "lang" && (
+              <div className="df-dropdown df-lang" role="menu">
+                <button type="button" aria-pressed="true">English</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="df-body">
+        <aside className="df-chat" aria-label="Live chat">
+          <Community compact />
+        </aside>
+        <div className="main">
+          <div className="content" ref={contentRef}>
+            <Outlet context={{ query, setQuery } satisfies ShellContext} />
+            {location.pathname !== "/chat" && <BetsTable />}
+            <SiteFooter />
+          </div>
         </div>
       </div>
 
-      {location.pathname !== "/chat" && <button type="button" className={"chat-drawer-toggle"+(chatOpen?" active":"")} aria-expanded={chatOpen}
-        aria-label={chatOpen?"Close live chat":"Open live chat"} onClick={()=>setChatOpen(v=>!v)}>
-        {chatOpen?"✕":"💬"} <span>{chatOpen?"Close chat":"Live Chat"}</span>
-      </button>}
-      {showChat&&<aside className="chat-drawer" aria-label="Live BlockBet chat">
-        <header className="chat-drawer-head"><div><strong>Live Chat</strong><small>BlockBet community</small></div>
-          <button type="button" aria-label="Close chat" onClick={()=>setChatOpen(false)}>✕</button>
-        </header>
-        <Community compact/>
-      </aside>}
-      {notifications.length>0&&<section className={"transfer-notifications"+(chatOpen?" drawer-open":"")} role="region" aria-label="Transfer notifications">
-        {notifications.map(item=><div key={item.id} className="transfer-notification" role="status">
-          <span className="transfer-notification-icon">✦</span>
-          <div><b>Play USD received!</b><p>{item.sender} sent you <strong>{formatAmount(item.cents)} Play USD</strong>.</p></div>
-          <button type="button" aria-label="Dismiss transfer notification" onClick={()=>dismissNotification(item.id)}>✕</button>
-        </div>)}
-      </section>}
+      {notifications.length > 0 && (
+        <section className="transfer-notifications" role="region" aria-label="Transfer notifications">
+          {notifications.map((item) => (
+            <div key={item.id} className="transfer-notification" role="status">
+              <span className="transfer-notification-icon">✦</span>
+              <div><b>Play coins received</b><p>{item.sender} sent you <strong>{formatCoins(item.cents)} coins</strong>.</p></div>
+              <button type="button" aria-label="Dismiss transfer notification" onClick={() => dismissNotification(item.id)}>✕</button>
+            </div>
+          ))}
+        </section>
+      )}
       <Cashier open={walletOpen} onClose={() => setWalletOpen(false)} />
     </div>
   );
 }
-

@@ -1,9 +1,8 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { gameById } from "../data/games";
-import { formatMult, formatUSD } from "../lib/money";
+import { formatCoins, formatMult } from "../lib/money";
 import { useWallet } from "../state/wallet";
-import { Icon } from "./Icons";
 
 const rooms = new Set(["flip", "mines-battles", "uno", "connect-four", "poker", "pool", "chess", "case-battles"]);
 const historicalNames: Record<string,string> = {dragon:"Dragon Tower", diamonds:"Diamonds"};
@@ -22,7 +21,7 @@ export function GameLayout({ title, note, panel, children }: {
 
   useEffect(() => {
     const previous = document.title;
-    document.title = title + " · BlockBet";
+    document.title = title + " · DonutFlip";
     return () => { document.title = previous; };
   }, [title]);
 
@@ -30,7 +29,6 @@ export function GameLayout({ title, note, panel, children }: {
     <section className={"game-page play-surface" + (room ? " play-room" : "")} data-play={id}>
       <header className="play-top">
         <div className="play-title">
-          <Icon name={id} />
           <h1>{title}</h1>
           {room && <small>{id === "pool" ? "Solo practice" : "VS Computer"}</small>}
         </div>
@@ -49,11 +47,11 @@ export function GameLayout({ title, note, panel, children }: {
         <h2>Recent games</h2>
         <div>{recent.map(row => <article key={row.id}>
           <small>{new Date(row.at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</small>
-          <strong>{formatUSD(row.payout)}</strong>
+          <strong>{formatCoins(row.payout)}</strong>
           <span>{formatMult(row.payout / row.wager)}</span>
         </article>)}</div>
       </section>}
-      <div className="play-footer"><Link to="/">‹ Games</Link><span>{note}</span><small>Simulated Play USD</small></div>
+      <div className="play-footer"><Link to="/">‹ Games</Link><span>{note}</span><small>Play coins · no cash value</small></div>
     </section>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { CASES, caseImage } from "../data/cases";
-import { betCents, formatUSD, payout } from "../lib/money";
+import { betCents, formatCoins, payout } from "../lib/money";
 import { randInt, random, shuffle } from "../lib/random";
 import { useWallet } from "../state/wallet";
 
@@ -90,7 +90,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     pending.current = null;
     const paid = wallet.credit(payout(wager,multiplier));
     wallet.record(game.name,wager,paid);
-    setMessage(result + (paid ? " · " + formatUSD(paid) + " Play USD returned" : " · Round lost"));
+    setMessage(result + (paid ? " · " + formatCoins(paid) + " coins returned" : " · Round lost"));
     setStake(0);
   }
 
@@ -118,7 +118,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     }
     const wager = betCents(isCase ? CASES[selected]!.price : amount,wallet.balance);
     if (wager == null || !wallet.debit(wager)) {
-      setError("Enter a stake of at least $0.10 within your Play USD balance.");
+      setError("Enter a stake of at least 0.10 coins within your balance.");
       return;
     }
     setError("");
@@ -213,7 +213,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     isPoker ? "Deal" : isCase ? "Create battle" : isDerby ? "Race" : isStocks ? "Place order" : "Play";
   const quote = isSlide ? Math.max(0,target-1) : isDouble ? doublePayouts[choice]!-1 : 0;
   const profit = stake && (board || isRps) ? Math.max(0,payout(stake,total)-stake) : payout(Math.round(amount*100),quote);
-  return <GameLayout title={game.name} note={isCase ? "VS Computer" : "Play USD"} panel={
+  return <GameLayout title={game.name} note={isCase ? "VS Computer" : "Play coins"} panel={
     <BetPanel amount={isCase?CASES[choice]!.price:amount} onAmount={setAmount} locked={Boolean(stake)||isCase}
       profitCents={profit} error={error} showProfit={!isCase&&!isPoker&&!isDouble&&!isStocks&&!isDerby}
       label={label} onAction={()=>play()} cashout={Boolean(stake)}
@@ -266,7 +266,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
         <div className="rps-multipliers">{[1,1.3,1.7,2.5,4,6.5,10,20,50,150].map(value=><span key={value}>{value}×</span>)}</div>
         <div className="draw-cards">{(draw.length?draw:Array<number>(9).fill(0)).map((value,i)=><button key={i}
           type="button" disabled={!stake||!value} onClick={()=>claim(i)} data-live={!!value}>
-          <b>{value?"◆":"♧"}</b><span>{value ? (value/9).toFixed(2) + "×" : "BlockBet"}</span>
+          <b>{value?"◆":"♧"}</b><span>{value ? (value/9).toFixed(2) + "×" : "Open"}</span>
         </button>)}</div>
       </div>}
       {isCase && <div className="battle-openings">
@@ -290,7 +290,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
         </div>)}
       </div>}
       {isStocks && <div className="market-stage">
-        <div className="market-header"><b>BlockBet Index</b><span>{race.length?"Round closed":"Awaiting order"}</span></div>
+        <div className="market-header"><b>Arcade Index</b><span>{race.length?"Round closed":"Awaiting order"}</span></div>
         <svg viewBox="0 0 600 250" role="img" aria-label="Price movement">
           {[25,75,125,175,225].map(y=><line key={y} x1="0" x2="600" y1={y} y2={y} stroke="#3b454b" strokeWidth="1"/>)}
           <polyline points={[50,...(race.length?race:Array<number>(12).fill(50))].map((value,i)=>i*50+","+(250-Math.min(97,Math.max(3,value))*2.5)).join(" ")}

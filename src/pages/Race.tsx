@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { formatUSD } from "../lib/money";
+import { formatCoins } from "../lib/money";
 
 type Leader = {label: string; profitCents: number; bets: number};
 type RaceFeed = {leaders: Leader[]; resetAt: number};
@@ -30,7 +30,7 @@ export function Race(){
   return <section className="arcade-race">
     <header className="arcade-hero-card">
       <div><p className="arcade-kicker">Daily leaderboard</p><h1>Race</h1>
-        <p>Ranked by net Play USD profit from today's reported games.</p></div>
+        <p>Ranked by net play-coin profit from today's reported games. Coins have no cash value.</p></div>
       <div><small>RESETS AT 00:00 UTC</small><strong className="race-clock">{feed?clock:"--:--:--"}</strong></div>
     </header>
     <div className="race-results">
@@ -38,7 +38,7 @@ export function Race(){
       {offline&&<p role="status">Race feed is temporarily unavailable.</p>}
       {!offline&&!feed&&<p role="status">Loading standings…</p>}
       {feed&&!leaders.length&&<p>{secs?"No positive results reported today.":"Today's standings are resetting."}</p>}
-      <ol>{leaders.map((row,index)=><li key={row.label+index}><span>{row.label}<small>{row.bets} plays</small></span><strong>{formatUSD(row.profitCents)}</strong></li>)}</ol>
+      <ol>{leaders.map((row,index)=><li key={row.label+index}><span>{row.label}<small>{row.bets} plays</small></span><strong>{formatCoins(row.profitCents)}</strong></li>)}</ol>
     </div>
   </section>;
 }

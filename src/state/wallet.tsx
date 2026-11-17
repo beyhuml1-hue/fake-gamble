@@ -52,6 +52,7 @@ type WalletValue = {
   credit: (cents: number) => number;
   record: (game: string, wager: number, payout: number) => void;
   openCashier: () => void;
+  grant: (cents: number) => number;
   depositFromCard: (cents: number) => string | null;
   withdrawToCard: (cents: number) => string | null;
 };
@@ -338,6 +339,15 @@ export function WalletProvider({ email, children, adjustment }: {
       }
     },
     openCashier: () => setCashierNonce((n) => n + 1),
+    grant: (cents) => {
+      if (!Number.isSafeInteger(cents) || cents <= 0) return 0;
+      const credited = Math.min(cents, MAX_BALANCE - balanceRef.current);
+      if (credited <= 0) return 0;
+      assign(balanceRef.current + credited);
+      queueDelta(credited);
+      sound.cash();
+      return credited;
+    },
     depositFromCard: (cents) => {
       if (cents < 100) return "Minimum deposit is $1.00.";
       if (cardRef.current < cents) return "Declined. Insufficient funds.";

@@ -30,12 +30,12 @@ export function AgeGate({ children }: { children: ReactNode }) {
         {state === "no" ? (
           <>
             <h1>Adults only</h1>
-            <p>Blockbet is for people 18 and older.</p>
+            <p>DonutFlip is for people 18 and older.</p>
           </>
         ) : (
           <>
             <h1>Are you 18 or older?</h1>
-            <p>Blockbet is an adults-only casino. You need to be 18 or older to enter.</p>
+            <p>DonutFlip is an adults-only play-money arcade. Coins have no cash value. You need to be 18 or older to enter.</p>
             <div className="age-actions">
               <button className="bet-btn" type="button" onClick={enter}>
                 I’m 18 or older — enter

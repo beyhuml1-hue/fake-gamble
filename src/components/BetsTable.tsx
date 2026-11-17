@@ -72,7 +72,7 @@ export function BetsTable() {
       <div className="bets-head live-bets-heading">
         <div>
           <h2>Live Bets <span className={status === "online" ? "live-feed-dot online" : "live-feed-dot"} aria-label={status}/></h2>
-          <p>Bets use Play USD. Community results come from players’ devices.</p>
+          <p>Bets use play coins with no cash value. Community results come from players’ devices.</p>
         </div>
         <div className="live-bets-tabs" role="group" aria-label="Bet history view">
           <button type="button" className={tab==="live" ? "selected" : ""} onClick={()=>setTab("live")} aria-pressed={tab==="live"}>Community Bets</button>

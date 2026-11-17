@@ -22,7 +22,7 @@ function Recap({row}:{row:Highlight}){
  const win=row.payout>row.wager;
  return <div className={win?"highlight-recap won":"highlight-recap"}>
    <Glow win={win}/>
-   <small>BLOCKBET · SHAREABLE DEMO HIGHLIGHT</small>
+   <small>DONUTFLIP · SHAREABLE DEMO HIGHLIGHT</small>
    <span className="highlight-game">{row.game}</span>
    <strong>{multi}×</strong>
    <span className={win?"highlight-win":"highlight-loss"}>{win?"✦ BIG WIN":"RESULT RECAP"}</span>
@@ -58,7 +58,7 @@ export function HighlightPage(){
  const [counter,setCounter]=useState(0);
  const isValid=safe(raw);
  const [copied,setCopied]=useState(false);
- if(!isValid)return <main className="highlight-page"><h1>Result highlight unavailable</h1><p>This link is invalid.</p><Link to="/">Return to BlockBet</Link></main>;
+ if(!isValid)return <main className="highlight-page"><h1>Result highlight unavailable</h1><p>This link is invalid.</p><Link to="/">Return to DonutFlip</Link></main>;
  return <main className="highlight-page">
   <div key={counter} className="highlight-frame"><Recap row={raw}/></div>
   <div className="highlight-buttons">
