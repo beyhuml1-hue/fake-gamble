@@ -3,6 +3,7 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { randInt } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const cards = Array.from({length:52}, (_, index)=>({
@@ -31,7 +32,7 @@ export function Blitz() {
     const drawn=new Set<number>();
     let duplicate:number|null=null;
     while(drawn.size<target){
-      const next=randInt(52);
+      const next=luckOn()?drawn.size:randInt(52);
       if(drawn.has(next)){duplicate=next;break;}
       drawn.add(next);
     }
@@ -100,7 +101,7 @@ export function Snakes(){
   }
   function roll(){
     if(!stake)return;
-    const pair:[number,number]=[randInt(6)+1,randInt(6)+1];
+    const pair:[number,number]=luckOn()?[1,1]:[randInt(6)+1,randInt(6)+1];
     const sum=pair[0]+pair[1];
     const next=mult*snakePayouts[sum-2]!;
     setRolled(pair);
