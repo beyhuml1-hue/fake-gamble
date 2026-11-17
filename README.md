@@ -1,6 +1,6 @@
-# Fake Gamble
+# DonutFlip
 
-Play-money casino originals. The balance is **Play USD**, pegged 1:1 to the US dollar. There is no deposit, no withdrawal, and no slots.
+Play-money arcade. The balance is **coins** with no cash value. There is no real deposit, no withdrawal, and no real-money gambling.
 
 ## Play
 

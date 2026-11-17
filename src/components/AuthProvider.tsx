@@ -14,6 +14,7 @@ type AuthValue = {
   canSignIn: boolean;
   logout: () => Promise<void>;
   showSignIn: () => void;
+  showSignUp: () => void;
 };
 const AuthContext = createContext<AuthValue | null>(null);
 
@@ -179,6 +180,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   };
 
   const showSignIn = () => switchTo("login");
+  const showSignUp = () => switchTo("signup");
   const signedIn = phase === "authenticated";
   const editing = phase === "login" || phase === "signup" || phase === "verify";
   const context: AuthValue = {
@@ -189,10 +191,11 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
     canSignIn: enabled,
     logout,
     showSignIn,
+    showSignUp,
   };
   if (phase === "loading") {
     return <div className="auth-screen"><div className="auth-card">
-      <div className="auth-logo">B</div><h1>BlockBet</h1><p>Checking your session…</p>
+      <div className="auth-logo">D</div><h1>DonutFlip</h1><p>Checking your session…</p>
     </div></div>;
   }
 
@@ -202,8 +205,8 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
     {editing && <div className="auth-screen auth-overlay" onKeyDown={event=>{if(event.key==="Escape"&&!busy)setPhase("guest");}}>
       <section className="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-dialog-title">
         <div className="auth-heading">
-          <span className="auth-logo">B</span>
-          <div><strong>BlockBet</strong><small>Player account</small></div>
+          <span className="auth-logo">D</span>
+          <div><strong>DonutFlip</strong><small>Play-money profile</small></div>
           <button type="button" className="auth-close" disabled={busy} aria-label="Close sign-in" onClick={()=>setPhase("guest")}>&times;</button>
         </div>
         {phase === "verify" ? (
@@ -258,7 +261,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
         <button className="auth-guest-link" type="button" onClick={() => setPhase("guest")}>
           Continue as guest <span aria-hidden="true">→</span>
         </button>
-        <p className="auth-fineprint">18+ · Play USD is simulated.</p>
+        <p className="auth-fineprint">18+ · Play coins are simulated and have no cash value.</p>
       </section>
     </div>}
     </AuthContext.Provider>

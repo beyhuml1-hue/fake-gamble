@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { Chess, type Square } from "chess.js";
+import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
+import { betCents, formatCoins, payout } from "../lib/money";
 import { randInt, shuffle } from "../lib/random";
+import { useWallet } from "../state/wallet";
 import { Pool } from "./Pool";
+
+type RoundProps = { onResult?: (outcome: "win" | "loss" | "draw") => void; onAbandon?: () => void };
 
 const discs = Array<number>(42).fill(0);
 function drop(board: number[], column: number, player: number) {
@@ -24,7 +29,7 @@ function connect(board: number[], player: number) {
       }));
   });
 }
-function ConnectFour(){
+function ConnectFour({ onResult, onAbandon }: RoundProps){
   const [board,setBoard]=useState(discs);
   const [result,setResult]=useState("");
   function move(col:number){
@@ -39,17 +44,21 @@ function ConnectFour(){
     if(connect(reply,2))setResult("Rival connected four.");
     else if(reply.every(Boolean))setResult("Draw.");
   }
+  useEffect(() => {
+    if (!result) return;
+    onResult?.(result.startsWith("You") ? "win" : result.startsWith("Draw") ? "draw" : "loss");
+  }, [result, onResult]);
   return <>
     <div className="connect-choices">{Array.from({length:7},(_,i)=><button type="button" className="ghost-btn" key={i} disabled={Boolean(result)||Boolean(board[i])} aria-label={"Drop in column "+(i+1)} onClick={()=>move(i)}>↓</button>)}</div>
     <div className="connect-board" aria-label="Connect Four board">{board.map((disc,i)=><span aria-label={disc===1?"Your disc":disc===2?"Rival disc":"Empty"} data-disc={disc} key={i}/>)}</div>
     <p role="status">{result||"Your turn · gold discs"}</p>
-    <button type="button" className="ghost-btn" onClick={()=>{setBoard(discs);setResult("");}}>New game</button>
+    <button type="button" className="ghost-btn" onClick={()=>{ if (board.some(Boolean) && !result) onAbandon?.(); setBoard(discs); setResult(""); }}>New game</button>
   </>;
 }
 
 const glyph:Record<string,string>={wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"};
 const value:Record<string,number>={p:1,n:3,b:3,r:5,q:9,k:0};
-function ChessBoard(){
+function ChessBoard({ onResult, onAbandon }: RoundProps){
   const [movesPlayed,setMovesPlayed]=useState<string[]>([]);
   const [from,setFrom]=useState<Square|null>(null);
   const [promotion,setPromotion]=useState<"q"|"r"|"b"|"n">("q");
@@ -68,6 +77,12 @@ function ChessBoard(){
     },400);
     return ()=>window.clearTimeout(timer);
   },[movesPlayed]);
+  useEffect(() => {
+    const current = new Chess();
+    movesPlayed.forEach(move => current.move(move));
+    if (!current.isGameOver()) return;
+    onResult?.(current.isCheckmate() ? (current.turn() === "w" ? "loss" : "win") : "draw");
+  }, [movesPlayed, onResult]);
   function move(square:Square){
     if(ended||board.turn()!=="w")return;
     const legal=possible.find(option=>option.to===square && (!option.promotion||option.promotion===promotion));
@@ -86,7 +101,7 @@ function ChessBoard(){
     <label>Promote to <select value={promotion} onChange={event=>setPromotion(event.target.value as typeof promotion)}>
       <option value="q">Queen</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option>
     </select></label>
-    <button type="button" className="ghost-btn" onClick={()=>{setMovesPlayed([]);setFrom(null);}}>New game</button>
+    <button type="button" className="ghost-btn" onClick={()=>{ if (movesPlayed.length && !ended) onAbandon?.(); setMovesPlayed([]); setFrom(null); }}>New game</button>
   </>;
 }
 const colors=["Red","Green","Blue","Gold"];
@@ -99,7 +114,7 @@ function unoStart(){
   return {deck:deck.slice(15),you:deck.slice(0,7),bot:deck.slice(7,14),pile:[deck[14]!],result:"",turns:0};
 }
 function usable(card:Card,top:Card){return card.color===top.color||card.rank===top.rank;}
-function Uno(){
+function Uno({ onResult, onAbandon }: RoundProps){
   const [state,setState]=useState(unoStart);
   function turn(card?:Card){
     if(state.result)return;
@@ -119,6 +134,10 @@ function Uno(){
     else if(next.turns>200)next.result="Draw.";
     setState(next);
   }
+  useEffect(() => {
+    if (!state.result) return;
+    onResult?.(state.result.startsWith("You") ? "win" : state.result.startsWith("Draw") ? "draw" : "loss");
+  }, [state.result, onResult]);
   const top=state.pile.at(-1)!;
   return <>
     <div className="uno-card uno-top" data-color={top.color} aria-label={colors[top.color]+" "+top.rank}>{top.rank}</div>
@@ -126,23 +145,69 @@ function Uno(){
     <div className="arcade-moves">{state.you.map(card=><button type="button" className="uno-card" data-color={card.color} key={card.id}
       aria-label={colors[card.color]+" "+card.rank} disabled={Boolean(state.result)||!usable(card,top)} onClick={()=>turn(card)}>{card.rank}</button>)}</div>
     <div className="arcade-moves"><button type="button" className="ghost-btn" disabled={Boolean(state.result)} onClick={()=>turn()}>Draw and pass</button>
-      <button type="button" className="ghost-btn" onClick={()=>setState(unoStart())}>New game</button></div>
+      <button type="button" className="ghost-btn" onClick={()=>{ if (state.turns && !state.result) onAbandon?.(); setState(unoStart()); }}>New game</button></div>
   </>;
 }
-const boards={chess:["Chess","Classic chess against a computer rival.",ChessBoard],
-  "connect-four":["Connect Four","Pick a column and connect four discs first.",ConnectFour],
-  uno:["Uno","Number-card rules. Match color or number and empty your hand.",Uno],
-  pool:["8-Ball Pool","Solo practice. Clear the rack and pocket the eight ball last.",Pool]} as const;
+const boards: Record<"chess" | "connect-four" | "uno" | "pool", [string, string, ComponentType<RoundProps>]> = {
+  chess: ["Chess", "Classic chess against a computer rival.", ChessBoard],
+  "connect-four": ["Connect Four", "Pick a column and connect four discs first.", ConnectFour],
+  uno: ["Uno", "Number-card rules. Match color or number and empty your hand.", Uno],
+  pool: ["8-Ball Pool", "Clear the rack and pocket the eight ball last.", Pool],
+};
 
-export function BoardArcade({game}:{game:keyof typeof boards}){
-  const [name,description,Board]=boards[game];
-  const [opened,setOpened] = useState(false);
-  return <GameLayout title={name} note="Practice" panel={<div className="room-setup">
-    <p>{description}</p><button className="bet-btn" type="button" onClick={()=>setOpened(!opened)}>
-      {opened?"Leave practice game":"Create practice game"}
-    </button>
-  </div>}>
-    {opened ? <div className="arcade-board-stage"><Board/></div> :
-      <div className="room-empty"><h2>Open games</h2><p>Create a practice game to get started.</p></div>}
+export function BoardArcade({ game }: { game: keyof typeof boards }) {
+  const { balance, debit, credit, record } = useWallet();
+  const [name, description, Board] = boards[game];
+  const [amount, setAmount] = useState(1);
+  const [phase, setPhase] = useState<"idle" | "live" | "done">("idle");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
+  const [round, setRound] = useState(0);
+  const stakeRef = useRef(0);
+  const settled = useRef(true);
+  const recordRef = useRef(record);
+  const creditRef = useRef(credit);
+  recordRef.current = record;
+  creditRef.current = credit;
+
+  useEffect(() => () => {
+    if (!settled.current) {
+      settled.current = true;
+      recordRef.current(name, stakeRef.current, 0);
+    }
+  }, [name]);
+
+  function finish(outcome: "win" | "loss" | "draw") {
+    if (settled.current) return;
+    settled.current = true;
+    const wager = stakeRef.current;
+    const mult = outcome === "win" ? 1.96 : outcome === "draw" ? 1 : 0;
+    const pay = mult ? creditRef.current(payout(wager, mult)) : 0;
+    recordRef.current(name, wager, pay);
+    setPhase("done");
+    setNote(outcome === "win" ? "Won " + formatCoins(pay) + " coins." : outcome === "draw" ? "Stake returned." : "Round lost.");
+  }
+
+  function begin() {
+    if (phase === "live") return;
+    const wager = betCents(amount, balance);
+    if (wager == null || !debit(wager)) {
+      setError("Minimum bet is 0.10 coins, and it can't be more than your balance.");
+      return;
+    }
+    stakeRef.current = wager;
+    settled.current = false;
+    setError("");
+    setNote("");
+    setPhase("live");
+    setRound((value) => value + 1);
+  }
+
+  return <GameLayout title={name} note="Play coins · 1.96× on a win" panel={
+    <BetPanel amount={amount} onAmount={setAmount} locked={phase === "live"} profitCents={Math.round(amount * 96)}
+      label={phase === "live" ? "In round" : "Play"} onAction={begin} disabled={phase === "live"} error={error} />
+  }>
+    {phase === "live" ? <div className="arcade-board-stage"><Board key={round} onResult={finish} onAbandon={() => finish("loss")} /></div> :
+      <div className="room-empty"><h2>{note || "Place a bet"}</h2><p>{description} A win pays 1.96×. A draw returns the stake. Coins have no cash value.</p></div>}
   </GameLayout>;
 }

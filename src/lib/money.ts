@@ -23,6 +23,21 @@ export function formatAmount(cents: number): string {
   });
 }
 
+/** Play-money coins. Large balances use K / M / B suffixes. */
+export function formatCoins(cents: number): string {
+  const sign = cents < 0 ? "-" : "";
+  const abs = Math.abs(Math.round(cents)) / 100;
+  const compact = (divisor: number, suffix: string) => {
+    const value = abs / divisor;
+    const text = value >= 100 ? value.toFixed(0) : value >= 10 ? value.toFixed(1) : value.toFixed(2);
+    return sign + text.replace(/\.0+$/, "").replace(/(\.\d)0$/, "$1") + suffix;
+  };
+  if (abs >= 1_000_000_000) return compact(1_000_000_000, "B");
+  if (abs >= 1_000_000) return compact(1_000_000, "M");
+  if (abs >= 10_000) return compact(1_000, "K");
+  return sign + abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function formatMult(mult: number): string {
   if (!Number.isFinite(mult) || mult <= 0) return "0.00×";
   if (mult >= 1000) return `${Math.round(mult).toLocaleString("en-US")}×`;

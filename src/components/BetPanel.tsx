@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { formatUSD, MIN_BET } from "../lib/money";
+import { CoinMark } from "./Icons";
+import { formatCoins, MIN_BET } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
 type Props = {
@@ -66,12 +67,12 @@ export function BetPanel({
       <label className="field">
         <span className="field-label">{amountLabel}</span>
         <span className="amount">
-          <span className="amount-prefix">$</span>
+          <CoinMark size={14} />
           <input
             inputMode="decimal"
             value={text}
             disabled={locked}
-            aria-label="Bet amount in Play USD"
+            aria-label="Bet amount in coins"
             onFocus={() => setFocused(true)}
             onBlur={() => {
               setFocused(false);
@@ -102,8 +103,8 @@ export function BetPanel({
       {showProfit && <div className="field">
         <span className="field-label">Profit on Win</span>
         <div className="profit-box">
-          <span>$</span>
-          <strong>{formatUSD(profitCents).replace("$", "")}</strong>
+          <CoinMark size={14} />
+          <strong>{formatCoins(profitCents)}</strong>
         </div>
       </div>}
 
@@ -111,7 +112,7 @@ export function BetPanel({
 
       {broke ? (
         <button className="bet-btn" type="button" onClick={openCashier}>
-          Open demo wallet
+          Add play coins
         </button>
       ) : (
         <button className={cashout ? "bet-btn cashout" : "bet-btn"} type="submit" disabled={disabled}>

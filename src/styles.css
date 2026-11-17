@@ -1,18 +1,20 @@
 :root {
   color-scheme: dark;
-  --bg: #101c28;
-  --bg-2: #152432;
-  --panel: #203544;
-  --line: #324958;
+  --bg: #151718;
+  --bg-2: #151718;
+  --panel: #161819;
+  --line: #2c3034;
   --text: #ffffff;
-  --muted: #b1bad3;
-  --green: #68e48a;
-  --green-ink: #04140a;
-  --red: #e9113c;
-  --gold: #ffbf39;
-  --blue: #1475e1;
+  --muted: #848b8d;
+  --green: #16a34a;
+  --green-2: #22c55e;
+  --green-ink: #ffffff;
+  --red: #ef4444;
+  --gold: #f5c542;
+  --gray: #3a3e44;
+  --blue: #16a34a;
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
-  font-family: Inter, "Segoe UI", sans-serif;
+  font-family: "Bai Jamjuree", system-ui, Arial, sans-serif;
   font-synthesis: none;
 }
 
@@ -366,7 +368,7 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .bet-btn:hover:not(:disabled) { filter: brightness(1.08); }
 .bet-btn:active:not(:disabled) { transform: translateY(1px) scale(0.985); }
 .bet-btn:disabled { opacity: 0.45; }
-.bet-btn.cashout { background: #ffbf39; }
+.bet-btn.cashout { background: #f5c542; color: #1a1403; }
 .ghost-btn { background: var(--bg); color: white; }
 .form-error { margin: 0; color: #ff8b98; font-size: 13px; }
 .hint { margin: 0; font-size: 12px; line-height: 1.4; }

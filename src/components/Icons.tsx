@@ -9,6 +9,16 @@ const common = {
   strokeLinejoin: "round" as const,
 };
 
+export function CoinMark({ size = 16 }: { size?: number }) {
+  return (
+    <svg className="coin-mark" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="#f5c542" />
+      <circle cx="12" cy="12" r="6.2" fill="none" stroke="#8a6a12" strokeWidth="1.4" />
+      <path d="M12 7.6v8.8M9.6 9.4c.8-.9 4-.9 4.8 0M9.6 14.6c.8.9 4 .9 4.8 0" fill="none" stroke="#8a6a12" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function Icon({ name }: { name: string }) {
   const paths: Record<string, ReactNode> = {
     dice: (
@@ -149,6 +159,110 @@ export function Icon({ name }: { name: string }) {
         <path d="M8 15v-4" />
         <path d="M12 15V8" />
         <path d="M16 15v-6" />
+      </>
+    ),
+    packs: (
+      <>
+        <rect x="4" y="7" width="16" height="12" rx="2" />
+        <path d="M4 11h16M12 7v12" />
+      </>
+    ),
+    "case-battles": (
+      <>
+        <rect x="3" y="8" width="8" height="9" rx="1.4" />
+        <rect x="13" y="8" width="8" height="9" rx="1.4" />
+        <path d="M11 12h2" />
+      </>
+    ),
+    coinflip: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M9 12h6" />
+      </>
+    ),
+    uno: (
+      <>
+        <rect x="5" y="4" width="10" height="14" rx="1.5" />
+        <path d="M9 11h2" />
+      </>
+    ),
+    "connect-four": (
+      <>
+        <circle cx="8" cy="9" r="2" />
+        <circle cx="16" cy="9" r="2" />
+        <circle cx="8" cy="15" r="2" />
+        <circle cx="16" cy="15" r="2" />
+      </>
+    ),
+    poker: (
+      <>
+        <rect x="7" y="3" width="10" height="14" rx="1.4" />
+        <path d="M12 8v4" />
+      </>
+    ),
+    pool: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="2" fill="currentColor" />
+      </>
+    ),
+    chess: (
+      <>
+        <path d="M8 19h8M9 19l1-6h4l1 6" />
+        <circle cx="12" cy="8" r="2.2" />
+      </>
+    ),
+    "floor-is-lava": (
+      <>
+        <path d="M4 16c2-3 4-3 6 0s4 3 6 0 4-3 4 0" />
+        <path d="M8 10h8" />
+      </>
+    ),
+    draw: (
+      <>
+        <rect x="6" y="4" width="12" height="16" rx="1.5" />
+        <path d="M9 9h6M9 13h4" />
+      </>
+    ),
+    rps: (
+      <>
+        <circle cx="8" cy="12" r="3" />
+        <path d="M13 9h5l-2 3h2l-5 6" />
+      </>
+    ),
+    double: (
+      <>
+        <circle cx="8" cy="12" r="4" />
+        <circle cx="16" cy="12" r="4" />
+      </>
+    ),
+    "pig-race": (
+      <>
+        <path d="M4 16h16" />
+        <path d="M6 16l2-6h3l2 6M14 16l2-8h2" />
+      </>
+    ),
+    stocks: (
+      <>
+        <path d="M4 16l4-5 3 3 6-7" />
+        <path d="M14 7h4v4" />
+      </>
+    ),
+    slide: (
+      <>
+        <path d="M4 16h16" />
+        <circle cx="15" cy="16" r="2" fill="currentColor" />
+      </>
+    ),
+    blitz: (
+      <>
+        <path d="M13 3L6 13h5l-1 8 8-12h-5l0-6z" />
+      </>
+    ),
+    snakes: (
+      <>
+        <path d="M7 16c0-6 10-2 10-8" />
+        <circle cx="17" cy="7" r="1.2" fill="currentColor" />
       </>
     ),
   };

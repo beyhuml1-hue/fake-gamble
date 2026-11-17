@@ -44,7 +44,7 @@ function tick(balls:Ball[]) {
   }
 }
 
-export function Pool(){
+export function Pool({ onResult, onAbandon }: { onResult?: (outcome: "win" | "loss" | "draw") => void; onAbandon?: () => void } = {}){
   const balls=useRef(rack());
   const animation=useRef(0);
   const [display,setDisplay]=useState(()=>rack());
@@ -54,6 +54,10 @@ export function Pool(){
   const [result,setResult]=useState("");
   const [shots,setShots]=useState(0);
   useEffect(()=>()=>cancelAnimationFrame(animation.current),[]);
+  useEffect(() => {
+    if (!result) return;
+    onResult?.(result.startsWith("Rack cleared") ? "win" : "loss");
+  }, [result, onResult]);
   function publish(){setDisplay(balls.current.map(ball=>({...ball})));}
   function reset(){
     cancelAnimationFrame(animation.current);
@@ -119,7 +123,7 @@ export function Pool(){
     <div className="arcade-moves">
       <label>Power <input type="range" min={15} max={100} value={power} disabled={moving} onChange={e=>setPower(Number(e.target.value))}/></label>
       <button className="ghost-btn" type="button" disabled={moving||Boolean(result)} onClick={shoot}>Shoot</button>
-      <button className="ghost-btn" type="button" onClick={reset}>New rack</button>
+      <button className="ghost-btn" type="button" onClick={() => { if (shots && !result) onAbandon?.(); reset(); }}>New rack</button>
     </div>
   </>;
 }

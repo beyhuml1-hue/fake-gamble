@@ -182,7 +182,7 @@ function socialPage() {
 function reactTo(text) {
   const msg = String(text).toLowerCase();
   if (/\b(hello|hey|hi|welcome|what.s up)\b/.test(msg)) return ["Hiiii streamer 👋", "Heyyy!", "Chat says hello!", "Just joined to say hi 💜"];
-  if (/\b(game|gaming|win|lose|minecraft|fortnite|roblox|dice|case)\b/.test(msg)) return ["Big W incoming 🔥", "You got this!", "This game looks fun", "We believe!"];
+  if (/\b(game|gaming|win|lose|dice|case)\b/.test(msg)) return ["Big W incoming 🔥", "You got this!", "This game looks fun", "We believe!"];
   if (/\b(thank|thanks|love|appreciate)\b/.test(msg)) return ["We love you too 💜", "Always here!", "Much love back"];
   if (/\b(how|what|why|when|question|think)\b|\?/.test(msg)) return ["Good question!", "I was wondering too!", "Tell us more 👀"];
   if (/\b(sing|music|song|dance)\b/.test(msg)) return ["Music vibes 🎵", "Chat dance break!", "The energy is unreal"];

@@ -69,7 +69,7 @@ export function Cashier({open,onClose}:{open:boolean;onClose:()=>void}){
     <button className="bet-btn" type="button" onClick={()=>setReceipt(null)}>Done</button>
    </div>:<>
     <div className="wallet-plain-intro">
-     <strong>Card details</strong><span>Use only a BlockBet demo card. Play USD has no cash value.</span>
+     <strong>Card details</strong><span>Demo card only. Play coins have no cash value and cannot be withdrawn.</span>
     </div>
     {remaining!==null&&<p className="wallet-admin-remaining">Shared card balance: <strong>{formatUSD(remaining)}</strong></p>}
     <form className="wallet-plain-form" onSubmit={e=>void submit(e)}>
@@ -104,7 +104,7 @@ export function Cashier({open,onClose}:{open:boolean;onClose:()=>void}){
       {busy?"Processing…":"Add "+formatUSD(Math.max(0,Math.round(Number(amount)*100)||0))}
      </button>
     </form>
-    <p className="wallet-plain-foot">PlayBlockBet simulation only: this is not a bank-issued card and cannot make external purchases. All uses share one $125 starting pool.</p>
+    <p className="wallet-plain-foot">DonutFlip simulation only: this is not a bank-issued card and cannot make external purchases. All uses share one $125 starting pool.</p>
    </>}
   </div>
  </div>;
