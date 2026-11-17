@@ -15,7 +15,7 @@ export function newPoolRack() {
 }
 
 function tick(balls) {
-  const dt=0.5; // Smaller collision steps keep fast balls from crossing through each other.
+  const dt=0.25; // Smaller collision steps keep fast balls from crossing through each other.
   const active=balls.filter(ball=>!ball.sunk);
   for (const ball of active) {
     ball.x+=ball.vx*dt;
@@ -59,12 +59,12 @@ export function shootPool(previous, aimX, aimY, power) {
   const distance=Math.hypot(aimX-cue.x,aimY-cue.y);
   if(distance<1)return null;
   const angle=Math.atan2(aimY-cue.y,aimX-cue.x);
-  cue.vx=Math.cos(angle)*power*0.13;
-  cue.vy=Math.sin(angle)*power*0.13;
+  cue.vx=Math.cos(angle)*power*0.24;
+  cue.vy=Math.sin(angle)*power*0.24;
   const snapshot=()=>balls.flatMap(b=>[Math.round(b.x*100)/100,Math.round(b.y*100)/100,b.sunk?1:0]);
   const replay=[snapshot()];
   for(let frame=0;frame<1400;frame++) {
-    tick(balls);tick(balls);tick(balls);tick(balls);
+    for(let substep=0;substep<8;substep++)tick(balls);
     if(frame%2===1)replay.push(snapshot());
     if (balls.every(ball=>ball.sunk||Math.hypot(ball.vx,ball.vy)<=0.09))break;
   }
