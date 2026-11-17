@@ -178,7 +178,8 @@ test("Two players see waiting rooms, escrow their play money and settle exactly 
 
     // A player cannot create another room while in an active match.
     if(shot.data.match.status==="active") {
-      assert.equal((await call("guest","matches",{action:"create",game:"pool",stakeCents:100})).status,409);
+      const resumed=await call("guest","matches",{action:"create",game:"pool",stakeCents:100});
+      assert.equal(resumed.status,200);assert.equal(resumed.data.match.id,poolId);assert.equal(resumed.data.resumed,true);
       assert.equal((await call("guest","matches",{action:"leave",id:poolId})).status,200);
     }
     const mines=await call("host","matches",{action:"create",game:"mines-battles",stakeCents:250});

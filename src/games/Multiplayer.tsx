@@ -35,7 +35,7 @@ async function request(path:string,body?:object):Promise<Payload>{
 
 export function Multiplayer({game}:{game:Game}){
   const {email,showSignIn}=useAuth();
-  const {balance,walletReady,syncSocialWallet}=useWallet();
+  const {balance,walletReady,syncSocialWallet,prepareTransfer}=useWallet();
   const [amount,setAmount]=useState(1);
   const [rooms,setRooms]=useState<Room[]>([]);
   const [mine,setMine]=useState<Room|null>(null);
@@ -72,8 +72,12 @@ export function Multiplayer({game}:{game:Game}){
     pending.current=true;
     setBusy(true);setError("");
     try{
+      if(action==="create"||action==="join"){
+        const synced=await prepareTransfer();
+        if(synced===null)throw new Error("Your wallet is still syncing. Please try again in a moment.");
+      }
       const reply=await request("",{action,...extra});
-      if(reply.match){setMatch(reply.match);setRoomId(reply.match.id);}
+      if(reply.match){idRef.current=reply.match.id;setMatch(reply.match);setRoomId(reply.match.id);}
       syncSocialWallet();
       void refresh();
     }catch(e){
@@ -189,8 +193,8 @@ export function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:
   function strike(){if(!playable)return;setStriking(true);sound.tick();strikeTimer.current=window.setTimeout(()=>{shoot({type:"shoot",x:aimRef.current.x,y:aimRef.current.y,power});setStriking(false);},220);}
   function nudge(degrees:number){if(!cue||!playable)return;const angle=Math.atan2(aim.y-cue.y,aim.x-cue.x)+degrees*Math.PI/180;const reach=Math.min(350,Math.hypot(aim.x-cue.x,aim.y-cue.y));setAim({x:Math.max(0,Math.min(700,cue.x+Math.cos(angle)*reach)),y:Math.max(0,Math.min(350,cue.y+Math.sin(angle)*reach))});}
   return <>
-    <svg className="pool-table pvp-pool" viewBox="-35 -35 770 420" role="img" aria-label="Pool table. Tap to aim a shot."
-      onPointerMove={event=>{if(event.pointerType==="mouse"||event.buttons===1)aimAt(event);}}
+    <svg className="pool-table pvp-pool" viewBox="-35 -35 770 420" role="img" aria-label="Pool table. Click and drag to aim a shot."
+      onPointerMove={event=>{if(event.currentTarget.hasPointerCapture(event.pointerId))aimAt(event);}}
       onPointerDown={event=>{aimAt(event);event.currentTarget.setPointerCapture(event.pointerId);}}
       onPointerUp={event=>{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);}}>
       <defs>
@@ -234,7 +238,7 @@ export function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:
         onClick={strike}>{moving?"Balls moving…":striking?"Shooting…":"Shoot"}</button>
     </div>
     <div className="pool-fine-controls"><button type="button" disabled={!playable} onClick={()=>nudge(-1)}>↶ Fine aim</button><span>Power {power}%</span><button type="button" disabled={!playable} onClick={()=>nudge(1)}>Fine aim ↷</button></div>
-    <p className="hint">Move your mouse or drag on the table to aim. Adjust power, fine-tune with the arrows, then shoot. Pocket the eight ball last.</p>
+    <p className="hint">Click and drag on the table to aim. Release to keep the cue in place. Adjust power, fine-tune with the arrows, then shoot. Pocket the eight ball last.</p>
   </>;
 }
 function FourMatch({room,busy,move}:{room:Room;busy:boolean;move:(column:number)=>void}){

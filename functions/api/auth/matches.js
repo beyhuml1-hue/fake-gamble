@@ -166,8 +166,15 @@ export async function onRequestPost({request,env}) {
         "WHERE w.user_id=?3 AND w.initialized=1 AND w.cents>=?4 "+
         "AND NOT EXISTS(SELECT 1 FROM pvp_rooms r WHERE (r.host_id=?3 OR r.guest_id=?3) AND r.status IN ('waiting','active'))");
       const wrote=await statement.bind(id,game,user.id,stake,JSON.stringify(initial(game)),now).run();
-      if(wrote.meta?.changes!==1)
-        return json({error:"You need enough available play money and no other open match. Finish or cancel your existing match first."},409);
+      if(wrote.meta?.changes!==1){
+        const existing=await env.DB.prepare(detailSql+"WHERE (r.host_id=?1 OR r.guest_id=?1) AND r.status IN ('waiting','active') ORDER BY r.created_ms DESC LIMIT 1").bind(user.id).first();
+        if(existing?.game===game)return json({match:view(existing,user),resumed:true});
+        if(existing)return json({error:"You already have an open "+({pool:"Pool",uno:"Uno",chess:"Chess","connect-four":"Connect Four","mines-battles":"Mines Duel"}[existing.game]||"player")+" match. Open that game to continue or cancel it."},409);
+        const wallet=await env.DB.prepare("SELECT cents,initialized FROM playusd_wallets WHERE user_id=?1").bind(user.id).first();
+        if(!wallet?.initialized)return json({error:"Your wallet is still syncing. Wait a moment and try again."},409);
+        if(wallet.cents<stake)return json({error:"Your available balance is $"+(wallet.cents/100).toFixed(2)+". Lower the stake and try again."},409);
+        return json({error:"The room could not be created. Please try again."},409);
+      }
       return json({match:view(await detail(env,id),user)},201);
     }
     const id=input?.id;
