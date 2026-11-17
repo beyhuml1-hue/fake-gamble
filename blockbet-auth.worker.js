@@ -20,9 +20,12 @@ import { onRequestGet as aiOwner, onRequestPost as postAiOwner } from "./functio
 import { onRequestGet as walletEvents, onRequestPost as acknowledgeWalletNotice } from "./functions/api/auth/wallet-events.js";
 import { onRequestGet as playUsdBalance, onRequestPost as postPlayUsd } from "./functions/api/auth/playusd.js";
 import { onRequestGet as weeklyLeaderboard } from "./functions/api/auth/leaderboard.js";
+import { onRequestGet as listMatches, onRequestPost as matchAction } from "./functions/api/auth/matches.js";
 import { onRequestGet as demoCardStatus, onRequestPost as chargeDemoCard } from "./functions/api/auth/demo-card.js";
 
 const routes = {
+  "GET /api/auth/matches": listMatches,
+  "POST /api/auth/matches": matchAction,
   "GET /api/auth/playusd": playUsdBalance,
   "POST /api/auth/playusd": postPlayUsd,
   "GET /api/auth/leaderboard": weeklyLeaderboard,

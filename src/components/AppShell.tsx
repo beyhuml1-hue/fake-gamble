@@ -193,7 +193,7 @@ export function AppShell() {
           <Outlet context={{ query, setQuery } satisfies ShellContext} />
           {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
-            <p>18+ · If gambling is a problem, visit ncpgambling.org or call 1-800-GAMBLER.</p>
+            <p>Play money only - no real value.</p>
           </footer>
         </div>
       </div>

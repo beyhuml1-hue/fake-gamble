@@ -4,6 +4,7 @@ import { GameLayout } from "../components/GameLayout";
 import { CASES, caseImage } from "../data/cases";
 import { betCents, formatUSD, payout } from "../lib/money";
 import { randInt, random, shuffle } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const directions = ["Up", "Down"];
@@ -99,7 +100,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       if (isDraw) {
         if (turn >= 5) return;
         setTurn(turn+1);
-        const next = draw.map(value => value > 0 && random() < [0.72,0.63,0.52][difficulty]! ? value * [1.3,1.45,1.75][difficulty]! : 0);
+        const next = draw.map(value => value > 0 && (luckOn() || random() < [0.72,0.63,0.52][difficulty]!) ? value * [1.3,1.45,1.75][difficulty]! : 0);
         setDraw(next);
         if (next.every(value=>value===0)) finish(stake,claimed,"Draw complete");
         return;
@@ -108,7 +109,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
         let index = 0;
         const final = cards.map((card, slot) => held.includes(slot) ? card : deck[index++]!);
         const rival = deck.slice(5,10);
-        const score = Math.sign(handScore(final) - handScore(rival));
+        const score = luckOn() ? 1 : Math.sign(handScore(final) - handScore(rival));
         setCards(final);
         finish(stake, score === 1 ? 1.96 : score === 0 ? 1 : 0, "Rival: " + rival.map(cardLabel).join(" ") + (score === 1 ? " · You won" : score === 0 ? " · Tie" : ""));
         return;
@@ -146,7 +147,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       return;
     }
     if (game.id === "stocks") {
-      const candles = Array.from({length:12},()=> (random() - 0.5) * 2);
+      const candles = Array.from({length:12},()=> luckOn() ? (selected === 0 ? 0.5 : -0.5) : (random() - 0.5) * 2);
       const change = candles.reduce((sum,value)=>sum+value,0);
       setRace(candles.map((_,i)=>50+candles.slice(0,i+1).reduce((sum,value)=>sum+value,0)*7));
       finish(wager,(change >= 0 ? 0 : 1) === selected ? 1.96 : 0,"Market closed " + (change > 0 ? "+" : "") + change.toFixed(2) + "%");
@@ -154,13 +155,13 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     }
     if (game.id === "slide") {
       const threshold = Math.min(1000,Math.max(1.01,target));
-      const result = Math.max(1, Math.floor(98 / random()) / 100);
+      const result = luckOn() ? Math.min(1000, threshold + 1) : Math.max(1, Math.floor(98 / random()) / 100);
       setResult(result);
       finish(wager,result >= threshold ? threshold : 0,"Slider stopped at " + result.toFixed(2) + "×");
       return;
     }
     let raceRoll = randInt(100);
-    const outcome = game.id === "pig-race" ? derbyWeights.findIndex(weight=>(raceRoll-=weight)<0) :
+    const outcome = luckOn() ? selected : game.id === "pig-race" ? derbyWeights.findIndex(weight=>(raceRoll-=weight)<0) :
       isDouble ? doubleReel[randInt(doubleReel.length)]! : randInt(options.length);
     if (game.id === "pig-race") setRace(options.map((_,lane)=> lane === outcome ? 100 : 66 + randInt(29)));
     setResult(outcome);
@@ -171,7 +172,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
   function move(tile: number) {
     if (!stake || !board) return;
     const chance = board[turn]!;
-    const sink = isLava ? shuffle(lavaTiles).slice(0,49-Math.round(49*chance)) : [];
+    const sink = isLava ? shuffle(lavaTiles.filter(index => !luckOn() || index !== tile)).slice(0,49-Math.round(49*chance)) : [];
     if (isLava) {
       setStone(tile);
       setSunken(sink);
@@ -199,7 +200,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
   }
   function throwHand(hand: number) {
     if (!stake) return;
-    const rival = randInt(3);
+    const rival = luckOn() ? (hand+2)%3 : randInt(3);
     const result = "Rival threw " + options[rival];
     if (rival === hand) { setMessage(result + " · Tie. Throw again."); return; }
     if ((hand+2)%3 !== rival) { finish(stake,0,result); return; }

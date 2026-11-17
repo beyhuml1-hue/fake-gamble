@@ -4,6 +4,7 @@ import { GameLayout } from "../components/GameLayout";
 import { PLINKO, PLINKO_ROWS, type PlinkoRows, type Risk } from "../lib/math";
 import { betCents, formatMult, payout } from "../lib/money";
 import { random } from "../lib/random";
+import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const MAX_BALLS = 15;
@@ -203,9 +204,11 @@ export function Plinko() {
     const table = binsRef.current;
     const path: number[] = [];
     let rights = 0;
-    // Fair binomial paths: every decision is a 50/50 sample.
+    // Each normal decision is a fair 50/50 sample. Local hot-table mode
+    // selects a winning edge bin using the same visible ball physics.
+    const hotBin = luckOn() ? table.indexOf(Math.max(...table)) : -1;
     for (let i = 0; i < boardRows; i++) {
-      const right=random()<.5?1:0;
+      const right = hotBin >= 0 ? (i < hotBin ? 1 : 0) : (random() < .5 ? 1 : 0);
       path.push(right);
       rights += right;
     }
