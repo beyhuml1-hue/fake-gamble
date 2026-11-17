@@ -121,10 +121,6 @@ export function Packs(){
  };
  const maxPayout=payout(Math.max(0,wager),best);
  return <section className="packs-page" data-screen="packs">
-   <header className="packs-header">
-     <div><span className="packs-eyebrow">BLOCKBET ORIGINALS</span><h1>Packs</h1><p>Pick a difficulty, open a pack and watch the reel land.</p></div>
-     <div className="packs-header-preview"><img src="/covers/cover-packs.webp" alt="Plain silver mystery pack"/></div>
-   </header>
    <div className="packs-game">
      <div className="packs-stage">
        <div className="packs-stage-head">
