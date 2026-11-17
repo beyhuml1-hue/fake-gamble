@@ -114,7 +114,7 @@ test("Submitted big wins publish once to public chat and weekly rankings reflect
   assert.doesNotMatch(JSON.stringify(board),/beyhum|example.com/);
  }finally{db.close();}
 });
-test("Homepage rotates real stats and leaderboard; Plinko has unbiased bounces; wallet has no decorative plastic card",()=>{
+test("Homepage retains stats; Plinko has independent normal paths; free wallet needs no card",()=>{
  const source=path=>readFileSync(new URL(path,import.meta.url),"utf8");
  assert.doesNotMatch(source("../src/components/AppShell.tsx"),/<HighlightToast/);
  assert.match(source("../src/pages/HomeSpotlight.tsx"),/Weekly leaderboard/);
@@ -122,7 +122,8 @@ test("Homepage rotates real stats and leaderboard; Plinko has unbiased bounces; 
  assert.match(source("../src/pages/HomeSpotlight.tsx"),/setInterval/);
  assert.match(source("../src/pages/Lobby.tsx"),/HomeSpotlight history/);
  assert.match(source("../src/games/Plinko.tsx"),/sway/);
- assert.doesNotMatch(source("../src/games/Plinko.tsx"),/luckOn|rights < target/);
+ assert.match(source("../src/games/Plinko.tsx"),/random\(\) < \.5/);
+  assert.match(source("../src/games/Plinko.tsx"),/hotBin/);
  const cashier=source("../src/components/Cashier.tsx");
  assert.doesNotMatch(cashier,/className="plastic"|withdrawToCard|depositFromCard/);
  assert.match(cashier,/\/api\/auth\/demo-card/);
