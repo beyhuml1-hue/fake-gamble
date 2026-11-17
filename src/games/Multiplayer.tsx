@@ -94,7 +94,7 @@ export function Multiplayer({game}:{game:Game}){
     return()=>window.clearInterval(handle);
   },[refresh,live]);
 
-  return <GameLayout title={names[game]} note="Player vs player Â· play-money stakes" panel={
+  return <GameLayout title={names[game]} note="Player vs player · play-money stakes" panel={
     <div className="pvp-controls">
       {!email?<div className="room-setup">
         <p>Sign in to create a match and play against another player.</p>
@@ -111,11 +111,11 @@ export function Multiplayer({game}:{game:Game}){
           {current.status==="waiting"?"Cancel waiting match":"Forfeit match"}
         </button>
       </div>:<BetPanel amount={amount} onAmount={setAmount} profitCents={Math.round(amount*100)}
-        label={busy?"Creatingâ€¦":"Create match"} onAction={()=>void act("create",{game,stakeCents:Math.round(amount*100)})}
+        label={busy?"Creating…":"Create match"} onAction={()=>void act("create",{game,stakeCents:Math.round(amount*100)})}
         error={error} disabled={!canCreate}>
         <p className="hint">Another player stakes the same amount. Winner takes both stakes; a draw refunds both. No house edge.</p>
         {otherGame&&<p className="form-error">Finish your <Link to={"/game/"+mine.game}>{names[mine.game]}</Link> match first.</p>}
-        {!walletReady&&<p className="hint">Syncing your play-money balanceâ€¦</p>}
+        {!walletReady&&<p className="hint">Syncing your play-money balance…</p>}
       </BetPanel>}
       {working&&error&&<p role="alert" className="form-error">{error}</p>}
       {!working&&<p className="hint">Available: {formatUSD(balance)}</p>}
@@ -126,7 +126,7 @@ export function Multiplayer({game}:{game:Game}){
       <div className="pvp-versus">
         <span>{current.host}</span><strong>VS</strong><span>{current.guest}</span>
       </div>
-      <p className="pvp-turn" role="status">{current.myTurn?"Your turn":(current.turn==="host"?current.host:current.guest)+" is playing"} Â· Pot {formatUSD(current.stakeCents*2)}</p>
+      <p className="pvp-turn" role="status">{current.myTurn?"Your turn":(current.turn==="host"?current.host:current.guest)+" is playing"} · Pot {formatUSD(current.stakeCents*2)}</p>
       {game==="uno"?<UnoMatch room={current} busy={busy} play={move=>void act("move",{id:current.id,move})}/>:game==="pool"?<PoolMatch room={current} busy={busy} shoot={move=>void act("move",{id:current.id,move})}/>:
         game==="connect-four"?<FourMatch room={current} busy={busy} move={column=>void act("move",{id:current.id,move:{column}})}/>:
         <MinesMatch room={current} busy={busy} move={tile=>void act("move",{id:current.id,move:{tile}})}/>}
@@ -201,7 +201,7 @@ function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:{type:"
       <circle cx={ball.x} cy={ball.y} r="11" fill="url(#room-ball)"/>
       </g>)}
     </svg>
-    <p role="status">{room.state.pocketed??0} pocketed Â· {room.state.shots??0} shots</p>
+    <p role="status">{room.state.pocketed??0} pocketed · {room.state.shots??0} shots</p>
     <div className="arcade-moves pvp-shot-controls">
       <label>Power <input type="range" min={15} max={100} value={power} disabled={!playable}
         onChange={e=>setPower(Number(e.target.value))}/></label>
@@ -216,7 +216,7 @@ function FourMatch({room,busy,move}:{room:Room;busy:boolean;move:(column:number)
   return <>
     <div className="connect-choices">{Array.from({length:7},(_,i)=>
       <button type="button" className="ghost-btn" key={i} aria-label={"Drop in column "+(i+1)}
-        disabled={!room.myTurn||busy||Boolean(board[i])} onClick={()=>move(i)}>â†“</button>)}</div>
+        disabled={!room.myTurn||busy||Boolean(board[i])} onClick={()=>move(i)}>↓</button>)}</div>
     <div className="connect-board" aria-label="Shared Connect Four board">
       {board.map((disc,i)=><span key={i} data-disc={disc} aria-label={disc===1?"Host disc":disc===2?"Challenger disc":"Empty"}/>)}
     </div>
@@ -227,7 +227,7 @@ function MinesMatch({room,busy,move}:{room:Room;busy:boolean;move:(tile:number)=
   const shown=room.state.revealed||[];
   const hiddenMines=room.state.mines||[];
   return <>
-    <p className="pvp-turn">Safe gems Â· {room.host}: {room.state.hostScore||0} Â· {room.guest}: {room.state.guestScore||0}</p>
+    <p className="pvp-turn">Safe gems · {room.host}: {room.state.hostScore||0} · {room.guest}: {room.state.guestScore||0}</p>
     <div className="mb-board" aria-label="Shared Mines Duel board">
       {Array.from({length:25},(_,tile)=>{
         const revealed=shown.includes(tile),bomb=hiddenMines.includes(tile);
