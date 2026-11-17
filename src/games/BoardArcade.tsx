@@ -3,6 +3,7 @@ import { Chess, type Square } from "chess.js";
 import { GameLayout } from "../components/GameLayout";
 import { randInt, shuffle } from "../lib/random";
 import { Pool } from "./Pool";
+import { Multiplayer } from "./Multiplayer";
 
 const discs = Array<number>(42).fill(0);
 function drop(board: number[], column: number, player: number) {
@@ -135,6 +136,12 @@ const boards={chess:["Chess","Classic chess against a computer rival.",ChessBoar
   pool:["8-Ball Pool","Solo practice. Clear the rack and pocket the eight ball last.",Pool]} as const;
 
 export function BoardArcade({game}:{game:keyof typeof boards}){
+  return game === "pool" || game === "connect-four"
+    ? <Multiplayer game={game} />
+    : <PracticeBoard game={game} />;
+}
+
+function PracticeBoard({game}:{game:"chess"|"uno"}){
   const [name,description,Board]=boards[game];
   const [opened,setOpened] = useState(false);
   return <GameLayout title={name} note="Practice" panel={<div className="room-setup">
