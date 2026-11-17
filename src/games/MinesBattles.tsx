@@ -101,11 +101,7 @@ export function MinesBattles() {
     game.turn === "you" ? "Your turn — choose a tile" : "Rival is choosing…";
 
   return (
-    <section className="mb-page">
-      <div className="mb-heading">
-        <div><small>BLOCKBET ORIGINALS / VERSUS</small><h1>Mines Duel</h1><p>One shared minefield. Take turns opening tiles. Hit a mine and lose.</p></div>
-        <span className="mb-mode">PRACTICE · VS COMPUTER</span>
-      </div>
+    <section className="mb-page" aria-label="Mines Duel">
       <div className="mb-layout">
         <aside className="mb-controls">
           <div className="mb-controls-head"><h2>Battle setup</h2><span>1v1</span></div>
