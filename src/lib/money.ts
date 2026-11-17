@@ -1,5 +1,6 @@
-export const START_CENTS = 2_000;
+export const START_CENTS = 100_000;
 export const MIN_BET = 10;
+export const MAX_BET = 10_000_000; // $100,000 per round (before game-specific caps).
 export const MAX_BALANCE = 10_000_000_000;
 
 export const PEG_COPY = "Play USD is simulated currency with no cash value.";
@@ -33,11 +34,11 @@ export function formatMult(mult: number): string {
 export function betCents(dollars: number, balance: number): number | null {
   if (!Number.isFinite(dollars)) return null;
   const cents = Math.round(dollars * 100);
-  if (cents < MIN_BET || cents > balance) return null;
+  if (!Number.isSafeInteger(cents) || cents < MIN_BET || cents > MAX_BET || cents > balance) return null;
   return cents;
 }
 
 export function payout(bet: number, mult: number): number {
-  if (mult <= 0) return 0;
+  if (!Number.isSafeInteger(bet) || bet <= 0 || !Number.isFinite(mult) || mult <= 0) return 0;
   return Math.min(MAX_BALANCE, Math.max(0, Math.round(bet * mult)));
 }
