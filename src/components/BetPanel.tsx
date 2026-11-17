@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { formatUSD, MIN_BET } from "../lib/money";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { betCents, formatUSD, MIN_BET } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
 type Props = {
@@ -36,6 +36,11 @@ export function BetPanel({
   const { balance, openCashier } = useWallet();
   const [text, setText] = useState(amount.toFixed(2));
   const [focused, setFocused] = useState(false);
+  const [localError, setLocalError] = useState("");
+  const clickGuard = useRef(false);
+  const guardTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(guardTimer.current), []);
 
   useEffect(() => {
     if (!focused) setText(amount.toFixed(2));
@@ -45,14 +50,24 @@ export function BetPanel({
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (disabled || broke) return;
+    if (disabled || broke || (locked && !cashout) || clickGuard.current) return;
+    if (!cashout && betCents(amount, balance) === null) {
+      setLocalError("Enter a bet from $0.10 up to your available balance (maximum $100,000).");
+      return;
+    }
+    setLocalError("");
+    // Guard the input synchronously: rapid double submits cannot debit twice.
+    clickGuard.current = true;
+    window.clearTimeout(guardTimer.current);
+    guardTimer.current = window.setTimeout(() => { clickGuard.current = false; }, 350);
     onAction();
   };
 
   const write = (next: number) => {
-    const safe = Math.max(0, Math.round(next * 100) / 100);
+    const safe = Number.isFinite(next) ? Math.max(0, Math.round(next * 100) / 100) : 0;
     onAmount(safe);
     setText(safe.toFixed(2));
+    setLocalError("");
   };
 
   return (
@@ -83,6 +98,7 @@ export function BetPanel({
               const raw = event.target.value;
               if (!/^\d*\.?\d{0,2}$/.test(raw)) return;
               setText(raw);
+              setLocalError("");
               const parsed = Number(raw);
               if (Number.isFinite(parsed)) onAmount(parsed);
             }}
@@ -107,11 +123,12 @@ export function BetPanel({
         </div>
       </div>}
 
-      {error ? <p className="form-error">{error}</p> : null}
+      <small className="hint" aria-live="polite">Available: {formatUSD(balance)}</small>
+      {(error || localError) ? <p className="form-error" role="alert">{error || localError}</p> : null}
 
       {broke ? (
         <button className="bet-btn" type="button" onClick={openCashier}>
-          Open demo wallet
+          Claim free play money
         </button>
       ) : (
         <button className={cashout ? "bet-btn cashout" : "bet-btn"} type="submit" disabled={disabled}>
