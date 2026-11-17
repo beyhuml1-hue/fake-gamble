@@ -1,3 +1,4 @@
+import {apiJSON,errorMessage} from "../lib/api";
 import {createPortal} from "react-dom";
 import "../games/uno-matches.css";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -144,16 +145,10 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Please try again.");
+      await apiJSON(URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error && !(err instanceof SyntaxError) ? err.message : "Please try again.");
+      setError(errorMessage(err));
     } finally {
       await refresh();
       setBusy(false);

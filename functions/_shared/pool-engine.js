@@ -15,10 +15,11 @@ export function newPoolRack() {
 }
 
 function tick(balls) {
+  const dt=0.5; // Smaller collision steps keep fast balls from crossing through each other.
   const active=balls.filter(ball=>!ball.sunk);
   for (const ball of active) {
-    ball.x+=ball.vx;
-    ball.y+=ball.vy;
+    ball.x+=ball.vx*dt;
+    ball.y+=ball.vy*dt;
     if (pockets.some(([x,y])=>Math.hypot(ball.x-x,ball.y-y)<23)) {
       ball.sunk=true;continue;
     }
@@ -28,7 +29,7 @@ function tick(balls) {
     if (ball.y<R||ball.y>POOL_HEIGHT-R) {
       ball.y=Math.max(R,Math.min(POOL_HEIGHT-R,ball.y));ball.vy*=-0.83;
     }
-    ball.vx*=0.987;ball.vy*=0.987;
+    ball.vx*=0.987**dt;ball.vy*=0.987**dt;
   }
   for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++) {
     const a=active[i],b=active[j];
@@ -60,10 +61,14 @@ export function shootPool(previous, aimX, aimY, power) {
   const angle=Math.atan2(aimY-cue.y,aimX-cue.x);
   cue.vx=Math.cos(angle)*power*0.13;
   cue.vy=Math.sin(angle)*power*0.13;
+  const snapshot=()=>balls.flatMap(b=>[Math.round(b.x*100)/100,Math.round(b.y*100)/100,b.sunk?1:0]);
+  const replay=[snapshot()];
   for(let frame=0;frame<1400;frame++) {
-    tick(balls);tick(balls);
+    tick(balls);tick(balls);tick(balls);tick(balls);
+    if(frame%2===1)replay.push(snapshot());
     if (balls.every(ball=>ball.sunk||Math.hypot(ball.vx,ball.vy)<=0.09))break;
   }
+  replay.push(snapshot());
   for(const ball of balls){ball.vx=0;ball.vy=0;
     ball.x=Number(ball.x.toFixed(2));ball.y=Number(ball.y.toFixed(2));
   }
@@ -77,9 +82,10 @@ export function shootPool(previous, aimX, aimY, power) {
   }
   const shots=previous.shots+1;
   return {
-    state:{balls,shots,pocketed:potCount},
+    state:{balls,shots,pocketed:potCount,replay},
     // A premature eight-ball pocket or scratch on eight loses.
     outcome:eightPotted ? (remaining.length===0&&!cueFoul ? "win" : "loss") : shots>=120 ? "draw" : "next",
     reason:eightPotted ? (remaining.length===0&&!cueFoul?"Eight ball pocketed last.":"Early eight-ball pocket or cue-ball foul.") : cueFoul?"Cue-ball scratch. Opponent's turn.": "Shot complete."
   };
 }
+

@@ -146,7 +146,7 @@ const boards={chess:["Chess","Classic chess against a computer rival.",ChessBoar
   pool:["8-Ball Pool","Solo practice. Clear the rack and pocket the eight ball last.",Pool]} as const;
 
 export function BoardArcade({game}:{game:keyof typeof boards}){
-  return game === "pool" || game === "connect-four" || game === "uno"
+  return game === "pool" || game === "connect-four" || game === "uno" || game === "chess"
     ? <Multiplayer game={game} />
     : <WagerBoard game={game} />;
 }

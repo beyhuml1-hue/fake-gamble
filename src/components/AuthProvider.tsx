@@ -1,3 +1,5 @@
+import {apiJSON,errorMessage} from "../lib/api";
+import "../games/match-polish.css";
 import {
   createContext, useContext, useEffect, useState,
   type FormEvent, type ReactNode,
@@ -25,16 +27,9 @@ type AuthResponse = {
 };
 
 async function api(path: string, data?: object): Promise<AuthResponse> {
-  const response = await fetch("/api/auth/" + path, {
-    method: data ? "POST" : "GET",
-    credentials: "same-origin",
-    cache: "no-store",
-    headers: data ? { "Content-Type": "application/json" } : {},
-    ...(data ? { body: JSON.stringify(data) } : {}),
+  return apiJSON<AuthResponse>("/api/auth/"+path,{
+    method:data?"POST":"GET",headers:data?{"Content-Type":"application/json"}:{},...(data?{body:JSON.stringify(data)}:{})
   });
-  const payload = (await response.json().catch(() => ({}))) as AuthResponse;
-  if (!response.ok) throw new Error(payload.error || "Account service unavailable. Please try again.");
-  return payload;
 }
 
 export function AuthProvider({ children }: { children: (key: string, adjustment?: BalanceAdjustment | null) => ReactNode }) {
@@ -124,7 +119,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
       setEmail(result.user.email);
       setPassword(""); setPhase("authenticated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't log in.");
+      setError(errorMessage(err,"Couldn't log in. Please try again."));
     } finally { setBusy(false); }
   }
 
@@ -139,7 +134,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
       setNotice(result.message || "We've sent your six-digit verification code.");
       setCode(""); setPassword(""); setPhase("verify");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't start sign-up.");
+      setError(errorMessage(err,"Couldn't start sign-up. Please try again."));
     } finally { setBusy(false); }
   }
 
@@ -152,7 +147,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
       setEmail(result.user.email);
       setCode(""); setPhase("authenticated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Incorrect or expired code.");
+      setError(errorMessage(err,"Incorrect or expired code. Request a new code and try again."));
     } finally { setBusy(false); }
   }
 
@@ -162,7 +157,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
       const result = await api("request", { email: email.trim() });
       setNotice(result.message || "Another code has been sent.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't resend the code.");
+      setError(errorMessage(err,"Couldn't resend the code. Please try again."));
     } finally { setBusy(false); }
   }
 

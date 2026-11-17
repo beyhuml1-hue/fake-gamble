@@ -5,15 +5,18 @@ import { GameLayout } from "../components/GameLayout";
 import { useAuth } from "../components/AuthProvider";
 import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
+import {ChessMatch} from "./ChessMatch";
+import {apiJSON,ApiError,errorMessage} from "../lib/api";
+import "./match-polish.css";
 import {sound} from "../lib/sound";
 import "./uno-matches.css";
 import "./multiplayer.css";
 import "./pool-uno.css";
 
-type Game = "pool" | "connect-four" | "mines-battles" | "uno";
+type Game = "pool" | "connect-four" | "mines-battles" | "uno" | "chess";
 type UnoCard={id:number;color:string;value:string};
 type Ball = {id:number;x:number;y:number;sunk:boolean};
-type State = {hand?:UnoCard[];top?:UnoCard;color?:string;hostCount?:number;guestCount?:number;drawn?:{host:number;guest:number};balls?:Ball[];shots?:number;pocketed?:number;board?:number[];
+type State = {fen?:string;moves?:string[];lastMove?:{from:string;to:string}|null;replay?:number[][];hand?:UnoCard[];top?:UnoCard;color?:string;hostCount?:number;guestCount?:number;drawn?:{host:number;guest:number};balls?:Ball[];shots?:number;pocketed?:number;board?:number[];
   revealed?:number[];mines?:number[];hostScore?:number;guestScore?:number;last?:number};
 type Room = {
   id:string;game:Game;stakeCents:number;status:"waiting"|"active"|"finished"|"cancelled"|"expired";
@@ -23,17 +26,11 @@ type Room = {
 };
 type Payload={open?:Room[];mine?:Room|null;match?:Room;error?:string};
 
-const names:Record<Game,string>={"pool":"8-Ball Pool","connect-four":"Connect Four","mines-battles":"Mines Duel","uno":"Uno"};
+const names:Record<Game,string>={"pool":"8-Ball Pool","connect-four":"Connect Four","mines-battles":"Mines Duel","uno":"Uno","chess":"Chess"};
 async function request(path:string,body?:object):Promise<Payload>{
-  const response=await fetch("/api/auth/matches"+path,{
-    method:body?"POST":"GET",
-    credentials:"same-origin",cache:"no-store",
-    headers:body?{"Content-Type":"application/json"}:{},
-    ...(body?{body:JSON.stringify(body)}:{})
+  return apiJSON<Payload>("/api/auth/matches"+path,{
+    method:body?"POST":"GET",headers:body?{"Content-Type":"application/json"}:{},...(body?{body:JSON.stringify(body)}:{})
   });
-  const payload=await response.json() as Payload;
-  if(!response.ok)throw new Error(payload.error||"Multiplayer service unavailable.");
-  return payload;
 }
 
 export function Multiplayer({game}:{game:Game}){
@@ -46,6 +43,7 @@ export function Multiplayer({game}:{game:Game}){
   const [roomId,setRoomId]=useState<string|null>(null);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
+  const [loadError,setLoadError]=useState("");
   const pending=useRef(false);
   const idRef=useRef(roomId);
   idRef.current=roomId;
@@ -54,15 +52,17 @@ export function Multiplayer({game}:{game:Game}){
     if(!email)return;
     try{
       const data=await request("?game="+encodeURIComponent(game));
+      setLoadError("");
       setRooms(data.open||[]);
       setMine(data.mine||null);
       const id=idRef.current|| (data.mine?.game===game?data.mine.id:null);
       if(id){
         const detail=await request("?id="+encodeURIComponent(id));
-        if(detail.match){setMatch(detail.match);if(!idRef.current)setRoomId(id);}
+        if(detail.match){setMatch(previous=>previous?.id===detail.match!.id&&previous.version>detail.match!.version?previous:detail.match!);if(!idRef.current)setRoomId(id);}
       }
     }catch(e){
-      setError(e instanceof Error?e.message:"Unable to load open matches.");
+      if(e instanceof ApiError&&e.status===404){idRef.current=null;setRoomId(null);setMatch(null);}
+      setLoadError(errorMessage(e,"Unable to load open matches. Please retry."));
     }
   },[email,game]);
 
@@ -77,7 +77,7 @@ export function Multiplayer({game}:{game:Game}){
       syncSocialWallet();
       void refresh();
     }catch(e){
-      setError(e instanceof Error?e.message:"Could not update the match.");
+      setError(errorMessage(e,"Could not update the match. Please retry."));
       void refresh();
     }finally{pending.current=false;setBusy(false);}
   };
@@ -96,6 +96,7 @@ export function Multiplayer({game}:{game:Game}){
 
   return <GameLayout title={names[game]} note="Player vs player · play-money stakes" panel={
     <div className="pvp-controls">
+      {loadError&&<div className="match-error" role="alert"><strong>Connection interrupted</strong><p>{loadError}</p><button type="button" onClick={()=>void refresh()}>Retry connection</button></div>}
       {!email?<div className="room-setup">
         <p>Sign in to create a match and play against another player.</p>
         <button className="bet-btn" type="button" onClick={showSignIn}>Sign in to play</button>
@@ -122,14 +123,15 @@ export function Multiplayer({game}:{game:Game}){
     </div>
   }>
     {!email?<div className="pvp-empty"><h2>Open matches</h2><p>Sign in to see who is waiting and challenge them.</p></div>:
-    current?.status==="active"?<div className="pvp-match">
+    (current?.status==="active"||((game==="pool"||game==="chess")&&current?.status==="finished"))?<div className="pvp-match">
       <div className="pvp-versus">
         <span>{current.host}</span><strong>VS</strong><span>{current.guest}</span>
       </div>
-      <p className="pvp-turn" role="status">{current.myTurn?"Your turn":(current.turn==="host"?current.host:current.guest)+" is playing"} · Pot {formatUSD(current.stakeCents*2)}</p>
-      {game==="uno"?<UnoMatch room={current} busy={busy} play={move=>void act("move",{id:current.id,move})}/>:game==="pool"?<PoolMatch room={current} busy={busy} shoot={move=>void act("move",{id:current.id,move})}/>:
+      <p className="pvp-turn" role="status">{current.status==="finished"?"Match finished":current.myTurn?"Your turn":(current.turn==="host"?current.host:current.guest)+" is playing"} · Pot {formatUSD(current.stakeCents*2)}</p>
+      {game==="chess"&&current.state.fen?<ChessMatch fen={current.state.fen} moves={current.state.moves||[]} lastMove={current.state.lastMove} role={current.role} myTurn={current.myTurn} busy={busy} onMove={move=>void act("move",{id:current.id,move})}/>:game==="uno"?<UnoMatch room={current} busy={busy} play={move=>void act("move",{id:current.id,move})}/>:game==="pool"?<PoolMatch room={current} busy={busy} shoot={move=>void act("move",{id:current.id,move})}/>:
         game==="connect-four"?<FourMatch room={current} busy={busy} move={column=>void act("move",{id:current.id,move:{column}})}/>:
         <MinesMatch room={current} busy={busy} move={tile=>void act("move",{id:current.id,move:{tile}})}/>}
+      {current.status==="finished"&&<div className="match-outcome"><h2>{current.winner===current.role?"You won!":current.winner?"Opponent won":"Match drawn"}</h2><p>{current.result}</p><button type="button" className="bet-btn" onClick={()=>{idRef.current=null;setMatch(null);setRoomId(null);void refresh();}}>Back to open matches</button></div>}
       <p className="hint">Moves are verified on the server. Refreshing or changing pages will not reset the match.</p>
     </div>:
     current&&["finished","expired","cancelled"].includes(current.status)?<div className="pvp-empty">
@@ -155,21 +157,42 @@ const tableColors=["#f8f4df","#FFD64A","#3186ea","#f85845","#a95de2","#fb9f45","
 const pockets:[[number,number],[number,number],[number,number],[number,number],[number,number],[number,number]]=[
   [0,0],[350,0],[700,0],[0,350],[350,350],[700,350]
 ];
-function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:{type:"shoot";x:number;y:number;power:number})=>void}){
+export function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:{type:"shoot";x:number;y:number;power:number})=>void}){
   const [aim,setAim]=useState({x:480,y:175});
   const [power,setPower]=useState(65);
-  const balls=room.state.balls??[];
+  const [moving,setMoving]=useState(false);
+  const [striking,setStriking]=useState(false);
+  const [replayBalls,setReplayBalls]=useState<Ball[]|null>(null);
+  const seenShot=useRef(-1);const strikeTimer=useRef(0);const aimRef=useRef(aim);aimRef.current=aim;
+  useEffect(()=>()=>window.clearTimeout(strikeTimer.current),[]);
+  useEffect(()=>{
+    const shots=room.state.shots||0;if(shots===seenShot.current)return;seenShot.current=shots;
+    const frames=room.state.replay,final=room.state.balls||[];
+    if(!frames?.length||window.matchMedia("(prefers-reduced-motion: reduce)").matches){setReplayBalls(null);return;}
+    let frame=0,start=0;setMoving(true);sound.bet();
+    function animate(now:number){
+      if(!start)start=now;const at=(now-start)*.03,index=Math.min(frames!.length-1,Math.floor(at)),mix=at-index;
+      const a=frames![index]!,b=frames![Math.min(index+1,frames!.length-1)]!;
+      setReplayBalls(final.map((ball,i)=>({...ball,x:a[i*3]!+(b[i*3]!-a[i*3]!)*mix,y:a[i*3+1]!+(b[i*3+1]!-a[i*3+1]!)*mix,sunk:!!a[i*3+2]})));
+      if(at<frames!.length-1)frame=requestAnimationFrame(animate);else{setReplayBalls(null);setMoving(false);}
+    }
+    frame=requestAnimationFrame(animate);return()=>{cancelAnimationFrame(frame);setMoving(false);};
+  },[room.state.shots,room.id]);
+  const balls=replayBalls??room.state.balls??[];
   const cue=balls.find(ball=>ball.id===0);
-  const playable=room.myTurn&&!busy&&Boolean(cue);
+  const playable=room.myTurn&&!busy&&!moving&&!striking&&Boolean(cue);
+  function aimAt(event:React.PointerEvent<SVGSVGElement>){
+    if(!playable)return;const inverse=event.currentTarget.getScreenCTM()?.inverse();if(!inverse)return;
+    const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(inverse);
+    setAim({x:Math.max(0,Math.min(700,point.x)),y:Math.max(0,Math.min(350,point.y))});
+  }
+  function strike(){if(!playable)return;setStriking(true);sound.tick();strikeTimer.current=window.setTimeout(()=>{shoot({type:"shoot",x:aimRef.current.x,y:aimRef.current.y,power});setStriking(false);},220);}
+  function nudge(degrees:number){if(!cue||!playable)return;const angle=Math.atan2(aim.y-cue.y,aim.x-cue.x)+degrees*Math.PI/180;const reach=Math.min(350,Math.hypot(aim.x-cue.x,aim.y-cue.y));setAim({x:Math.max(0,Math.min(700,cue.x+Math.cos(angle)*reach)),y:Math.max(0,Math.min(350,cue.y+Math.sin(angle)*reach))});}
   return <>
     <svg className="pool-table pvp-pool" viewBox="-35 -35 770 420" role="img" aria-label="Pool table. Tap to aim a shot."
-      onPointerDown={event=>{
-        if(!playable)return;
-        const transform=event.currentTarget.getScreenCTM()?.inverse();
-        if(!transform)return;
-        const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(transform);
-        setAim({x:Math.max(0,Math.min(700,point.x)),y:Math.max(0,Math.min(350,point.y))});
-      }}>
+      onPointerMove={event=>{if(event.pointerType==="mouse"||event.buttons===1)aimAt(event);}}
+      onPointerDown={event=>{aimAt(event);event.currentTarget.setPointerCapture(event.pointerId);}}
+      onPointerUp={event=>{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);}}>
       <defs>
         <linearGradient id="room-wood" x2=".25" y2="1"><stop stopColor="#9b6339"/><stop offset=".3" stopColor="#412718"/><stop offset=".65" stopColor="#825333"/><stop offset="1" stopColor="#492a1c"/></linearGradient>
         <radialGradient id="room-felt"><stop stopColor="#179656"/><stop offset="1" stopColor="#07532e"/></radialGradient>
@@ -187,9 +210,11 @@ function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:{type:"
 
       {pockets.map(([x,y],i)=><circle key={i} cx={x} cy={y} r={18} fill="#030807" stroke="#625f42" strokeWidth="2"/>)}
       {cue&&playable&&<line x1={cue.x} y1={cue.y} x2={aim.x} y2={aim.y} stroke="#f6f8db" strokeDasharray="6 7"/>}
-      {cue&&playable&&<g transform={`translate(${cue.x} ${cue.y}) rotate(${Math.atan2(aim.y-cue.y,aim.x-cue.x)*180/Math.PI})`}>
+      {cue&&(playable||striking)&&<g transform={`translate(${cue.x} ${cue.y}) rotate(${Math.atan2(aim.y-cue.y,aim.x-cue.x)*180/Math.PI})`}>
+        <g className={striking?"pool-cue striking":"pool-cue"} style={{translate: `${-power*.22}px 0`}}>
         <path d="M-190 -3L-23 -1L-23 1L-190 3Z" fill="#dec08b" stroke="#674f29"/>
         <path d="M-190 -3v6l65-1v-4Z" fill="#6c3523"/>
+        </g>
       </g>}
       {balls.filter(ball=>!ball.sunk).map(ball=><g key={ball.id} className="pvp-ball">
         <ellipse cx={ball.x+2} cy={ball.y+3} rx="12" ry="9" fill="#00180a" opacity=".4"/>
@@ -201,14 +226,15 @@ function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:{type:"
       <circle cx={ball.x} cy={ball.y} r="11" fill="url(#room-ball)"/>
       </g>)}
     </svg>
-    <p role="status">{room.state.pocketed??0} pocketed · {room.state.shots??0} shots</p>
+    <p role="status">{moving?"Balls in motion - wait for the table to settle. ":striking?"Taking your shot… ":""}{room.state.pocketed??0} pocketed · {room.state.shots??0} shots</p>
     <div className="arcade-moves pvp-shot-controls">
       <label>Power <input type="range" min={15} max={100} value={power} disabled={!playable}
         onChange={e=>setPower(Number(e.target.value))}/></label>
       <button className="bet-btn" type="button" disabled={!playable}
-        onClick={()=>shoot({type:"shoot",x:aim.x,y:aim.y,power})}>Shoot</button>
+        onClick={strike}>{moving?"Balls moving…":striking?"Shooting…":"Shoot"}</button>
     </div>
-    <p className="hint">Aim by tapping the table. Take turns; pocket the eight ball last to win.</p>
+    <div className="pool-fine-controls"><button type="button" disabled={!playable} onClick={()=>nudge(-1)}>↶ Fine aim</button><span>Power {power}%</span><button type="button" disabled={!playable} onClick={()=>nudge(1)}>Fine aim ↷</button></div>
+    <p className="hint">Move your mouse or drag on the table to aim. Adjust power, fine-tune with the arrows, then shoot. Pocket the eight ball last.</p>
   </>;
 }
 function FourMatch({room,busy,move}:{room:Room;busy:boolean;move:(column:number)=>void}){

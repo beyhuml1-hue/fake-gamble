@@ -36,6 +36,31 @@ function setup(){
   return {db,env};
 }
 
+test("Two chess players share legal moves and checkmate settles the stakes once",async()=>{
+ const {db,env}=setup();const cookies={};const origin="https://playblockbet.com";
+ try{
+  for(const id of ["host","guest"]){
+   const email=id+"@example.com";
+   db.prepare("INSERT INTO auth_users(id,email,created_ms,last_login_ms,password_hash) VALUES(?,?,1,1,'test')").run(id,email);
+   cookies[id]=(await issueSession(env,{id,email})).headers.get("Set-Cookie").split(";")[0];
+  }
+  async function call(id,path,body){const response=await worker.fetch(new Request(origin+"/api/auth/"+path,{method:body?"POST":"GET",headers:{Cookie:cookies[id],Origin:origin,"Content-Type":"application/json"},...(body?{body:JSON.stringify(body)}:{})}),env);return {status:response.status,data:await response.json()};}
+  for(const id of ["host","guest"])await call(id,"playusd",{action:"initialize"});
+  const created=await call("host","matches",{action:"create",game:"chess",stakeCents:1000});assert.equal(created.status,201);
+  const id=created.data.match.id;assert.equal((await call("guest","matches?game=chess")).data.open.length,1);
+  assert.equal((await call("guest","matches",{action:"join",id})).status,200);
+  assert.equal((await call("guest","matches",{action:"move",id,move:{type:"chess",from:"e7",to:"e5"}})).status,409);
+  assert.equal((await call("host","matches",{action:"move",id,move:{type:"chess",from:"e2",to:"e5"}})).status,422);
+  for(const [player,from,to] of [["host","f2","f3"],["guest","e7","e5"],["host","g2","g4"],["guest","d8","h4"]]){
+   const response=await call(player,"matches",{action:"move",id,move:{type:"chess",from,to}});assert.equal(response.status,200,JSON.stringify(response.data));
+  }
+  const end=(await call("host","matches?id="+id)).data.match;assert.equal(end.status,"finished");assert.equal(end.winner,"guest");assert.equal(end.state.moves.at(-1),"Qh4#");
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='guest'").get().cents,101000);
+  assert.equal((await call("guest","matches",{action:"leave",id})).status,409);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='guest'").get().cents,101000);
+ }finally{db.close();}
+});
+
 test("Uno rooms share only each player's hand; Rain donations debit once and pay the full pot",async()=>{
  const {db,env}=setup();const cookies={};const origin="https://playblockbet.com";
  try{

@@ -4,7 +4,8 @@ import { newPoolRack, shootPool } from "../../_shared/pool-engine.js";
 // Only authenticated players can stake play money. All PvP logic is enforced
 // here; the browser never determines match winners or requests match payouts.
 import {newUno,playUno,unoView} from "../../_shared/uno-engine.js";
-const GAMES = new Set(["pool", "connect-four", "mines-battles", "uno"]);
+import {newChess,moveChess} from "../../_shared/chess-engine.js";
+const GAMES = new Set(["pool", "connect-four", "mines-battles", "uno", "chess"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const WAIT_MS = 15*60_000, TURN_MS = 10*60_000;
 const detailSql = "SELECT r.*,h.email AS host_email,g.email AS guest_email FROM pvp_rooms r "+
@@ -21,6 +22,7 @@ function shuffle25() {
   return values;
 }
 function initial(game) {
+  if(game==="chess")return newChess();
   if(game==="uno")return newUno();
   if(game==="pool")return newPoolRack();
   if(game==="connect-four")return {board:Array(42).fill(0),moves:0};
@@ -63,6 +65,10 @@ function legalMove(row,move) {
   if(row.game==="uno"){
     const result=playUno(state,hostTurn?"host":"guest",move);if(!result)return null;
     return {state:result.state,next:result.state.turn==="host"?row.host_id:row.guest_id,winner:result.winner?row.turn_id:null,status:result.winner||result.state.draw?"finished":"active",reason:result.winner?"Last card played!":"Card played; automatic draws applied when needed."};
+  }
+  if(row.game==="chess"){
+    const result=moveChess(state,move);if(!result)return null;
+    return {state:result.state,next:result.turn==="host"?row.host_id:row.guest_id,winner:result.won?row.turn_id:null,status:result.finished?"finished":"active",reason:result.reason};
   }
   if(row.game==="pool"){
     if(move?.type!=="shoot")return null;
@@ -136,7 +142,7 @@ export async function onRequestGet({request,env}) {
     const mine=await env.DB.prepare(detailSql+"WHERE (r.host_id=?1 OR r.guest_id=?1) "+
       "AND r.status IN ('waiting','active') ORDER BY r.created_ms DESC LIMIT 1").bind(user.id).first();
     return json({open:(open.results||[]).map(row=>view(row,user)),mine:mine?view(mine,user):null});
-  }catch{return json({error:"Multiplayer rooms temporarily unavailable. Apply migration 0013."},503);}
+  }catch{return json({error:"Match rooms are temporarily unavailable. Please try again shortly."},503);}
 }
 export async function onRequestPost({request,env}) {
   if(!sameOrigin(request))return json({error:"Invalid request origin."},403);
@@ -161,7 +167,7 @@ export async function onRequestPost({request,env}) {
         "AND NOT EXISTS(SELECT 1 FROM pvp_rooms r WHERE (r.host_id=?3 OR r.guest_id=?3) AND r.status IN ('waiting','active'))");
       const wrote=await statement.bind(id,game,user.id,stake,JSON.stringify(initial(game)),now).run();
       if(wrote.meta?.changes!==1)
-        return json({error:"Not enough balance, or you already have an open match."},409);
+        return json({error:"You need enough available play money and no other open match. Finish or cancel your existing match first."},409);
       return json({match:view(await detail(env,id),user)},201);
     }
     const id=input?.id;
@@ -172,7 +178,7 @@ export async function onRequestPost({request,env}) {
         "AND EXISTS(SELECT 1 FROM playusd_wallets w WHERE w.user_id=?1 AND w.initialized=1 AND w.cents>=pvp_rooms.stake_cents) "+
         "AND NOT EXISTS(SELECT 1 FROM pvp_rooms r WHERE (r.host_id=?1 OR r.guest_id=?1) AND r.status IN ('waiting','active'))")
         .bind(user.id,now,id).run();
-      if(wrote.meta?.changes!==1)return json({error:"Room full, unavailable, or insufficient play money."},409);
+      if(wrote.meta?.changes!==1)return json({error:"This room may have been joined already. Refresh the list, check your balance, and finish any other open match."},409);
       return json({match:view(await detail(env,id),user)});
     }
     const row=await detail(env,id);
@@ -190,6 +196,8 @@ export async function onRequestPost({request,env}) {
     }
     if(row.status!=="active"||row.turn_id!==user.id)
       return json({error:"It is not your turn."},409);
+    if(row.game==="pool"&&now<row.updated_ms+(JSON.parse(row.state_json).replay?.length||0)*1000/30)
+      return json({error:"The balls are still moving. Wait for the shot to finish."},409);
     const next=legalMove(row,input.move);
     if(!next)return json({error:"That move is not allowed."},422);
     const done=next.status==="finished";
@@ -201,7 +209,7 @@ export async function onRequestPost({request,env}) {
     if(wrote.meta?.changes!==1)return json({error:"Move already played; refresh the match."},409);
     return json({match:view(await detail(env,id),user)});
   }catch{
-    return json({error:"Multiplayer action unavailable. Check the server and match database."},503);
+    return json({error:"Your action could not be saved. Refresh the match and try again."},503);
   }
 }
 
