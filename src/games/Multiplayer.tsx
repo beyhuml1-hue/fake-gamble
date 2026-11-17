@@ -86,7 +86,7 @@ export function Multiplayer({game}:{game:Game}){
   const working=current&&["waiting","active"].includes(current.status);
   const otherGame=mine&&mine.game!==game&&["waiting","active"].includes(mine.status);
   const canCreate=Boolean(email&&walletReady&&!busy&&!working&&!otherGame);
-  const waiting=rooms.filter(room=>room.status==="waiting"&&room.role!=="host");
+  const waiting=rooms.filter(room=>room.status==="waiting");
 
   return <GameLayout title={names[game]} note="Player vs player · play-money stakes" panel={
     <div className="pvp-controls">
@@ -130,7 +130,7 @@ export function Multiplayer({game}:{game:Game}){
       <h2>{current.status==="cancelled"?"Match cancelled":current.winner===null?"Draw":current.winner===current.role?"You won!":"Opponent won"}</h2>
       <p>{current.result??"Match finished."}</p>
       <strong>{current.winner===current.role?formatUSD(current.stakeCents*2):current.winner===null?formatUSD(current.stakeCents)+" refunded":"No payout"}</strong>
-      <button type="button" className="bet-btn" onClick={()=>{setMatch(null);setRoomId(null);void refresh();}}>Back to open matches</button>
+      <button type="button" className="bet-btn" onClick={()=>{idRef.current=null;setMatch(null);setRoomId(null);void refresh();}}>Back to open matches</button>
     </div>:
     <div className="pvp-lobby">
       <div className="pvp-list-head"><h2>Waiting to play</h2><button className="ghost-btn" type="button" onClick={()=>void refresh()}>Refresh</button></div>
@@ -138,8 +138,8 @@ export function Multiplayer({game}:{game:Game}){
         <div className="pvp-room-list">{waiting.map(room=><div className="pvp-room" key={room.id}>
           <div><strong>{room.host}</strong><small>Waiting for opponent</small></div>
           <b>{formatUSD(room.stakeCents)}</b>
-          <button className="bet-btn" type="button" disabled={busy||!walletReady||balance<room.stakeCents||Boolean(otherGame)}
-            onClick={()=>void act("join",{id:room.id})}>Play against</button>
+          <button className="bet-btn" type="button" disabled={busy||!walletReady||balance<room.stakeCents||Boolean(otherGame)||Boolean(working)||room.role==="host"}
+            onClick={()=>void act("join",{id:room.id})}>{room.role==="host"?"Your room":"Play against"}</button>
         </div>)}</div>}
     </div>}
   </GameLayout>;
