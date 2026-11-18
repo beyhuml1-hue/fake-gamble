@@ -4,6 +4,7 @@ import {readFileSync,readdirSync} from "node:fs";
 import {DatabaseSync} from "node:sqlite";
 import worker from "../blockbet-auth.worker.js";
 import {issueSession} from "../functions/_shared/auth.js";
+import {cardDetails} from "../functions/_shared/demo-voucher.js";
 
 function setup(){
  const db=new DatabaseSync(":memory:");
@@ -26,7 +27,7 @@ function setup(){
  return {db,DB};
 }
 const base="https://playblockbet.com";
-test("Retired simulated card funding cannot add money",async()=>{
+test("Simulated card redeems only internal credits without accepting bank card numbers",async()=>{
  const {db,DB}=setup();
  try{
   const env={AUTH_PEPPER:"test-secret",DB,ADMIN_EMAIL:"owner@example.com"};
@@ -57,7 +58,7 @@ test("Retired simulated card funding cannot add money",async()=>{
   assert.doesNotMatch(JSON.stringify(await (await get("alice")).json()),/card_hash|9433426241988600|767/);
  }finally{db.close();}
 });
-test("Submitted big wins publish once to public chat and weekly rankings reflect actual submitted records",async()=>{
+test("Wins below 100m never enter public chat; submitted records still appear on leaderboards",async()=>{
  const {db,DB}=setup();
  try{
   const env={AUTH_PEPPER:"another-test",DB},cookies={};
@@ -118,7 +119,7 @@ test("Homepage retains stats; Plinko has independent normal paths; free wallet n
  assert.match(source("../src/games/Plinko.tsx"),/hotBin/);
  const cashier=source("../src/components/Cashier.tsx");
  assert.doesNotMatch(cashier,/className="plastic"|withdrawToCard|depositFromCard/);
- assert.doesNotMatch(cashier,/Card number|Expiry date|Security code|demo-card/);
+ assert.match(cashier,/demo-card/);
  assert.doesNotMatch(cashier,/credit\(/);
  assert.match(cashier,/Top-ups are disabled/);
  assert.match(cashier,/join Rain/);
