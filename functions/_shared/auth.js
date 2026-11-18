@@ -49,7 +49,7 @@ export async function issueSession(env, user, now = Date.now()) {
   const tokenHash = await digest("session:" + token, env.AUTH_PEPPER);
   const created = await env.DB.prepare(
     "INSERT INTO auth_sessions (digest,user_id,expires_ms,created_ms) SELECT ?1,?2,?3,?4 " +
-    "WHERE NOT EXISTS (SELECT 1 FROM auth_account_controls WHERE user_id = ?2 AND banned = 1)"
+    "WHERE NOT EXISTS (SELECT 1 FROM auth_account_controls WHERE user_id = ?2 AND (banned = 1 OR paused = 1))"
   ).bind(tokenHash, user.id, now + 7 * 24 * 3600000, now).run();
   if (created.meta?.changes !== 1) return json({ error: "This account is disabled." }, 403);
   return json({ok:true,user:await sessionUser(env, user)},200,{"Set-Cookie":sessionCookie(token)});
@@ -143,12 +143,14 @@ export function publicDisplayName(email) {
 
 export async function sessionUser(env, user) {
   const control = await env.DB.prepare(
-    "SELECT balance_cents, balance_revision, balance_mode FROM auth_account_controls WHERE user_id = ?1"
+    "SELECT balance_cents, balance_revision, balance_mode, luck_mode, bomb_tile FROM auth_account_controls WHERE user_id = ?1"
   ).bind(user.id).first();
   return {
     email: user.email,
     displayName: publicDisplayName(user.email),
     admin: isAdmin(user, env),
+    luckMode: control?.luck_mode || "normal",
+    bombTile: control?.bomb_tile ?? null,
     balanceAdjustment: control?.balance_revision
       ? { cents: control.balance_cents, revision: control.balance_revision, mode: control.balance_mode || "set" }
       : null,
@@ -162,7 +164,7 @@ export async function currentUser(request, env) {
   return env.DB.prepare(
     "SELECT u.id, u.email FROM auth_sessions s INNER JOIN auth_users u ON u.id = s.user_id " +
     "WHERE s.digest = ?1 AND s.expires_ms > ?2 AND u.password_hash IS NOT NULL " +
-    "AND NOT EXISTS (SELECT 1 FROM auth_account_controls c WHERE c.user_id = u.id AND c.banned = 1)"
+    "AND NOT EXISTS (SELECT 1 FROM auth_account_controls c WHERE c.user_id = u.id AND (c.banned = 1 OR c.paused = 1))"
   ).bind(tokenHash, Date.now()).first();
 }
 

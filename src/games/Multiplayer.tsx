@@ -12,6 +12,7 @@ import {sound} from "../lib/sound";
 import "./uno-matches.css";
 import "./multiplayer.css";
 import "./pool-uno.css";
+import "./multiplayer-polish.css";
 
 type Game = "pool" | "connect-four" | "mines-battles" | "uno" | "chess";
 type UnoCard={id:number;color:string;value:string};
@@ -135,7 +136,7 @@ export function Multiplayer({game}:{game:Game}){
       {game==="chess"&&current.state.fen?<ChessMatch fen={current.state.fen} moves={current.state.moves||[]} lastMove={current.state.lastMove} role={current.role} myTurn={current.myTurn} busy={busy} onMove={move=>void act("move",{id:current.id,move})}/>:game==="uno"?<UnoMatch room={current} busy={busy} play={move=>void act("move",{id:current.id,move})}/>:game==="pool"?<PoolMatch room={current} busy={busy} shoot={move=>void act("move",{id:current.id,move})}/>:
         game==="connect-four"?<FourMatch room={current} busy={busy} move={column=>void act("move",{id:current.id,move:{column}})}/>:
         <MinesMatch room={current} busy={busy} move={tile=>void act("move",{id:current.id,move:{tile}})}/>}
-      {current.status==="finished"&&<div className="match-outcome"><h2>{current.winner===current.role?"You won!":current.winner?"Opponent won":"Match drawn"}</h2><p>{current.result}</p><button type="button" className="bet-btn" onClick={()=>{idRef.current=null;setMatch(null);setRoomId(null);void refresh();}}>Back to open matches</button></div>}
+      {current.status==="finished"&&<div className="match-outcome"><h2>{current.winner===current.role?"You won!":current.winner?"Opponent won":"Match drawn"}</h2><strong className={current.winner===current.role?"pvp-result-win":current.winner?"pvp-result-loss":"pvp-result-draw"}>{current.winner===current.role?"+"+formatUSD(current.stakeCents)+" profit":current.winner?"−"+formatUSD(current.stakeCents)+" lost":formatUSD(current.stakeCents)+" refunded"}</strong><p>{current.result}</p><button type="button" className="bet-btn" onClick={()=>{idRef.current=null;setMatch(null);setRoomId(null);void refresh();}}>Back to open matches</button></div>}
       <p className="hint">Moves are verified on the server. Refreshing or changing pages will not reset the match.</p>
     </div>:
     current&&["finished","expired","cancelled"].includes(current.status)?<div className="pvp-empty">

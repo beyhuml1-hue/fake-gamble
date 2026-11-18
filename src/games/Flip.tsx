@@ -6,7 +6,7 @@ import { GameLayout } from "../components/GameLayout";
 import { betCents, formatUSD, payout } from "../lib/money";
 import { EDGE } from "../lib/math";
 import { random } from "../lib/random";
-import { luckOn } from "../lib/luck";
+import { luckOn, coldOn } from "../lib/luck";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 
@@ -86,7 +86,7 @@ export function Flip({ game = "Flip" }: { game?: "Flip" | "Coinflip" } = {}) {
     setWin(null);
     setLanded(null);
     sound.flip();
-    const heads = luckOn() ? side === "heads" : random() < 0.5;
+    const heads = coldOn() ? side !== "heads" : luckOn() ? side === "heads" : random() < 0.5;
     const didWin = (heads && side === "heads") || (!heads && side === "tails");
     const pay = didWin ? payout(stake, multiplier) : 0;
     pending.current = { stake, pay, win: didWin, heads };

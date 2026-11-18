@@ -21,9 +21,13 @@ import { onRequestGet as walletEvents, onRequestPost as acknowledgeWalletNotice 
 import { onRequestGet as playUsdBalance, onRequestPost as postPlayUsd } from "./functions/api/auth/playusd.js";
 import { onRequestGet as weeklyLeaderboard } from "./functions/api/auth/leaderboard.js";
 import { onRequestGet as listMatches, onRequestPost as matchAction } from "./functions/api/auth/matches.js";
+import { onRequestPost as updatePresence } from "./functions/api/auth/presence.js";
+import { onRequestGet as accountStatus } from "./functions/api/auth/account-status.js";
 import { onRequestGet as demoCardStatus, onRequestPost as chargeDemoCard } from "./functions/api/auth/demo-card.js";
 
 const routes = {
+  "GET /api/auth/account-status": accountStatus,
+  "POST /api/auth/presence": updatePresence,
   "GET /api/auth/matches": listMatches,
   "POST /api/auth/matches": matchAction,
   "GET /api/auth/playusd": playUsdBalance,

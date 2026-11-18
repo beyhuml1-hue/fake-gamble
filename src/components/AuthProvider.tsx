@@ -5,10 +5,12 @@ import {
   type FormEvent, type ReactNode,
 } from "react";
 
-type Phase = "loading" | "login" | "signup" | "verify" | "authenticated" | "guest";
-export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" };
-type Account = { email: string; displayName?: string; admin?: boolean; balanceAdjustment?: BalanceAdjustment | null };
+type Phase = "loading" | "login" | "signup" | "verify" | "authenticated" | "guest" | "restricted";
+export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" | "reset" };
+type Account = { email: string; displayName?: string; admin?: boolean; luckMode?: "normal" | "hot" | "cold"; bombTile?: number | null; balanceAdjustment?: BalanceAdjustment | null };
 type AuthValue = {
+  luckMode: "normal" | "hot" | "cold";
+  bombTile: number | null;
   isAdmin: boolean;
   email: string | null;
   displayName: string | null;
@@ -43,6 +45,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [restriction, setRestriction] = useState<"banned" | "paused">("paused");
 
   useEffect(() => {
     let alive = true;
@@ -62,7 +65,16 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
             setPhase("authenticated");
             return;
           }
-        } catch { /* No active session. */ }
+         } catch {
+          try {
+            const response=await fetch("/api/auth/account-status",{cache:"no-store"});
+            const result=await response.json();
+            if(result.status==="banned"||result.status==="paused"){
+              if(alive){setRestriction(result.status);setPhase("restricted");}
+              return;
+            }
+          }catch{/* no active session */}
+        }
         if (alive) setPhase("guest");
       } catch {
         if (alive) setPhase("guest");
@@ -83,9 +95,15 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
         const response = await fetch("/api/auth/me", { cache: "no-store", signal: controller.signal });
         if (controller.signal.aborted) return;
         if (response.status === 401) {
+          const status=await fetch("/api/auth/account-status",{cache:"no-store",signal:controller.signal}).then(r=>r.json()).catch(()=>null);
           setAccount(null);
-          setPhase("login");
-          setError("Your session ended. Log in again to continue.");
+          if(status?.status==="banned"||status?.status==="paused"){
+            setRestriction(status.status);
+            setPhase("restricted");
+          }else{
+            setPhase("login");
+            setError("Your session ended. Log in again to continue.");
+          }
         } else if (response.ok) {
           const result: AuthResponse = await response.json();
           if (result.user && !controller.signal.aborted) setAccount(result.user);
@@ -162,7 +180,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   }
 
   const logout = async () => {
-    if (phase === "authenticated") {
+    if (phase === "authenticated" || phase === "restricted") {
       try { await api("logout", {}); }
       catch {
         setError("Couldn't sign out on the server. Please retry.");
@@ -177,6 +195,8 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   const signedIn = phase === "authenticated";
   const editing = phase === "login" || phase === "signup" || phase === "verify";
   const context: AuthValue = {
+    luckMode: signedIn ? account?.luckMode || "normal" : "normal",
+    bombTile: signedIn ? account?.bombTile ?? null : null,
     isAdmin: phase === "authenticated" && account?.admin === true,
     email: signedIn ? account?.email ?? null : null,
     displayName: signedIn ? account?.displayName ?? "Player" : null,
@@ -185,6 +205,19 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
     logout,
     showSignIn,
   };
+  useEffect(()=>{
+    try{localStorage.setItem("blockbet.account-simulation",phase==="authenticated"?account?.luckMode||"normal":"normal");}
+    catch{/* no local storage */}
+  },[phase,account?.luckMode]);
+  if (phase === "restricted") return <div className="auth-screen">
+    <section className="auth-card" role="alert">
+      <div className="auth-logo">B</div>
+      <h1>{restriction==="banned"?"Account banned":"Account paused"}</h1>
+      <p>{restriction==="banned"?"Your BlockBet account has been banned. Contact the site owner if this is a mistake.":"Your account has been temporarily paused by the site owner."}</p>
+      <button type="button" className="bet-btn" onClick={()=>void logout()}>Sign out</button>
+      <button type="button" className="ghost-btn" onClick={()=>window.location.reload()}>Check account status</button>
+    </section>
+  </div>;
   if (phase === "loading") {
     return <div className="auth-screen"><div className="auth-card">
       <div className="auth-logo">B</div><h1>BlockBet</h1><p>Checking your session…</p>

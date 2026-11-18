@@ -4,6 +4,7 @@ import {readFileSync,readdirSync} from "node:fs";
 import {DatabaseSync} from "node:sqlite";
 import worker from "../blockbet-auth.worker.js";
 import {issueSession} from "../functions/_shared/auth.js";
+import {cardDetails} from "../functions/_shared/demo-voucher.js";
 
 function setup(){
  const db=new DatabaseSync(":memory:");
@@ -26,7 +27,7 @@ function setup(){
  return {db,DB};
 }
 const base="https://playblockbet.com";
-test("Retired simulated card funding cannot add money",async()=>{
+test("Simulated card redeems only internal credits without accepting bank card numbers",async()=>{
  const {db,DB}=setup();
  try{
   const env={AUTH_PEPPER:"test-secret",DB,ADMIN_EMAIL:"owner@example.com"};
@@ -50,14 +51,19 @@ test("Retired simulated card funding cannot add money",async()=>{
   assert.equal((await (await get("owner")).json()).remainingCents,12500);
   assert.equal((await post("alice",payload(100),"https://other.example")).status,403);
   assert.equal((await post("",payload(100))).status,401);
-  assert.equal((await post("alice",payload(100))).status,410);
-  assert.equal((await post("alice",payload(100))).status,410);
-  assert.equal(db.prepare("SELECT balance_cents FROM demo_shared_voucher").get().balance_cents,12500);
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM demo_voucher_redemptions").get().n,0);
+  assert.equal((await post("alice",payload(100))).status,400);
+  db.prepare("INSERT INTO playusd_wallets(user_id,cents,initialized,updated_ms) VALUES(\'alice\',100000,1,1)").run();
+  const valid=await cardDetails(env);
+  const receipt={id:crypto.randomUUID(),cents:2000,...valid};
+  assert.equal((await post("alice",receipt)).status,200);
+  assert.equal((await post("alice",receipt)).status,200,"Duplicate receipt cannot spend twice");
+  assert.equal(db.prepare("SELECT balance_cents FROM demo_shared_voucher").get().balance_cents,10500);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id=\'alice\'").get().cents,102000);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM demo_voucher_redemptions").get().n,1);
   assert.doesNotMatch(JSON.stringify(await (await get("alice")).json()),/card_hash|9433426241988600|767/);
  }finally{db.close();}
 });
-test("Submitted big wins publish once to public chat and weekly rankings reflect actual submitted records",async()=>{
+test("Wins below 100m never enter public chat; submitted records still appear on leaderboards",async()=>{
  const {db,DB}=setup();
  try{
   const env={AUTH_PEPPER:"another-test",DB},cookies={};
@@ -75,11 +81,7 @@ test("Submitted big wins publish once to public chat and weekly rankings reflect
   assert.equal((await bet("alice",win)).status,201);
   assert.equal((await bet("alice",win)).status,201);
   const messages=db.prepare("SELECT body,kind FROM community_messages").all();
-  assert.equal(messages.length,1);
-  assert.equal(messages[0].kind,"bigwin");
-  assert.match(messages[0].body,/BIG WIN/);
-  assert.match(messages[0].body,/player-reported/);
-  assert.match(messages[0].body,/10\.00×/);
+  assert.equal(messages.length,0,"Below-threshold wins must stay out of chat.");
   assert.equal((await bet("bob",{id:crypto.randomUUID(),game:"Dice",wager:500,payout:0,at:now})).status,201);
   const feed=await worker.fetch(new Request(base+"/api/auth/leaderboard"),env);
   assert.equal(feed.status,200);
@@ -100,9 +102,7 @@ test("Submitted big wins publish once to public chat and weekly rankings reflect
   const c=await worker.fetch(new Request(base+"/api/auth/community",{headers:{Cookie:cookies.bob}}),env);
   assert.equal(c.status,200);
   const board=await c.json();
-  assert.equal(board.messages.length,1);
-  assert.equal(board.messages[0].kind,"bigwin");
-  assert.equal(board.messages[0].label,"Laith");
+  assert.equal(board.messages.length,0);
   assert.doesNotMatch(JSON.stringify(board),/beyhum|example.com/);
  }finally{db.close();}
 });
@@ -118,7 +118,7 @@ test("Homepage retains stats; Plinko has independent normal paths; free wallet n
  assert.match(source("../src/games/Plinko.tsx"),/hotBin/);
  const cashier=source("../src/components/Cashier.tsx");
  assert.doesNotMatch(cashier,/className="plastic"|withdrawToCard|depositFromCard/);
- assert.doesNotMatch(cashier,/Card number|Expiry date|Security code|demo-card/);
+ assert.match(cashier,/demo-card/);
  assert.doesNotMatch(cashier,/credit\(/);
  assert.match(cashier,/Top-ups are disabled/);
  assert.match(cashier,/join Rain/);

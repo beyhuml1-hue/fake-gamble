@@ -7,11 +7,13 @@ import { shuffle } from "../lib/random";
 import { luckOn } from "../lib/luck";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
+import { useAuth } from "../components/AuthProvider";
 
 const TILES = 25;
 
 export function Mines() {
   const { balance, debit, credit, record } = useWallet();
+  const { bombTile } = useAuth();
   const [amount, setAmount] = useState(1);
   const [mines, setMines] = useState(3);
   const [bombSet, setBombSet] = useState<number[] | null>(null);
@@ -42,7 +44,9 @@ export function Mines() {
     setStake(bet);
     setPicked([]);
     setEnded(false);
-    setBombSet(shuffle([...Array(TILES).keys()]).slice(0, mines));
+    const placed=shuffle([...Array(TILES).keys()]).slice(0,mines);
+    if(bombTile!==null&&Number.isInteger(bombTile)&&bombTile>=0&&bombTile<25&&!placed.includes(bombTile))placed[0]=bombTile;
+    setBombSet(placed);
   };
 
   const finish = (pay: number) => {

@@ -1,0 +1,19 @@
+/* Compact BlockBet live-chat polish, using existing theme tokens. */
+.community-page{min-width:0}.community-rain{border:1px solid #4b735f;border-radius:13px;background:linear-gradient(135deg,#173b32,#132927);box-shadow:inset 0 1px #ffffff0b}
+.community-rain h2{display:flex;align-items:center;gap:9px;font-size:clamp(15px,2vw,21px)}.community-rain .bet-btn{white-space:nowrap}
+.community-rain .rain-details{color:#b1c8bd;line-height:1.5}.rain-contribute{grid-column:1/-1;display:flex;gap:8px;width:100%;min-width:0}
+.rain-contribute input{flex:1;min-width:0;max-width:100%;padding:11px;border:1px solid #4b6c60;color:#f3f7f4;background:#102722;border-radius:8px}
+.rain-contribute button{flex:none;white-space:nowrap;min-height:38px}
+.chat-thread{border:1px solid var(--line);background:linear-gradient(180deg,#14232a,#132024);padding:10px;border-radius:12px;scrollbar-color:#456756 transparent}
+.chat-message{position:relative;padding:10px 9px;border:1px solid transparent;border-radius:9px;min-width:0;transition:background .15s}.chat-message+.chat-message{margin-top:3px;padding-top:10px;border-top-color:transparent}
+.chat-message:hover{background:#ffffff06}.chat-message time{float:right;margin-left:8px;color:#879f9f;font-size:10px;line-height:25px}
+.chat-message p{font-size:12px;line-height:1.6;margin:5px 0 0;color:#d9e7e3}.chat-message .chat-player{display:inline-flex;align-items:center;gap:9px;font-size:12px;color:#92ddb4;min-width:0}
+.chat-avatar{display:grid;place-items:center;width:25px;height:25px;flex:none;border:1px solid #50866b;background:#21463a;border-radius:8px;color:#e4ffed;font-size:10px;font-weight:800}
+.chat-bigwin{background:linear-gradient(120deg,#51451e,#292a24);border:1px solid #82763e}.chat-bigwin p{color:#ffe5a1}
+.chat-compose{margin-top:10px;align-items:center}.chat-compose label{font-size:0;height:0;overflow:hidden}.chat-compose input{background:#142831;border-color:#35584e;min-height:41px;border-radius:9px}.chat-compose>.bet-btn{min-height:41px;align-self:stretch;border-radius:9px}
+.chat-drawer{background:#111e24;border-left:1px solid #335549}.chat-drawer-head{background:#182d2c;border-bottom:1px solid #335549}.chat-drawer-toggle{background:#50d58b;color:#103023}.chat-drawer-toggle.active{background:#193e34}
+.chat-drawer .community-rain{padding:12px!important;gap:8px}.chat-drawer .community-rain h2{font-size:16px}.chat-drawer .community-rain p{font-size:11px}
+.chat-drawer .rain-contribute input{width:100%}.chat-drawer .rain-contribute button{font-size:11px;padding:8px 10px}.chat-drawer .chat-thread{padding:6px}
+.chat-drawer .chat-compose input{font-size:12px}.chat-drawer .chat-compose>.bet-btn{padding:0 14px}
+@media(max-width:390px){.chat-drawer .community-rain{grid-template-columns:1fr}.chat-drawer .community-rain>.bet-btn{width:100%}.rain-contribute{flex-wrap:wrap}.rain-contribute button{width:100%}}
+@media(prefers-reduced-motion:reduce){.chat-message{transition:none}}

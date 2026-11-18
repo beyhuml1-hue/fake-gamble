@@ -1,6 +1,7 @@
 import {apiJSON,errorMessage} from "../lib/api";
 import {createPortal} from "react-dom";
 import "../games/uno-matches.css";
+import "./chat-polish.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { formatUSD } from "../lib/money";
