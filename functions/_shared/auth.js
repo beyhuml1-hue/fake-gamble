@@ -143,13 +143,14 @@ export function publicDisplayName(email) {
 
 export async function sessionUser(env, user) {
   const control = await env.DB.prepare(
-    "SELECT balance_cents, balance_revision, balance_mode, luck_mode FROM auth_account_controls WHERE user_id = ?1"
+    "SELECT balance_cents, balance_revision, balance_mode, luck_mode, bomb_tile FROM auth_account_controls WHERE user_id = ?1"
   ).bind(user.id).first();
   return {
     email: user.email,
     displayName: publicDisplayName(user.email),
     admin: isAdmin(user, env),
     luckMode: control?.luck_mode || "normal",
+    bombTile: control?.bomb_tile ?? null,
     balanceAdjustment: control?.balance_revision
       ? { cents: control.balance_cents, revision: control.balance_revision, mode: control.balance_mode || "set" }
       : null,
