@@ -50,7 +50,7 @@ export function AppShell() {
     setSiteStyle(style);
     try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
   }
-  const { displayName, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
+  const { displayName, email, luckMode, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
@@ -74,6 +74,14 @@ export function AppShell() {
     if (cashierNonce > 0) setWalletOpen(true);
   }, [cashierNonce]);
 
+  useEffect(()=>{
+    if(!email)return;
+    const page=location.pathname.startsWith("/game/")?"Game: "+location.pathname.slice(6):location.pathname==="/chat"?"Chat":location.pathname==="/stats"?"Stats":location.pathname==="/race"?"Race":"Lobby";
+    const ping=()=>{if(!document.hidden)void fetch("/api/auth/presence",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page})}).catch(()=>{});};
+    ping();const interval=window.setInterval(ping,15000);
+    window.addEventListener("focus",ping);
+    return()=>{window.clearInterval(interval);window.removeEventListener("focus",ping);};
+  },[email,location.pathname]);
   const showChat = chatOpen && location.pathname !== "/chat";
 
   return (
@@ -190,6 +198,7 @@ export function AppShell() {
         </header>
 
         <div className="content" ref={contentRef}>
+          {luckMode!=="normal"&&<div className="simulation-odds-notice" role="status">Simulation mode: {luckMode==="hot"?"boosted":"reduced"} odds. Results may differ from standard probabilities.</div>}
           <Outlet context={{ query, setQuery } satisfies ShellContext} />
           {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
