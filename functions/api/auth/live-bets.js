@@ -46,8 +46,9 @@ export async function onRequestPost({ request, env }) {
     ).bind(id,user.id,label,game,wager,payout,now).run();
     // Publish player-reported highlights automatically, never as verified results.
     // A duplicate bet ID can't trigger another announcement.
-    const profit=payout-wager, mult=payout/wager;
-    if(inserted.meta?.changes===1 && ((profit>=5000&&mult>=5)||profit>=25000)){
+    const mult=payout/wager;
+    // Announce only payouts STRICTLY greater than 100 million Play USD.
+    if(inserted.meta?.changes===1 && payout>10_000_000_000 && payout>wager){
       if(await hitRateLimit(env,"bigwin:"+user.id,3600000,3,now)){
         const amount=(payout/100).toLocaleString("en-US",{style:"currency",currency:"USD"});
         const line="🎉 BIG WIN · "+mult.toFixed(2)+"× on "+game+" · "+amount+" Play USD payout (player-reported)";
