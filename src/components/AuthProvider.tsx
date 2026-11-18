@@ -5,9 +5,9 @@ import {
   type FormEvent, type ReactNode,
 } from "react";
 
-type Phase = "loading" | "login" | "signup" | "verify" | "authenticated" | "guest";
+type Phase = "loading" | "login" | "signup" | "verify" | "authenticated" | "guest" | "restricted";
 export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" };
-type Account = { email: string; displayName?: string; admin?: boolean; balanceAdjustment?: BalanceAdjustment | null };
+type Account = { email: string; displayName?: string; admin?: boolean; luckMode?: "normal" | "hot" | "cold"; balanceAdjustment?: BalanceAdjustment | null };
 type AuthValue = {
   isAdmin: boolean;
   email: string | null;
@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [restriction, setRestriction] = useState<"banned" | "paused">("paused");
 
   useEffect(() => {
     let alive = true;
@@ -162,7 +163,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   }
 
   const logout = async () => {
-    if (phase === "authenticated") {
+    if (phase === "authenticated" || phase === "restricted") {
       try { await api("logout", {}); }
       catch {
         setError("Couldn't sign out on the server. Please retry.");
@@ -185,6 +186,19 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
     logout,
     showSignIn,
   };
+  useEffect(()=>{
+    try{localStorage.setItem("blockbet.account-simulation",phase==="authenticated"?account?.luckMode||"normal":"normal");}
+    catch{/* no local storage */}
+  },[phase,account?.luckMode]);
+  if (phase === "restricted") return <div className="auth-screen">
+    <section className="auth-card" role="alert">
+      <div className="auth-logo">B</div>
+      <h1>{restriction==="banned"?"Account banned":"Account paused"}</h1>
+      <p>{restriction==="banned"?"Your BlockBet account has been banned. Contact the site owner if this is a mistake.":"Your account has been temporarily paused by the site owner."}</p>
+      <button type="button" className="bet-btn" onClick={()=>void logout()}>Sign out</button>
+      <button type="button" className="ghost-btn" onClick={()=>window.location.reload()}>Check account status</button>
+    </section>
+  </div>;
   if (phase === "loading") {
     return <div className="auth-screen"><div className="auth-card">
       <div className="auth-logo">B</div><h1>BlockBet</h1><p>Checking your session…</p>
