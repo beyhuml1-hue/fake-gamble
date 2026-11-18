@@ -141,6 +141,7 @@ function reference() {
 
 function applyAdjustment(saved: Saved, adjustment?: BalanceAdjustment | null): Saved {
   if (!adjustment || adjustment.revision === saved.balanceRevision) return saved;
+  if(adjustment.mode==="reset")return {...saved,balance:clamp(adjustment.cents),history:[],ledger:[],pendingOps:[],balanceRevision:adjustment.revision};
   return { ...saved, balance: clamp(adjustment.mode === "add" ? saved.balance + adjustment.cents : adjustment.cents), balanceRevision: adjustment.revision };
 }
 
@@ -154,6 +155,10 @@ export function WalletProvider({ email, children, adjustment }: {
   if (saved !== stored) setSaved(saved);
   const [cashierNonce, setCashierNonce] = useState(0);
   const [notifications,setNotifications] = useState<WalletNotification[]>([]);
+  useEffect(()=>{
+    if(adjustment?.mode!=="reset")return;
+    opsRef.current=[];
+  },[adjustment?.revision,adjustment?.mode]);
   const opsRef=useRef<PendingOp[]>(saved.pendingOps||[]);
   const seedBalance=useRef(clamp(saved.balance-(saved.pendingOps||[]).reduce((total,op)=>total+op.delta,0)));
   const flushRef=useRef(false);
