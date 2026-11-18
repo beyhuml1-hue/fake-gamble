@@ -26,7 +26,7 @@ export function Cashier({open,onClose}:{open:boolean;onClose:()=>void}){
  if(!open)return null;
  return <div className="modal-back" onClick={onClose}><section className="modal wallet-modal wallet-plain" role="dialog" aria-modal="true" aria-labelledby="cashier-title" onClick={e=>e.stopPropagation()}>
   <header className="cashier-head"><h2 id="cashier-title">Play-money wallet</h2><button className="text-btn" type="button" onClick={onClose}>Close</button></header>
-  <h3>{formatUSD(balance)}</h3><p>Every account starts with $1,000 once. Normal top-ups are disabled.</p>
+  <h3>{formatUSD(balance)}</h3><p>Every account starts with $1,000 once. Top-ups are disabled except for the internal test voucher.</p>
   <p>Keep playing with your winnings, receive money from another player, or join Rain in chat.</p>
   <Link className="bet-btn" to="/chat" onClick={onClose}>Open chat and Rain</Link>
   {!isGuest&&<div className="test-card-redeem"><button className="ghost-btn" type="button" onClick={()=>setShowVoucher(v=>!v)} aria-expanded={showVoucher}>{showVoucher?"Hide":"Redeem"} internal demo card</button>
