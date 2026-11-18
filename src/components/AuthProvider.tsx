@@ -6,7 +6,7 @@ import {
 } from "react";
 
 type Phase = "loading" | "login" | "signup" | "verify" | "authenticated" | "guest" | "restricted";
-export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" };
+export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" | "reset" };
 type Account = { email: string; displayName?: string; admin?: boolean; luckMode?: "normal" | "hot" | "cold"; balanceAdjustment?: BalanceAdjustment | null };
 type AuthValue = {
   isAdmin: boolean;
