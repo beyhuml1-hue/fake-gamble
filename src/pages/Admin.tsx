@@ -4,7 +4,7 @@ import { formatUSD } from "../lib/money";
 import "./admin-dashboard.css";
 
 type Account={email:string;balanceCents:number|null;banned:0|1;paused:0|1;online:boolean;seenMs:number|null;page:string|null;lastLoginMs:number;activeGame:string|null;luckMode?:"normal"|"hot"|"cold"};
-type Action="balance"|"ban"|"unban"|"pause"|"unpause"|"luck";
+type Action="balance"|"ban"|"unban"|"pause"|"unpause"|"luck"|"reset"|"delete";
 type DemoCard={number:string;expiry:string;code:string;remainingCents:number;demoOnly:true};
 export function Admin(){
  const {isAdmin}=useAuth();
@@ -33,8 +33,13 @@ export function Admin(){
  async function change(action:Action,more:Record<string,unknown>={}){
   if(!player||busy)return;
   if(action==="ban"&&!window.confirm("Ban "+player.email+"?"))return;
+  if(action==="reset"||action==="delete") {
+    const confirmation=window.prompt((action==="delete"?"Permanently DELETE ":"Reset account for ")+player.email+"? Type their full email to confirm.");
+    if(confirmation!==player.email)return;
+    more={...more,confirm:confirmation};
+  }
   setBusy(true);setError("");setNotice("");
-  try{await api("",{action,email:player.email,...more});await refresh();setNotice("Account updated.");}
+  try{await api("",{action,email:player.email,...more});await refresh();if(action==="delete")setSelected("");setNotice(action==="delete"?"Account deleted.":"Account updated.");}
   catch(err){setError(err instanceof Error?err.message:"Unable to save");}
   finally{setBusy(false);}
  }
@@ -61,7 +66,9 @@ export function Admin(){
     <form className="admin-form" onSubmit={e=>{e.preventDefault();if(!/^\d+(\.\d{1,2})?$/.test(amount)){setError("Enter a valid amount.");return;}const cents=Math.round(Number(amount)*100);if(!Number.isSafeInteger(cents)||cents>10_000_000_000){setError("Maximum $100 million.");return;}void change("balance",{cents});}}>
      <label htmlFor="admin-balance">Set Play USD balance</label><div className="admin-inline"><input id="admin-balance" inputMode="decimal" value={amount} onChange={e=>setAmount(e.target.value)}/><button className="bet-btn" disabled={busy}>Save</button></div>
     </form><div className="admin-actions"><button type="button" className="ghost-btn" disabled={busy} onClick={()=>void change(player.paused?"unpause":"pause")}>{player.paused?"Resume account":"Pause account"}</button>
-    <button type="button" className="ghost-btn" disabled={busy} onClick={()=>void change(player.banned?"unban":"ban")}>{player.banned?"Unban account":"Ban account"}</button></div>
+    <button type="button" className="ghost-btn" disabled={busy} onClick={()=>void change(player.banned?"unban":"ban")}>{player.banned?"Unban account":"Ban account"}</button>
+    <button type="button" className="ghost-btn" disabled={busy} onClick={()=>void change("reset")}>Start account from scratch</button>
+    <button type="button" className="ghost-btn admin-danger" disabled={busy} onClick={()=>void change("delete")}>Delete account</button></div>
     <div className="admin-luck"><h3>Simulation odds</h3><p>Only for play-money test matches. Adjusted odds are labelled in-game.</p><div role="group" aria-label="Simulation luck">
     {(["normal","hot","cold"] as const).map(mode=><button type="button" key={mode} className={player.luckMode===mode?"selected":""} disabled={busy} onClick={()=>void change("luck",{mode})}>{mode==="hot"?"Hot table":mode==="cold"?"Cold table":"Normal"}</button>)}</div></div>
     </>:<div className="admin-empty"><h2>Select a player</h2><p>View online status, live balance, current game and account controls.</p></div>}</section>
