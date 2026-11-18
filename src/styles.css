@@ -1869,3 +1869,8 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .app.studio-style .lobby{background:#101b22}
 .app.studio-style .lobby .tile{background:#16242a}
 @media(max-width:650px){.site-style-control{padding:10px 8px}}
+
+/* Owner-labelled play-money test odds and wallet voucher */
+.simulation-odds-notice{margin:0 0 14px;padding:10px 14px;border:1px solid #7c814e;border-radius:9px;background:#282c1b;color:#e8e0b1;font-size:12px;font-weight:650}
+.test-card-redeem{margin:18px 0;padding-top:15px;border-top:1px solid var(--line)}.test-card-redeem form{display:grid;gap:12px;margin-top:12px}.test-card-redeem form p{font-size:12px}.test-card-redeem label{display:grid;gap:6px;font-size:12px;font-weight:700}.test-card-redeem input{padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:0;width:100%;background:var(--bg);color:var(--text)}.test-card-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.admin-danger{border-color:#a65b60!important;color:#ffc6ca!important}
