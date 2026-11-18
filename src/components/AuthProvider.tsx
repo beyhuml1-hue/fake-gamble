@@ -7,9 +7,10 @@ import {
 
 type Phase = "loading" | "login" | "signup" | "verify" | "authenticated" | "guest" | "restricted";
 export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" | "reset" };
-type Account = { email: string; displayName?: string; admin?: boolean; luckMode?: "normal" | "hot" | "cold"; balanceAdjustment?: BalanceAdjustment | null };
+type Account = { email: string; displayName?: string; admin?: boolean; luckMode?: "normal" | "hot" | "cold"; bombTile?: number | null; balanceAdjustment?: BalanceAdjustment | null };
 type AuthValue = {
   luckMode: "normal" | "hot" | "cold";
+  bombTile: number | null;
   isAdmin: boolean;
   email: string | null;
   displayName: string | null;
@@ -195,6 +196,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   const editing = phase === "login" || phase === "signup" || phase === "verify";
   const context: AuthValue = {
     luckMode: signedIn ? account?.luckMode || "normal" : "normal",
+    bombTile: signedIn ? account?.bombTile ?? null : null,
     isAdmin: phase === "authenticated" && account?.admin === true,
     email: signedIn ? account?.email ?? null : null,
     displayName: signedIn ? account?.displayName ?? "Player" : null,
