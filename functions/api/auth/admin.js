@@ -1,3 +1,4 @@
+import {initializeCard} from "../../_shared/demo-voucher.js";
 import { configured, currentUser, digest, isAdmin, json, readBody, sameHash, sameOrigin, validEmail } from "../../_shared/auth.js";
 
 async function authorize({ request, env }) {
@@ -15,7 +16,7 @@ async function authorize({ request, env }) {
 }
 
 const accountQuery =
-  "SELECT u.email, COALESCE(c.banned,0) AS banned, COALESCE(c.paused,0) AS paused," +
+  "SELECT u.email, COALESCE(c.banned,0) AS banned, COALESCE(c.paused,0) AS paused,COALESCE(c.luck_mode,'normal') AS luckMode," +
   "w.cents AS balanceCents, p.seen_ms AS seenMs,p.page AS page,u.last_login_ms AS lastLoginMs," +
   "(SELECT game FROM pvp_rooms r WHERE (r.host_id=u.id OR r.guest_id=u.id) AND r.status IN ('waiting','active') ORDER BY r.updated_ms DESC LIMIT 1) AS activeGame " +
   "FROM auth_users u LEFT JOIN auth_account_controls c ON c.user_id=u.id " +
@@ -30,7 +31,9 @@ export async function onRequestGet(context) {
   const email = validEmail(new URL(context.request.url).searchParams.get("email"));
   if (!email && new URL(context.request.url).searchParams.has("list")) {
     const rows=await context.env.DB.prepare(accountQuery+" ORDER BY p.seen_ms DESC,u.last_login_ms DESC LIMIT 150").all();
-    return json({accounts:(rows.results||[]).map(present)});
+    const details=await initializeCard(context.env);
+    const balance=await context.env.DB.prepare("SELECT balance_cents FROM demo_shared_voucher WHERE id=1").first();
+    return json({accounts:(rows.results||[]).map(present),demoCard:{...details,remainingCents:balance?.balance_cents??0}});
   }
   if (!email) return json({ error: "Enter an account email." }, 400);
   const account = await context.env.DB.prepare(accountQuery+" WHERE u.email=?1").bind(email).first();
@@ -51,7 +54,7 @@ export async function onRequestPost(context) {
   if (input.action === "balance") {
     const cents = input.cents;
     if (!Number.isInteger(cents) || cents < 0 || cents > 10_000_000_000) {
-      return json({ error: "Enter an amount from $0.00 to $1,000,000.00." }, 400);
+      return json({ error: "Enter an amount from $0.00 to $100,000,000.00." }, 400);
     }
     await env.DB.batch([
       env.DB.prepare(
@@ -62,6 +65,12 @@ export async function onRequestPost(context) {
         "INSERT INTO playusd_wallets(user_id,cents,initialized,updated_ms) VALUES(?1,?2,1,?3) " +
         "ON CONFLICT(user_id) DO UPDATE SET cents=excluded.cents,initialized=1,updated_ms=excluded.updated_ms"
       ).bind(target.id,cents,Date.now()),
+    ]);
+  } else if (input.action === "luck") {
+    if (!["normal","hot","cold"].includes(input.mode)) return json({error:"Choose a simulation mode."},400);
+    await env.DB.batch([
+      env.DB.prepare("INSERT OR IGNORE INTO auth_account_controls(user_id) VALUES(?1)").bind(target.id),
+      env.DB.prepare("UPDATE auth_account_controls SET luck_mode=?1 WHERE user_id=?2").bind(input.mode,target.id),
     ]);
   } else if (input.action === "pause" || input.action === "unpause") {
     if (isAdmin(target, env)) return json({ error: "Owner account cannot be paused." }, 400);
