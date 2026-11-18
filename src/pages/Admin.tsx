@@ -3,8 +3,8 @@ import { useAuth } from "../components/AuthProvider";
 import { formatUSD } from "../lib/money";
 import "./admin-dashboard.css";
 
-type Account={email:string;balanceCents:number|null;banned:0|1;paused:0|1;online:boolean;seenMs:number|null;page:string|null;lastLoginMs:number;activeGame:string|null;luckMode?:"normal"|"hot"|"cold"};
-type Action="balance"|"ban"|"unban"|"pause"|"unpause"|"luck"|"reset"|"delete";
+type Account={email:string;balanceCents:number|null;banned:0|1;paused:0|1;online:boolean;seenMs:number|null;page:string|null;lastLoginMs:number;activeGame:string|null;luckMode?:"normal"|"hot"|"cold";bombTile?:number|null};
+type Action="balance"|"ban"|"unban"|"pause"|"unpause"|"luck"|"bomb"|"reset"|"delete";
 type DemoCard={number:string;expiry:string;code:string;remainingCents:number;demoOnly:true};
 export function Admin(){
  const {isAdmin}=useAuth();
