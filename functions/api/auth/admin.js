@@ -16,7 +16,7 @@ async function authorize({ request, env }) {
 }
 
 const accountQuery =
-  "SELECT u.email, COALESCE(c.banned,0) AS banned, COALESCE(c.paused,0) AS paused,COALESCE(c.luck_mode,'normal') AS luckMode," +
+  "SELECT u.email, COALESCE(c.banned,0) AS banned, COALESCE(c.paused,0) AS paused,COALESCE(c.luck_mode,'normal') AS luckMode,c.bomb_tile AS bombTile," +
   "w.cents AS balanceCents, p.seen_ms AS seenMs,p.page AS page,u.last_login_ms AS lastLoginMs," +
   "(SELECT game FROM pvp_rooms r WHERE (r.host_id=u.id OR r.guest_id=u.id) AND r.status IN ('waiting','active') ORDER BY r.updated_ms DESC LIMIT 1) AS activeGame " +
   "FROM auth_users u LEFT JOIN auth_account_controls c ON c.user_id=u.id " +
@@ -70,7 +70,7 @@ export async function onRequestPost(context) {
         env.DB.prepare("DELETE FROM ai_messages WHERE user_id=?1").bind(target.id),
         env.DB.prepare("DELETE FROM ai_memory WHERE user_id=?1").bind(target.id),
         env.DB.prepare("INSERT OR IGNORE INTO auth_account_controls(user_id) VALUES(?1)").bind(target.id),
-        env.DB.prepare("UPDATE auth_account_controls SET balance_cents=100000,balance_revision=?1,balance_mode='reset',luck_mode='normal' WHERE user_id=?2").bind(crypto.randomUUID(),target.id),
+        env.DB.prepare("UPDATE auth_account_controls SET balance_cents=100000,balance_revision=?1,balance_mode='reset',luck_mode='normal',bomb_tile=NULL WHERE user_id=?2").bind(crypto.randomUUID(),target.id),
         env.DB.prepare("INSERT INTO playusd_wallets(user_id,cents,initialized,updated_ms) VALUES(?1,100000,1,?2) ON CONFLICT(user_id) DO UPDATE SET cents=100000,initialized=1,updated_ms=excluded.updated_ms").bind(target.id,now),
         env.DB.prepare("INSERT INTO admin_account_audit(id,actor_email,target_email,action,at_ms) VALUES(?1,?2,?3,'reset',?4)").bind(crypto.randomUUID(),(await currentUser(request,env)).email,email,now)
       ]);
@@ -118,6 +118,13 @@ export async function onRequestPost(context) {
         "INSERT INTO playusd_wallets(user_id,cents,initialized,updated_ms) VALUES(?1,?2,1,?3) " +
         "ON CONFLICT(user_id) DO UPDATE SET cents=excluded.cents,initialized=1,updated_ms=excluded.updated_ms"
       ).bind(target.id,cents,Date.now()),
+    ]);
+  } else if(input.action==="bomb"){
+    if(input.tile!==null&&(!Number.isInteger(input.tile)||input.tile<0||input.tile>24))
+      return json({error:"Choose a tile from 1 to 25, or clear the override."},400);
+    await env.DB.batch([
+      env.DB.prepare("INSERT OR IGNORE INTO auth_account_controls(user_id) VALUES(?1)").bind(target.id),
+      env.DB.prepare("UPDATE auth_account_controls SET bomb_tile=?1 WHERE user_id=?2").bind(input.tile,target.id)
     ]);
   } else if (input.action === "luck") {
     if (!["normal","hot","cold"].includes(input.mode)) return json({error:"Choose a simulation mode."},400);
