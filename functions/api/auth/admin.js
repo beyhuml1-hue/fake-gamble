@@ -51,6 +51,59 @@ export async function onRequestPost(context) {
   const target = await env.DB.prepare("SELECT id, email FROM auth_users WHERE email = ?1").bind(email).first();
   if (!target) return json({ error: "Account not found." }, 404);
 
+  if (["reset","delete"].includes(input.action)) {
+    if (isAdmin(target,env)) return json({error:"Owner account cannot be reset or deleted."},400);
+    if (input.confirm !== email) return json({error:"Type the full account email to confirm this action."},400);
+    const now=Date.now();
+    // Close affected PvP rooms before changing balances: existing escrow trigger
+    // refunds waiting hosts and awards active opponents when accounts are deleted.
+    await env.DB.prepare("UPDATE pvp_rooms SET status=CASE WHEN status='waiting' THEN 'cancelled' ELSE 'finished' END,"+
+      "winner_id=CASE WHEN status='waiting' THEN NULL WHEN host_id=?1 THEN guest_id ELSE host_id END,"+
+      "result_text='Match ended by account management.',updated_ms=?2,finished_ms=?2 "+
+      "WHERE (host_id=?1 OR guest_id=?1) AND status IN ('waiting','active')")
+      .bind(target.id,now).run();
+    if(input.action==="reset") {
+      await env.DB.batch([
+        env.DB.prepare("DELETE FROM playusd_game_ops WHERE user_id=?1").bind(target.id),
+        env.DB.prepare("DELETE FROM auth_live_bets WHERE user_id=?1").bind(target.id),
+        env.DB.prepare("DELETE FROM community_messages WHERE user_id=?1").bind(target.id),
+        env.DB.prepare("DELETE FROM ai_messages WHERE user_id=?1").bind(target.id),
+        env.DB.prepare("DELETE FROM ai_memory WHERE user_id=?1").bind(target.id),
+        env.DB.prepare("INSERT OR IGNORE INTO auth_account_controls(user_id) VALUES(?1)").bind(target.id),
+        env.DB.prepare("UPDATE auth_account_controls SET balance_cents=100000,balance_revision=?1,balance_mode='reset',luck_mode='normal' WHERE user_id=?2").bind(crypto.randomUUID(),target.id),
+        env.DB.prepare("INSERT INTO playusd_wallets(user_id,cents,initialized,updated_ms) VALUES(?1,100000,1,?2) ON CONFLICT(user_id) DO UPDATE SET cents=100000,initialized=1,updated_ms=excluded.updated_ms").bind(target.id,now),
+        env.DB.prepare("INSERT INTO admin_account_audit(id,actor_email,target_email,action,at_ms) VALUES(?1,?2,?3,'reset',?4)").bind(crypto.randomUUID(),(await currentUser(request,env)).email,email,now)
+      ]);
+      return json({ok:true,account:present(await env.DB.prepare(accountQuery+" WHERE u.email=?1").bind(email).first())});
+    }
+    // Order deletes by dependency. A hard delete is deliberately irreversible.
+    const deletes=[
+      "DELETE FROM community_notifications WHERE recipient_id=?1 OR sender_id=?1",
+      "DELETE FROM community_transfers WHERE sender=?1 OR recipient=?1",
+      "DELETE FROM community_rain WHERE user_id=?1",
+      "DELETE FROM rain_contributions WHERE user_id=?1",
+      "DELETE FROM community_messages WHERE user_id=?1",
+      "DELETE FROM community_wallet_events WHERE user_id=?1",
+      "DELETE FROM demo_voucher_redemptions WHERE user_id=?1",
+      "DELETE FROM auth_live_bets WHERE user_id=?1",
+      "DELETE FROM playusd_game_ops WHERE user_id=?1",
+      "DELETE FROM pvp_rooms WHERE host_id=?1 OR guest_id=?1 OR winner_id=?1",
+      "DELETE FROM mines_battle_rooms WHERE host_id=?1 OR guest_id=?1 OR winner_id=?1",
+      "DELETE FROM auth_presence WHERE user_id=?1",
+      "DELETE FROM auth_sessions WHERE user_id=?1",
+      "DELETE FROM ai_messages WHERE user_id=?1",
+      "DELETE FROM ai_memory WHERE user_id=?1",
+      "DELETE FROM community_profiles WHERE user_id=?1",
+      "DELETE FROM playusd_wallets WHERE user_id=?1",
+      "DELETE FROM auth_account_controls WHERE user_id=?1",
+      "DELETE FROM auth_users WHERE id=?1"
+    ].map(sql=>env.DB.prepare(sql).bind(target.id));
+    deletes.push(env.DB.prepare("DELETE FROM auth_otp WHERE email=?1").bind(email));
+    deletes.push(env.DB.prepare("DELETE FROM auth_pending WHERE email=?1").bind(email));
+    deletes.push(env.DB.prepare("INSERT INTO admin_account_audit(id,actor_email,target_email,action,at_ms) VALUES(?1,?2,?3,'delete',?4)").bind(crypto.randomUUID(),(await currentUser(request,env)).email,email,now));
+    await env.DB.batch(deletes);
+    return json({ok:true,deleted:true});
+  }
   if (input.action === "balance") {
     const cents = input.cents;
     if (!Number.isInteger(cents) || cents < 0 || cents > 10_000_000_000) {
