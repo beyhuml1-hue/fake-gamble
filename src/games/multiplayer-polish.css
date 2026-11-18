@@ -1,0 +1,14 @@
+.pvp-match,.pvp-lobby{max-width:100%;gap:16px}.pvp-list-head h2{font-size:clamp(17px,2vw,22px)}
+.pvp-room-list{grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:12px}
+.pvp-room{border-radius:13px;border:1px solid #39564b;background:linear-gradient(155deg,#1e3430,#19272a);padding:18px;box-shadow:0 10px 28px #0002;transition:border-color .18s ease,transform .18s ease}
+.pvp-room:hover{border-color:#5aa57c;transform:translateY(-2px)}
+.pvp-room>div strong{color:#e7f5eb}.pvp-room b{font-size:18px;color:#89e8b2}.pvp-room .bet-btn{min-height:41px}
+.pvp-versus{position:relative;max-width:850px;margin:auto;border-radius:14px;background:linear-gradient(110deg,#254338,#192f32 50%,#254338);padding:19px}
+.pvp-versus strong{font-size:13px;color:#aff7cc;border:1px solid #47745b;background:#193629;padding:13px;box-shadow:0 4px 12px #0003}
+.pvp-versus span{font-size:clamp(15px,2vw,19px)}.pvp-turn{max-width:850px;width:100%;margin:auto;border:1px solid #365a49;border-radius:9px;color:#cff3d9;background:#183027}
+.pvp-empty{background:linear-gradient(145deg,#1b2d2a,#17252b);border:1px dashed #36594d;padding:45px 20px}
+.match-outcome{max-width:500px;width:100%;margin:auto;border-radius:13px;box-shadow:0 10px 30px #0003}
+.pvp-result-win{font-weight:900!important;color:#85edae!important;font-size:22px!important}.pvp-result-loss{font-weight:900!important;color:#ff9196!important;font-size:22px!important}.pvp-result-draw{font-weight:800!important;color:#f3da9c!important;font-size:19px!important}
+.pvp-match .mb-board,.pvp-match .connect-board{box-shadow:0 18px 35px #0004}
+.pvp-controls .room-setup{border-radius:12px;background:linear-gradient(135deg,#1b3229,#1b2a2e);border:1px solid #3d6651}
+@media(max-width:600px){.pvp-room-list{grid-template-columns:1fr}.pvp-room{padding:13px}.pvp-versus{padding:12px;gap:8px}.pvp-empty{padding:24px 12px}}@media(prefers-reduced-motion:reduce){.pvp-room{transition:none;transform:none!important}}
