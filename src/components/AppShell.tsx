@@ -50,7 +50,7 @@ export function AppShell() {
     setSiteStyle(style);
     try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
   }
-  const { displayName, email, luckMode, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
+  const { displayName, email, luckMode, bombTile, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
@@ -198,7 +198,7 @@ export function AppShell() {
         </header>
 
         <div className="content" ref={contentRef}>
-          {luckMode!=="normal"&&<div className="simulation-odds-notice" role="status">Simulation mode: {luckMode==="hot"?"boosted":"reduced"} odds. Results may differ from standard probabilities.</div>}
+          {(luckMode!=="normal"||bombTile!==null)&&<div className="simulation-odds-notice" role="status">Simulation settings active: {luckMode!=="normal"?(luckMode==="hot"?"boosted":"reduced")+" odds":"standard odds"}{bombTile!==null?" · single-player Mines placement configured":""}. Results may differ from standard probabilities.</div>}
           <Outlet context={{ query, setQuery } satisfies ShellContext} />
           {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
