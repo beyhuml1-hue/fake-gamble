@@ -9,6 +9,7 @@ type Phase = "loading" | "login" | "signup" | "verify" | "authenticated" | "gues
 export type BalanceAdjustment = { cents: number; revision: string; mode?: "set" | "add" | "reset" };
 type Account = { email: string; displayName?: string; admin?: boolean; luckMode?: "normal" | "hot" | "cold"; balanceAdjustment?: BalanceAdjustment | null };
 type AuthValue = {
+  luckMode: "normal" | "hot" | "cold";
   isAdmin: boolean;
   email: string | null;
   displayName: string | null;
@@ -63,7 +64,16 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
             setPhase("authenticated");
             return;
           }
-        } catch { /* No active session. */ }
+         } catch {
+          try {
+            const response=await fetch("/api/auth/account-status",{cache:"no-store"});
+            const result=await response.json();
+            if(result.status==="banned"||result.status==="paused"){
+              if(alive){setRestriction(result.status);setPhase("restricted");}
+              return;
+            }
+          }catch{/* no active session */}
+        }
         if (alive) setPhase("guest");
       } catch {
         if (alive) setPhase("guest");
@@ -84,9 +94,15 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
         const response = await fetch("/api/auth/me", { cache: "no-store", signal: controller.signal });
         if (controller.signal.aborted) return;
         if (response.status === 401) {
+          const status=await fetch("/api/auth/account-status",{cache:"no-store",signal:controller.signal}).then(r=>r.json()).catch(()=>null);
           setAccount(null);
-          setPhase("login");
-          setError("Your session ended. Log in again to continue.");
+          if(status?.status==="banned"||status?.status==="paused"){
+            setRestriction(status.status);
+            setPhase("restricted");
+          }else{
+            setPhase("login");
+            setError("Your session ended. Log in again to continue.");
+          }
         } else if (response.ok) {
           const result: AuthResponse = await response.json();
           if (result.user && !controller.signal.aborted) setAccount(result.user);
@@ -178,6 +194,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   const signedIn = phase === "authenticated";
   const editing = phase === "login" || phase === "signup" || phase === "verify";
   const context: AuthValue = {
+    luckMode: signedIn ? account?.luckMode || "normal" : "normal",
     isAdmin: phase === "authenticated" && account?.admin === true,
     email: signedIn ? account?.email ?? null : null,
     displayName: signedIn ? account?.displayName ?? "Player" : null,
