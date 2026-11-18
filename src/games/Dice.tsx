@@ -4,7 +4,7 @@ import { GameLayout } from "../components/GameLayout";
 import { betCents, payout } from "../lib/money";
 import { chanceMultiplier } from "../lib/math";
 import { random } from "../lib/random";
-import { luckOn } from "../lib/luck";
+import { luckOn, coldOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const DIE_FACE = [
@@ -55,6 +55,7 @@ export function Dice() {
     setWin(null);
     let result = random() * 100;
     if (luckOn()) result = mode === "under" ? chance * 0.45 : 100 - chance * 0.45;
+    if (coldOn()) result = mode === "under" ? Math.min(99.9,chance+10) : Math.max(0.1,90-chance);
     const didWin = mode === "under" ? result < chance : result > 100 - chance;
     const pay = didWin ? payout(stake, mult) : 0;
     if (pay) credit(pay);
