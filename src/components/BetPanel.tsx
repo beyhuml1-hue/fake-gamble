@@ -52,7 +52,7 @@ export function BetPanel({
     event.preventDefault();
     if (disabled || broke || clickGuard.current) return;
     if (!cashout && betCents(amount, balance) === null) {
-      setLocalError("Enter a bet from $0.10 up to your available balance (maximum $100,000).");
+      setLocalError("Enter a bet from $0.10 up to your available balance.");
       return;
     }
     setLocalError("");
