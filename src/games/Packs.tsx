@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { PACK_LEVELS,PACK_ODDS,packMax,packRtp,pickPackPrize,type PackDifficulty,type PackPrize } from "../data/packs";
-import { betCents,formatUSD,MAX_BALANCE,payout } from "../lib/money";
+import { betCents,formatUSD,payout } from "../lib/money";
 import { sound } from "../lib/sound";
 import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
