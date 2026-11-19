@@ -159,8 +159,8 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
     if (!selected) return;
     const value = amount.trim();
     const cents = Math.round(Number(value) * 100);
-    if (!/^\d+(\.\d{1,2})?$/.test(value) || !Number.isSafeInteger(cents) || cents < 1) {
-      setError("Enter a valid amount of at least $0.01.");
+    if (!/^\d+(\.\d{1,2})?$/.test(value) || !Number.isSafeInteger(cents) || cents < 1 || cents > 100_000_000) {
+      setError("Enter an amount from $0.01 to $1,000,000.");
       return;
     }
     if(!walletReady){setError("Your main Play USD wallet is still syncing.");return;}
@@ -209,7 +209,7 @@ export function Community({ compact = false }: { compact?: boolean } = {}) {
         <form className="rain-contribute" onSubmit={async event=>{
           event.preventDefault();if(busy)return;
           const cents=Math.round(Number(rainAmount)*100);
-          if(!/^\d+(\.\d{1,2})?$/.test(rainAmount)||!Number.isSafeInteger(cents)||cents<1){setError("Enter a valid amount of at least $0.01.");return;}
+          if(!/^\d+(\.\d{1,2})?$/.test(rainAmount)||!Number.isSafeInteger(cents)||cents<1||cents>100_000_000){setError("Enter a valid amount of at least $0.01.");return;}
           setBusy(true);const available=await prepareTransfer();setBusy(false);
           if(available===null){setError("Wallet sync unavailable. Check your connection and try again.");return;}
           if(cents>available){setError("Not enough Play USD. Available: "+formatUSD(available)+".");return;}
