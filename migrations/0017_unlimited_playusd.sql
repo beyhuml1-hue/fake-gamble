@@ -16,6 +16,10 @@ INSERT INTO playusd_game_ops_unlimited SELECT * FROM playusd_game_ops;
 DROP TRIGGER playusd_game_op_apply;
 DROP TRIGGER playusd_social_apply;
 DROP TRIGGER community_transfer_main_apply;
+DROP TRIGGER IF EXISTS rain_contribution_apply;
+DROP TRIGGER IF EXISTS pvp_host_escrow;
+DROP TRIGGER IF EXISTS pvp_guest_escrow;
+DROP TRIGGER IF EXISTS pvp_settle;
 DROP TABLE playusd_game_ops;
 DROP TABLE playusd_wallets;
 ALTER TABLE playusd_wallets_unlimited RENAME TO playusd_wallets;
@@ -42,3 +46,39 @@ CREATE TRIGGER IF NOT EXISTS community_transfer_main_apply AFTER INSERT ON commu
  INSERT OR IGNORE INTO community_notifications(id,recipient_id,sender_id,cents,at_ms)
  VALUES(NEW.id,NEW.recipient,NEW.sender,NEW.cents,CAST(unixepoch()*1000 AS INTEGER));
 END;
+
+-- Restore game and Rain triggers after replacing their referenced wallet table.
+CREATE TRIGGER IF NOT EXISTS rain_contribution_apply AFTER INSERT ON rain_contributions BEGIN
+ UPDATE playusd_wallets SET cents=cents-NEW.cents,updated_ms=NEW.at_ms WHERE user_id=NEW.user_id;
+ INSERT OR IGNORE INTO rain_pots(round) VALUES(NEW.round);
+ UPDATE rain_pots SET cents=cents+NEW.cents WHERE round=NEW.round;
+ INSERT OR IGNORE INTO community_rain(round,user_id) VALUES(NEW.round,NEW.user_id);
+END;
+
+CREATE TRIGGER IF NOT EXISTS pvp_host_escrow AFTER INSERT ON pvp_rooms BEGIN
+ UPDATE playusd_wallets SET cents=cents-NEW.stake_cents,updated_ms=NEW.created_ms
+ WHERE user_id=NEW.host_id;
+END;
+CREATE TRIGGER IF NOT EXISTS pvp_guest_escrow AFTER UPDATE OF guest_id ON pvp_rooms
+WHEN OLD.guest_id IS NULL AND NEW.guest_id IS NOT NULL BEGIN
+ UPDATE playusd_wallets SET cents=cents-NEW.stake_cents,updated_ms=NEW.updated_ms
+ WHERE user_id=NEW.guest_id;
+END;
+
+-- Exactly-once settlement: only status transitions out of active/waiting pay.
+-- A cancelled waiting room returns the host's stake; a draw refunds both.
+-- A winner receives both stakes. No cash payments or withdrawal mechanism.
+CREATE TRIGGER IF NOT EXISTS pvp_settle AFTER UPDATE OF status ON pvp_rooms
+WHEN OLD.status IN ('waiting','active') AND NEW.status IN ('finished','cancelled','expired')
+BEGIN
+ UPDATE playusd_wallets SET cents=MIN(9007199254740991,cents+
+   CASE WHEN OLD.status='waiting' THEN NEW.stake_cents
+        WHEN NEW.winner_id IS NULL THEN NEW.stake_cents
+        WHEN NEW.winner_id=NEW.host_id THEN 2*NEW.stake_cents ELSE 0 END),
+   updated_ms=NEW.updated_ms WHERE user_id=NEW.host_id;
+ UPDATE playusd_wallets SET cents=MIN(9007199254740991,cents+
+   CASE WHEN NEW.winner_id IS NULL THEN NEW.stake_cents
+        WHEN NEW.winner_id=NEW.guest_id THEN 2*NEW.stake_cents ELSE 0 END),
+   updated_ms=NEW.updated_ms WHERE OLD.status='active' AND user_id=NEW.guest_id;
+END;
+
