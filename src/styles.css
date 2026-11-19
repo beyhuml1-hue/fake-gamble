@@ -1869,3 +1869,21 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .app.studio-style .lobby{background:#101b22}
 .app.studio-style .lobby .tile{background:#16242a}
 @media(max-width:650px){.site-style-control{padding:10px 8px}}
+
+
+/* Owner controls — responsive player manager */
+.admin-page { max-width: 980px; width: 100%; padding: 8px 16px 32px; }
+.admin-page .admin-header { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.admin-page .admin-header p { color: var(--muted); margin-top: 6px; }
+.admin-player-list { display: grid; gap: 8px; margin: 16px 0; }
+.admin-player-list > p { color: var(--muted); margin: 0 0 4px; font-size: 13px; }
+.admin-player { display: flex; justify-content: space-between; gap: 12px; align-items: center; text-align: left; width: 100%; color: var(--text); background: var(--bg-2); border: 1px solid var(--line); border-radius: 11px; padding: 13px 16px; cursor: pointer; font: inherit; }
+.admin-player:hover, .admin-player:focus-visible, .admin-player.selected { border-color: var(--accent, #66e0bd); background: var(--bg); }
+.admin-player span { display: grid; gap: 4px; min-width: 0; }
+.admin-player span:last-child { text-align: right; }
+.admin-player strong { overflow-wrap: anywhere; font-size: 14px; }
+.admin-player small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.admin-account { margin-top: 22px; }
+.admin-account .admin-actions { margin: 8px 0; }
+.admin-account .admin-actions button { flex: 1 1 125px; justify-content: center; }
+@media (max-width: 540px) { .admin-page { padding: 0 6px 24px; } .admin-player { padding: 12px 10px; gap: 6px; } .admin-player strong { font-size: 12px; } .admin-player small { font-size: 10px; } }
