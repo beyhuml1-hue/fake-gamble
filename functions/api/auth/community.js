@@ -1,7 +1,7 @@
 import { configured, currentUser, publicDisplayName, hitRateLimit, json, readBody, sameOrigin } from "../../_shared/auth.js";
 
 const ROUND_MS = 7 * 60_000;
-const RAIN_CENTS = 1_000;
+const RAIN_CENTS = 100_000;
 const named = ({ email, ...row }) => ({ ...row, label:publicDisplayName(email) });
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 
@@ -11,6 +11,7 @@ export async function preparePlayer(env, user, round) {
     env.DB.prepare(
       "INSERT OR IGNORE INTO community_profiles (user_id,public_id,label) VALUES (?1,?2,?3)"
     ).bind(user.id, crypto.randomUUID(), label),
+    env.DB.prepare("INSERT OR IGNORE INTO rain_pots(round,cents) VALUES(?1,?2)").bind(round, RAIN_CENTS),
     env.DB.prepare("UPDATE community_rain SET paid = 1 WHERE user_id = ?1 AND paid = 0 AND round < MIN(?2, CAST(unixepoch() / 420 AS INTEGER))")
       .bind(user.id, round),
   ]);
@@ -94,7 +95,7 @@ export async function onRequestPost({ request, env }) {
       "INSERT OR IGNORE INTO community_rain (round,user_id) SELECT ?1,?2 " +
       "WHERE CAST(unixepoch() / 420 AS INTEGER) = ?1 " +
       "AND (SELECT COUNT(*) FROM community_rain WHERE round = ?1) < ?3"
-    ).bind(round, user.id, RAIN_CENTS).run();
+    ).bind(round, user.id, 100_000).run();
     const entry = await env.DB.prepare("SELECT 1 FROM community_rain WHERE round = ?1 AND user_id = ?2").bind(round, user.id).first();
     return entry ? json({ ok: true }) : json({ error: "That round is full or closed." }, 409);
   }
@@ -104,7 +105,7 @@ export async function onRequestPost({ request, env }) {
     if(typeof id!=="string"||!UUID.test(id)||!Number.isSafeInteger(cents)||cents<1||cents>100_000_000)return json({error:"Enter a valid Rain amount."},400);
     if(input.round!==round)return json({error:"That round closed. Try the new Rain."},409);
     const [written,existing]=await env.DB.batch([
-      env.DB.prepare("INSERT OR IGNORE INTO rain_contributions(id,user_id,round,cents,at_ms) SELECT ?1,?2,?3,?4,?5 FROM playusd_wallets w WHERE w.user_id=?2 AND w.initialized=1 AND w.cents>=?4 AND CAST(unixepoch()/420 AS INTEGER)=?3 AND ?4<=10000000000-COALESCE((SELECT cents FROM rain_pots WHERE round=?3),1000) AND NOT EXISTS(SELECT 1 FROM community_rain WHERE round=?3 AND paid=1)").bind(id,user.id,round,cents,now),
+      env.DB.prepare("INSERT OR IGNORE INTO rain_contributions(id,user_id,round,cents,at_ms) SELECT ?1,?2,?3,?4,?5 FROM playusd_wallets w WHERE w.user_id=?2 AND w.initialized=1 AND w.cents>=?4 AND CAST(unixepoch()/420 AS INTEGER)=?3 AND ?4<=10000000000-COALESCE((SELECT cents FROM rain_pots WHERE round=?3),100000) AND NOT EXISTS(SELECT 1 FROM community_rain WHERE round=?3 AND paid=1)").bind(id,user.id,round,cents,now),
       env.DB.prepare("SELECT 1 FROM rain_contributions WHERE id=?1 AND user_id=?2 AND cents=?3 AND round=?4").bind(id,user.id,cents,round)
     ]);
     return written.meta.changes||existing.results.length?json({ok:true}):json({error:"Insufficient balance or Rain has closed."},409);
