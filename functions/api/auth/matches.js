@@ -180,6 +180,9 @@ export async function onRequestPost({request,env}) {
     const id=input?.id;
     if(typeof id!=="string"||!UUID.test(id))return json({error:"Invalid match ID."},400);
     if(action==="join"){
+      const rival=await env.DB.prepare("SELECT u.email FROM pvp_rooms r JOIN auth_users u ON u.id=r.host_id WHERE r.id=?1").bind(id).first();
+      const shared=['16laith.beyhum@beechenchill.manp.org.uk','beyhuml@gmail.com'];
+      if(shared.includes(user.email)&&shared.includes(rival?.email))return json({error:"Accounts sharing a wallet cannot play against each other."},409);
       const wrote=await env.DB.prepare("UPDATE pvp_rooms SET guest_id=?1,status='active',turn_id=CASE WHEN game='uno' AND json_extract(state_json,'$.turn')='guest' THEN ?1 ELSE host_id END,updated_ms=?2 "+
         "WHERE id=?3 AND status='waiting' AND guest_id IS NULL AND host_id<>?1 "+
         "AND EXISTS(SELECT 1 FROM playusd_wallets w WHERE w.user_id=?1 AND w.initialized=1 AND w.cents>=pvp_rooms.stake_cents) "+
@@ -219,4 +222,3 @@ export async function onRequestPost({request,env}) {
     return json({error:"Your action could not be saved. Refresh the match and try again."},503);
   }
 }
-

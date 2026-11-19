@@ -98,14 +98,14 @@ test("Uno rooms share only each player's hand; Rain donations debit once and pay
   assert.equal((await call("host","community",donation)).status,200);
   assert.equal((await call("host","community",donation)).status,200);
   assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='host'").get().cents,before-1200);
-  assert.equal((await call("guest","community")).data.rain.cents,101200);
+  assert.equal((await call("guest","community")).data.rain.cents,11200);
   assert.equal((await call("host","community",{...donation,id:crypto.randomUUID(),cents:100000000})).status,409);
   db.prepare("UPDATE community_rain SET round=? WHERE round=?").run(round-1,round);
   db.prepare("UPDATE rain_pots SET round=? WHERE round=?").run(round-1,round);
   await call("host","community");await call("guest","community");
   const total=db.prepare("SELECT SUM(delta_cents) AS cents FROM community_wallet_events WHERE kind='rain'").get().cents;
-  assert.equal(total,101200);await call("host","community");
-  assert.equal(db.prepare("SELECT SUM(delta_cents) AS cents FROM community_wallet_events WHERE kind='rain'").get().cents,101200);
+  assert.equal(total,11200);await call("host","community");
+  assert.equal(db.prepare("SELECT SUM(delta_cents) AS cents FROM community_wallet_events WHERE kind='rain'").get().cents,11200);
  }finally{db.close();}
 });
 
@@ -200,4 +200,3 @@ test("Two players see waiting rooms, escrow their play money and settle exactly 
     assert.equal(cancelled.data.match.status,"cancelled");
   }finally{db.close();}
 });
-

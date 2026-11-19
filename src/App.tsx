@@ -15,10 +15,10 @@ import { WalletProvider } from "./state/wallet";
 export default function App() {
   return (
     <AgeGate>
-      <LuckHotkey />
       <AuthProvider>
         {(walletIdentity, adjustment) => (
           <WalletProvider key={walletIdentity} email={walletIdentity} adjustment={adjustment}>
+            <LuckHotkey />
             <BrowserRouter>
               <Routes>
                 <Route element={<AppShell />}>

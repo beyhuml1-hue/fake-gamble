@@ -128,6 +128,7 @@ export function Admin() {
       <button className="ghost-btn" type="button" disabled={busy} onClick={async () => {
         setBusy(true);
         try { await adminRequest({ action: "lock" }); setUnlocked(false); setAccounts([]); setSelected(null); }
+        catch (err) { setError(err instanceof Error ? err.message : "Could not lock admin."); }
         finally { setBusy(false); }
       }}>Lock admin</button>
     </div>

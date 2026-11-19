@@ -6,7 +6,7 @@ import {preparePlayer} from "./community.js";
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LIMIT=9007199254740991;
 async function readBalance(env,user){
- return env.DB.prepare("SELECT cents,initialized FROM playusd_wallets WHERE user_id=?1").bind(user.id).first();
+ return env.DB.prepare("SELECT cents,initialized,generation FROM playusd_wallets WHERE user_id=?1").bind(user.id).first();
 }
 export async function onRequestGet({request,env}){
  if(!configured(env))return json({error:"Play USD unavailable."},503);
@@ -15,7 +15,7 @@ export async function onRequestGet({request,env}){
  try{
   await preparePlayer(env,user,Math.floor(Date.now()/420000));
   const row=await readBalance(env,user);
-  return row?.initialized===1?json({balance:row.cents,ready:true,fictional:true}):
+  return row?.initialized===1?json({balance:row.cents,generation:row.generation,ready:true,fictional:true}):
     json({ready:false,fictional:true},200);
  }catch{return json({error:"Wallet temporarily offline."},503);}
 }
@@ -40,7 +40,7 @@ export async function onRequestPost({request,env}){
       .bind(user.id,balance,LIMIT,now),
    ]);
    const wallet=await readBalance(env,user);
-   return json({ok:true,balance:wallet.cents,ready:true,fictional:true});
+   return json({ok:true,balance:wallet.cents,generation:wallet.generation,ready:true,fictional:true});
   }
   if(input?.action==="game"){
    const delta=input.delta,id=input.id;
@@ -52,8 +52,8 @@ export async function onRequestPost({request,env}){
    const [written,existing]=await env.DB.batch([
     env.DB.prepare("INSERT OR IGNORE INTO playusd_game_ops(id,user_id,delta_cents,at_ms) "+
      "SELECT ?1,?2,?3,?4 FROM playusd_wallets "+
-     "WHERE user_id=?2 AND initialized=1 AND ?3>=-cents AND ?3<=?5-cents")
-      .bind(id,user.id,delta,now,LIMIT),
+     "WHERE user_id=?2 AND initialized=1 AND ?3>=-cents AND ?3<=?5-cents AND generation=?6")
+      .bind(id,user.id,delta,now,LIMIT,input.generation??1),
     env.DB.prepare("SELECT 1 AS ok FROM playusd_game_ops WHERE id=?1 AND user_id=?2 AND delta_cents=?3")
       .bind(id,user.id,delta),
    ]);

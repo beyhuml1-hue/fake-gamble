@@ -5,14 +5,18 @@ import { betCents, formatMult, payout } from "../lib/money";
 import { random } from "../lib/random";
 import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
+import { scaleToEdge } from "../lib/math";
 
-const RINGS = [
+const SHAPE = [
   { name: "Bull", mult: 7, until: 0.1 },
   { name: "Inner", mult: 4, until: 0.28 },
   { name: "Middle", mult: 1.6, until: 0.55 },
   { name: "Outer", mult: 0.6, until: 0.82 },
   { name: "Edge", mult: 0.2, until: 1 },
 ] as const;
+// The dart is uniform over area: annular probabilities use squared radii.
+const prices=scaleToEdge(SHAPE.map(r=>r.mult),SHAPE.map((r,i)=>r.until**2-(SHAPE[i-1]?.until??0)**2));
+const RINGS=SHAPE.map((r,i)=>({...r,mult:prices[i]!}));
 
 const FLIGHT = 720;
 
@@ -84,7 +88,7 @@ export function Darts() {
   return (
     <GameLayout
       title="Darts"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}

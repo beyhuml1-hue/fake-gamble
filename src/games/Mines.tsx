@@ -83,7 +83,7 @@ export function Mines() {
   return (
     <GameLayout
       title="Mines"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}

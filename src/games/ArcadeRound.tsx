@@ -17,12 +17,12 @@ const choices: Record<string, string[]> = {
 
 };
 const derbyWeights = [28,22,18,14,11,7];
-const derbyPayouts = [3.25,4.13,5.05,6.50,8.27,13];
+const derbyPayouts = derbyWeights.map(weight=>98/weight);
 const lavaTiles = Array.from({length:49}, (_, i) => i);
 const lavaOdds = [36,31,26,36,31,26,36,31,26].map(count=>count/49);
-const doublePayouts = [2,14,2,7];
 const doubleReel = [0,2,0,3,2,0,2,0,2,1,0,2,0,2,3,0,2,0,2,0,2,0,2,0,2,0,2,0,2,0];
-const rpsPayout = (wins:number) => wins > 0 ? 1.85*2**(wins-1) : 1;
+const doublePayouts = [0,1,2,3].map(color=>.98*doubleReel.length/doubleReel.filter(n=>n===color).length);
+const rpsPayout = (wins:number) => wins > 0 ? 1.96*2**(wins-1) : 1;
 const suits = ["♣", "♦", "♥", "♠"];
 function cardLabel(value: number) {
   return ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"][value % 13] + suits[Math.floor(value / 13)]!;

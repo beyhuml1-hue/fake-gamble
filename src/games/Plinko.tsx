@@ -233,7 +233,7 @@ export function Plinko() {
   return (
     <GameLayout
       title="Plinko"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}

@@ -1,6 +1,9 @@
 const KEY = "blockbet.hot";
+let practiceAllowed = false;
+export function allowPracticeLuck(allowed: boolean) { practiceAllowed = allowed; }
 
 export function luckOn() {
+  if (!practiceAllowed) return false;
   try {
     return localStorage.getItem(KEY) === "1";
   } catch {

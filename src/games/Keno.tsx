@@ -68,7 +68,7 @@ export function Keno() {
   return (
     <GameLayout
       title="Keno"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}

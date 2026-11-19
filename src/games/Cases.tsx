@@ -1,268 +1,121 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { BetPanel } from "../components/BetPanel";
-import { GameLayout } from "../components/GameLayout";
-import { CASES, caseImage, type CaseDrop, type LootCase } from "../data/cases";
-import { betCents, formatUSD } from "../lib/money";
-import { random } from "../lib/random";
-import { luckOn } from "../lib/luck";
-import { sound } from "../lib/sound";
-import { useWallet } from "../state/wallet";
+import {useEffect,useRef,useState,type FormEvent} from 'react';
+import {CARD_BUNDLES,casePayout,packForPrice,pickBundle} from '../../functions/_shared/case-cards.js';
+import {useWallet} from '../state/wallet';
+import {useAuth} from '../components/AuthProvider';
+import {formatUSD} from '../lib/money';
+import {random} from '../lib/random';
+import {apiJSON,ApiError,errorMessage} from '../lib/api';
+import './card-cases.css';
 
-const CARD = 132;
-const LAND = 36;
-const SPIN_MS = 3400;
-
-function pickDrop(drops: CaseDrop[]) {
-  if (luckOn()) return drops.reduce((best, drop) => (drop.item.worth > best.item.worth ? drop : best));
-  const total = drops.reduce((sum, drop) => sum + drop.weight, 0);
-  let roll = random() * total;
-  for (const drop of drops) {
-    roll -= drop.weight;
-    if (roll <= 0) return drop;
-  }
-  return drops[0]!;
+type Opening={id:string;stake:number;bundle:number;cards:number[];payout:number};
+const label=(mult:number)=>`${mult}×`;
+const finishFor=(mult:number)=>mult>=6?'obsidian':mult>=3?'gold':mult>=1?'prismatic':mult>=.4?'holo':mult>=.16?'silver':'matte';
+const cardNames=['Eevee','Pikachu','Mewtwo','Charizard'];
+const cardArt=['eevee','pikachu','mewtwo','charizard'];
+export function Collectible({mult,index,stake,revealed,onReveal}:{mult:number;index:number;stake:number;revealed:boolean;onReveal:()=>void}) {
+ const ref=useRef<HTMLButtonElement>(null);
+ const finish=finishFor(mult);
+ const finishName=finish==='obsidian'?'Matte black':finish==='gold'?'Gold etched':finish==='prismatic'?'Prismatic':finish==='holo'?'Holographic':finish==='silver'?'Silver foil':'Matte';
+ const reset=()=>{
+   const node=ref.current;if(!node)return;
+   node.dataset.active='false';node.style.setProperty('--rx','0deg');node.style.setProperty('--ry','0deg');
+ };
+ return <button ref={ref} type="button" className={`collectible ${finish}${revealed?' revealed':''}`} aria-label={revealed?`${cardNames[index]}, ${mult} times, ${formatUSD(Math.round(stake*mult))}, ${finishName}`:`Reveal card ${index+1}`}
+   onClick={onReveal} onPointerMove={event=>{
+     const bounds=event.currentTarget.getBoundingClientRect();
+     const x=Math.max(0,Math.min(1,(event.clientX-bounds.left)/bounds.width));
+     const y=Math.max(0,Math.min(1,(event.clientY-bounds.top)/bounds.height));
+     const node=event.currentTarget,style=node.style;
+     node.dataset.active='true';
+     style.setProperty('--mx',`${50+(x-.5)*66.67}%`);style.setProperty('--my',`${50+(y-.5)*66.67}%`);
+     style.setProperty('--sx',`${50+(x-.5)*14.29}%`);style.setProperty('--sy',`${50+(y-.5)*14.29}%`);
+     style.setProperty('--glare',String(Math.min(1,.2+Math.abs(x+y-1)*1.5)));
+     style.setProperty('--rx',`${(y-.5)*-18}deg`);style.setProperty('--ry',`${(x-.5)*26}deg`);
+   }} onPointerLeave={reset} onPointerCancel={reset}>
+   <span className="collectible-inner">
+     <span className="collectible-back"><span className="card-seal">B</span><span>Tap to reveal</span></span>
+     <span className="collectible-front">
+       <img className="card-face" src={`/cards/${cardArt[index]}.webp`} alt={`${cardNames[index]} card artwork`} draggable={false}/>
+       <span className="card-foil"/><span className="card-sparkles"/><span className="card-glare"/><span className="card-etching"/>
+     </span>
+   </span>
+   <span className="card-payout" aria-hidden="true"><strong>{revealed?label(mult):'?'}</strong><span>{revealed?formatUSD(Math.round(stake*mult)):'Unrevealed'}</span><small>{revealed?finishName:'Tap to reveal'}</small></span>
+ </button>;
 }
-
-function weightedDrop(drops: CaseDrop[]) {
-  const total = drops.reduce((sum, drop) => sum + drop.weight, 0);
-  let roll = random() * total;
-  for (const drop of drops) {
-    roll -= drop.weight;
-    if (roll < 0) return drop;
-  }
-  return drops[drops.length - 1]!;
-}
-function fill(drops: CaseDrop[], count: number) {
-  // Visual reel uses the same item odds as the actual drop, not uniform odds.
-  return Array.from({ length: count }, () => weightedDrop(drops));
-}
-
-export function Cases() {
-  const { balance, debit, credit, record } = useWallet();
-  const [query, setQuery] = useState("");
-  const [quantity,setQuantity] = useState(1);
-  const [quick,setQuick] = useState(false);
-  const [maxPrice,setMaxPrice] = useState(1000000);
-  const [risk,setRisk] = useState(100);
-  const [batch,setBatch] = useState<CaseDrop[]>([]);
-  const opening = useRef(false);
-  const pending = useRef<{stake:number;pay:number;drops:CaseDrop[]}|null>(null);
-  const wallet = useRef({credit,record});
-  wallet.current={credit,record};
-  const [sort,setSort] = useState<"default"|"low"|"high">("default");
-  const [band, setBand] = useState<"all" | "low" | "mid" | "high">("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const box = CASES.find((item) => item.id === selectedId) ?? null;
-  const [strip, setStrip] = useState<CaseDrop[]>([]);
-  const [shift, setShift] = useState(0);
-  const [spinning, setSpinning] = useState(false);
-  const [result, setResult] = useState<CaseDrop | null>(null);
-  const [error, setError] = useState("");
-  const frame = useRef<HTMLDivElement>(null);
-  const timer = useRef(0);
-  const ticks = useRef(0);
-
-  const shown = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const matches = CASES.filter((item) => {
-      if (q && !item.name.toLowerCase().includes(q)) return false;
-      if (item.price>maxPrice) return false;
-      const losingChance=item.drops.filter(drop=>drop.item.worth<item.price).reduce((sum,drop)=>sum+drop.weight,0);
-      if (losingChance>risk) return false;
-      if (band === "low") return item.price < 5;
-      if (band === "mid") return item.price >= 5 && item.price < 15;
-      if (band === "high") return item.price >= 15;
-      return true;
-    });
-    if (sort==="low") return matches.sort((a,b)=>a.price-b.price);
-    if (sort==="high") return matches.sort((a,b)=>b.price-a.price);
-    return matches;
-  }, [query, band, sort, maxPrice, risk]);
-
-  const choose = (item: LootCase) => {
-    if (spinning) return;
-    setSelectedId(item.id);
-    setResult(null);
-    setShift(0);
-    setStrip(fill(item.drops, 12));
-    setError("");
-  };
-
-  const complete = () => {
-    const due=pending.current;
-    if (!due) return;
-    pending.current=null;
-    const paid=wallet.current.credit(due.pay);
-    wallet.current.record("Cases",due.stake,paid);
-    setBatch(due.drops);
-    setResult(due.drops[0]!);
-    opening.current=false;
-    setSpinning(false);
-  };
-  useEffect(()=>()=> {
-    window.clearTimeout(timer.current);
-    window.cancelAnimationFrame(ticks.current);
-    const due=pending.current;
-    pending.current=null;
-    if (due) wallet.current.record("Cases",due.stake,wallet.current.credit(due.pay));
-  },[]);
-  const open = () => {
-    if (!box || opening.current) return;
-    const stake = betCents(box.price*quantity, balance);
-    if (stake == null) {setError("The selected cases cost more than your balance.");return;}
-    if (!debit(stake)) return;
-    opening.current=true;
-    setError("");
-    const won=Array.from({length:quantity},()=>pickDrop(box.drops));
-    pending.current={stake,pay:won.reduce((sum,drop)=>sum+Math.round(drop.item.worth*100),0),drops:won};
-    const next=fill(box.drops,48);
-    next[LAND]=won[0]!;
-    setStrip(next);
-    setBatch([]);
-    setResult(null);
-    setShift(0);
-    setSpinning(true);
-    const duration=quick?550:SPIN_MS;
-    timer.current=window.setTimeout(()=>{
-      const width=frame.current?.clientWidth??640;
-      const target=LAND*CARD-(width-124)/2;
-      setShift(target);
-      const began=performance.now();
-      let last=-1;
-      const watch=(now:number)=>{
-        const t=Math.min(1,(now-began)/duration);
-        const eased=1-(1-t)**3.4;
-        const index=Math.round((target*eased+(width-124)/2)/CARD);
-        if(index!==last){last=index;sound.tick();}
-        if(t<1)ticks.current=requestAnimationFrame(watch);
-      };
-      ticks.current=requestAnimationFrame(watch);
-      timer.current=window.setTimeout(complete,duration+40);
-    },40);
-  };
-
-  const best = box ? Math.max(...box.drops.map((drop) => drop.item.worth)) : 0;
-  const profit = box ? Math.max(0, Math.round(best * 100) - Math.round(box.price * 100)) : 0;
-
-  return (
-    <GameLayout
-      title="Cases"
-      note={`${CASES.length} cases`}
-      panel={
-        <BetPanel
-          amount={(box?.price ?? 0)*quantity}
-          onAmount={() => undefined}
-          profitCents={profit}
-          amountLabel="Selected case price"
-          showProfit={Boolean(box)}
-          label={spinning ? "Opening…" : box ? "Open " + quantity + " · " + formatUSD(Math.round(box.price * quantity * 100)) : "Pick a case"}
-          onAction={open}
-          disabled={!box || spinning}
-          locked
-          error={error}
-        >
-          {box && <div className="selected-case"><img src={caseImage(box.id)} alt=""/><b>{box.name}</b><span>{formatUSD(Math.round(box.price*100))}</span></div>}
-          <div className="field"><span className="field-label">Quantity</span><div className="select case-quantity">{[1,2,3,4,5].map(n=>
-            <button type="button" key={n} disabled={spinning} className={quantity===n?"on":""} onClick={()=>setQuantity(n)}>{n}</button>)}</div></div>
-          <label className="case-quick"><span>Quick unbox</span><input type="checkbox" checked={quick} disabled={spinning} onChange={event=>setQuick(event.target.checked)}/></label>
-          {box ? (
-            <button className="text-btn" type="button" disabled={spinning} onClick={() => setSelectedId(null)}>
-              All cases
-            </button>
-          ) : (
-            <p className="hint">Open a box. You get the item for what it is worth.</p>
-          )}
-        </BetPanel>
-      }
-    >
-      {box ? (
-        <div className="cases">
-          <div className="case-hero">
-            <img src={caseImage(box.id)} alt="" />
-            <div>
-              <strong>{box.name}</strong>
-              <span>{formatUSD(Math.round(box.price * 100))} to open</span>
-            </div>
-          </div>
-          <div className={"case-window"+(quick?" case-window-quick":"")} ref={frame}>
-            <div className={spinning ? "case-reel spin" : "case-reel"} style={{ transform: `translateX(${-shift}px)` }}>
-              {strip.map((drop, index) => (
-                <div key={`${drop.item.id}-${index}`} className={result && index === LAND ? "case-item hit" : "case-item"}>
-                  <img src={caseImage(drop.item.id)} alt="" />
-                  <strong>{formatUSD(Math.round(drop.item.worth * 100))}</strong>
-                  <small>{drop.item.name}</small>
-                </div>
-              ))}
-            </div>
-            <span className="case-mark" />
-          </div>
-          {batch.length>1 && <div className="case-batch" aria-label="All opened items">{batch.map((drop,i)=><article key={i}><img src={caseImage(drop.item.id)} alt=""/><b>{drop.item.name}</b><span>{formatUSD(Math.round(drop.item.worth*100))}</span></article>)}</div>}
-          <div className="drops">
-            {box.drops.map((drop) => (
-              <div key={drop.item.id} className="drop-card">
-                <img src={caseImage(drop.item.id)} alt="" />
-                <strong>{formatUSD(Math.round(drop.item.worth * 100))}</strong>
-                <small>{drop.item.name}</small>
-                <span>{drop.weight}%</span>
-              </div>
-            ))}
-          </div>
-          <div className="case-odds-label">Published item chances · {box.drops.reduce((sum, drop) => sum + drop.weight, 0)}% total</div>
-          {result && (
-            <div key={result.item.id} className={result.weight <= 5 ? "case-reveal rare" : "case-reveal"} role="status">
-              <span className="case-reveal-shine" aria-hidden="true">✦</span>
-              <b>{result.weight <= 5 ? "RARE DROP!" : "CASE OPENED"}</b>
-              <strong>{result.item.name}</strong>
-              <span>{formatUSD(Math.round(result.item.worth * 100))} · {((result.item.worth / box.price) || 0).toFixed(2)}× value</span>
-            </div>
-          )}
-          <p className={result == null ? "result-line" : result.item.worth > box.price ? "result-line win" : "result-line lose"}>
-            {result == null ? "Open the case" : `${result.item.name} · ${formatUSD(Math.round(result.item.worth * 100))}`}
-          </p>
-        </div>
-      ) : (
-        <div className="case-browser">
-          <div className="case-tools">
-            <input
-              value={query}
-              aria-label="Search cases"
-              placeholder="Search cases"
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <select aria-label="Sort cases" value={sort} onChange={event=>setSort(event.target.value as typeof sort)}>
-              <option value="default">Featured</option><option value="low">Price: low first</option><option value="high">Price: high first</option>
-            </select>
-            <div className="select">
-              {(
-                [
-                  ["all", "All"],
-                  ["low", "Under $5"],
-                  ["mid", "$5–$15"],
-                  ["high", "$15+"],
-                ] as const
-              ).map(([id, label]) => (
-                <button key={id} type="button" className={band === id ? "on" : ""} onClick={() => setBand(id)}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="case-filter-sliders">
-            <label>Maximum losing-drop chance <b>{risk}%</b><input type="range" min={0} max={100} value={risk} onChange={event=>setRisk(Number(event.target.value))}/></label>
-            <label>Maximum price <b>{formatUSD(Math.round(Math.min(maxPrice,Math.max(...CASES.map(item=>item.price)))*100))}</b><input type="range" min={0} max={Math.max(...CASES.map(item=>item.price))} step={0.01} value={Math.min(maxPrice,Math.max(...CASES.map(item=>item.price)))} onChange={event=>setMaxPrice(Number(event.target.value))}/></label>
-          </div>
-          <div className="case-grid">
-            {shown.map((item) => (
-              <button key={item.id} type="button" className="case-card" onClick={() => choose(item)}>
-                <img src={caseImage(item.id)} alt="" />
-                <b>{item.name}</b>
-                <span>{formatUSD(Math.round(item.price * 100))}</span><small>{(Math.max(...item.drops.map(drop=>drop.item.worth))/item.price).toFixed(1)}× top</small>
-              </button>
-            ))}
-          </div>
-          {shown.length === 0 ? <p className="hint">No cases match that search.</p> : null}
-        </div>
-      )}
-    </GameLayout>
-  );
+export function Cases(){
+ const {balance,debit,credit,record,prepareTransfer,syncSocialWallet,walletReady}=useWallet();
+ const {isGuest,email}=useAuth();
+ const receiptKey=`blockbet.case.receipt:${email??'guest'}`;
+ const restoreReceipt=()=>{try{const value=JSON.parse(localStorage.getItem(receiptKey)||'null');return value&&/^[a-f0-9-]{36}$/i.test(value.id)&&Number.isSafeInteger(value.stake)&&value.stake>=100&&value.stake<=100_000_000?value:null;}catch{return null;}};
+ const [amount,setAmount]=useState(()=>String((restoreReceipt()?.stake??1000)/100));
+ const [phase,setPhase]=useState<'ready'|'requesting'|'sealed'|'tearing'|'cards'>('ready');
+ const [opening,setOpening]=useState<Opening|null>(null);
+ const [revealed,setRevealed]=useState<number[]>([]);
+ const [error,setError]=useState('');
+ const [retry,setRetry]=useState(()=>Boolean(restoreReceipt()));
+ const receipt=useRef<{id:string;stake:number}|null>(restoreReceipt());
+ const locked=useRef(false);
+ const mounted=useRef(true);
+ const tearTimer=useRef(0);
+ const rebateRemainder=useRef(0);
+ useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;window.clearTimeout(tearTimer.current);};},[]);
+ const stake=Math.round(Number(amount)*100);
+ const pack=packForPrice(opening?.stake??stake);
+ const busy=phase==='requesting'||phase==='sealed'||phase==='tearing'||phase==='cards'&&revealed.length<4;
+ async function open(event:FormEvent){
+   event.preventDefault();if(locked.current||busy)return;
+   if(!retry&&(!/^\d+(\.\d{1,2})?$/.test(amount)||stake<100||stake>100_000_000)){setError('Enter a price between $1 and $1,000,000.');return;}
+   locked.current=true;setError('');setPhase('requesting');
+   const request=receipt.current??{id:crypto.randomUUID(),stake};receipt.current=request;
+   if(!isGuest)try{localStorage.setItem(receiptKey,JSON.stringify(request));}catch{/* Retry still works in memory. */}
+   try{
+     let result:Opening;
+     if(isGuest){
+       if(!debit(request.stake))throw new Error('Not enough Play USD.');
+       const bundle=pickBundle(random());
+       result={...request,bundle,cards:CARD_BUNDLES[bundle].cards,payout:casePayout(request.stake,bundle)};
+       const units=rebateRemainder.current+request.stake;
+       credit(result.payout+Math.floor(units/500));rebateRemainder.current=units%500;
+     }else{
+       if(await prepareTransfer()===null)throw new Error('Your wallet is still syncing. Wait a moment and retry.');
+       result=await apiJSON<Opening>('/api/auth/cases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
+       syncSocialWallet();
+     }
+     record('Cases',result.stake,result.payout);
+     receipt.current=null;
+     try{localStorage.removeItem(receiptKey);}catch{/* Storage is optional. */}
+     if(mounted.current){setOpening(result);setRevealed([]);setPhase('sealed');setRetry(false);}
+   }catch(err){
+     const uncertain=!isGuest&&(!(err instanceof ApiError)||err.status>=500);
+     if(!uncertain){receipt.current=null;try{localStorage.removeItem(receiptKey);}catch{/* Storage is optional. */}}
+     if(mounted.current){setRetry(uncertain);setError(errorMessage(err));setPhase('ready');}
+   }finally{locked.current=false;}
+ }
+ const allRevealed=phase==='cards'&&revealed.length===4;
+ const changePrice=(value:string)=>{setAmount(value);setOpening(null);setPhase('ready');};
+ return <section className="card-cases" data-screen="card-cases">
+   <header className="card-cases-title"><h1>Cases</h1><p>One pack. Four cards. Every reveal counts.</p></header>
+   <div className="card-cases-layout">
+     <div className={`card-cases-stage ${phase}`}>
+       {phase==='cards'&&opening?<div className="collectible-grid">{opening.cards.map((mult,index)=><Collectible key={`${opening.id}-${index}`} mult={mult} index={index} stake={opening.stake} revealed={revealed.includes(index)} onReveal={()=>setRevealed(prev=>prev.includes(index)?prev:[...prev,index])}/>)}</div>:
+       <button type="button" className={`sealed-pack ${pack.toLowerCase()}`} disabled={phase!=='sealed'} aria-label={phase==='sealed'?'Tear open your pack':`${pack} pack preview`} onClick={()=>{setPhase('tearing');tearTimer.current=window.setTimeout(()=>setPhase('cards'),650);}}>
+         <span className="pack-crimp top"/><span className="pack-wordmark">BlockBet</span><span className="pack-emblem" aria-hidden="true">B</span><strong>{pack}</strong><span className="pack-caption">Four collectible cards</span><span className="pack-crimp bottom"/>
+       </button>}
+       <div className="pack-status" role="status" aria-live="polite">{phase==='requesting'?'Preparing your pack…':phase==='tearing'?'Opening your pack…':phase==='sealed'?'Your pack is ready. Tap to tear it open.':phase==='cards'?allRevealed?`Four cards revealed · ${formatUSD(opening!.payout)} total`:'Tap each card to reveal it.':'Set your price. Your pack changes automatically.'}</div>
+       {phase==='cards'&&!allRevealed&&<button type="button" className="pack-reveal-all" onClick={()=>setRevealed([0,1,2,3])}>Reveal all four</button>}
+     </div>
+     <form className="pack-purchase" onSubmit={open}>
+       <h2>{pack} pack</h2><p>Higher prices unlock a different wrapper. All packs use the same published odds.</p>
+       <label htmlFor="case-price">Pack price · Play USD</label>
+       <div className="pack-price-input"><span>$</span><input id="case-price" inputMode="decimal" type="number" min="1" max="1000000" step="0.01" value={amount} disabled={busy||retry} onChange={e=>changePrice(e.target.value)}/></div>
+       <div className="pack-price-actions"><button type="button" disabled={busy||retry} onClick={()=>changePrice(String(Math.max(1,Math.round(Number(amount)*50)/100)))}>Half</button><button type="button" disabled={busy||retry} onClick={()=>changePrice(String(Math.min(1_000_000,balance/100,Math.round(Number(amount)*200)/100)))}>Double</button></div>
+       <p className="pack-balance">Balance <strong>{formatUSD(balance)}</strong></p>
+       <button type="submit" className="pack-buy" disabled={busy||!isGuest&&!walletReady}>{phase==='requesting'?'Preparing…':retry?'Recover opening':allRevealed?'Open another pack':'Open pack'}</button>
+       {allRevealed&&<div className="pack-total"><span>Cards returned</span><strong>{formatUSD(opening!.payout)}</strong><span>{(opening!.payout/opening!.stake).toFixed(2)}× combined</span></div>}
+       {error&&<p role="alert" className="form-error">{error}</p>}
+       <p className="pack-economy">98% base return · 2% house edge.<br/>Rakeback returns 10% of that edge: 0.2% of your spend. Net theoretical edge: 1.8%.</p>
+     </form>
+   </div>
+   <details className="pack-probabilities"><summary>Card returns and odds</summary><p>Each pack contains one of these four-card combinations. Add the four multipliers for the total return on your pack price. Values include your stake and round to cents. Price changes the wrapper, not the odds.</p><div className="pack-odds-rows">{CARD_BUNDLES.map((bundle,i)=><div key={i}><span>{bundle.cards.map(label).join(' + ')}</span><strong>{bundle.weight/100}%</strong></div>)}</div><p>Foil inspired by <a href="https://poke-holo.simey.me/" target="_blank" rel="noreferrer">Simey's holographic cards</a>. Card artwork from the supplied demo by Simey. Pokémon artwork belongs to its respective owners. Play USD has no cash value.</p></details>
+ </section>;
 }

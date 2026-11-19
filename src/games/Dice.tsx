@@ -81,7 +81,7 @@ export function Dice() {
   return (
     <GameLayout
       title="Dice"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}

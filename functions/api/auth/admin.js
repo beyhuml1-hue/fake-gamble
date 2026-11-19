@@ -2,7 +2,7 @@ import { configured, currentUser, isAdmin, json, readBody, sameOrigin, validEmai
 
 // The password is verified only on the server, never shipped to the frontend.
 // An authenticated account session AND a short-lived signed owner unlock are required.
-// Change this hash together with the password when rotating the owner's credentials.
+// Override ADMIN_PASSWORD_SHA256 with a server secret when rotating owner credentials.
 const ADMIN_PASSWORD_SHA256 = "0ce74f7a9edcdd4b989bf73fd58e17e18feb0f9f2b21c01391a1510b4608ac0c";
 const ADMIN_COOKIE = "bb_admin_unlock";
 const ADMIN_TTL = 60 * 60 * 1000;
@@ -28,6 +28,7 @@ async function authorize({ request, env }) {
   if (!configured(env)) return { error: json({ error: "Account service unavailable." }, 503) };
   const user = await currentUser(request, env);
   if (!user) return { error: json({ error: "Log in to your PlayBlockBet account first." }, 401) };
+  if (!isAdmin(user, env)) return { error: json({ error: "Owner access required." }, 403) };
   if (!await unlocked(request, env, user)) return { error: json({ error: "Enter the admin password to unlock account controls.", locked: true }, 403) };
   return { user };
 }
@@ -62,6 +63,7 @@ export async function onRequestPost(context) {
   if (!configured(env)) return json({ error: "Account service unavailable." }, 503);
   const user = await currentUser(request, env);
   if (!user) return json({ error: "Log in to your PlayBlockBet account first." }, 401);
+  if (!isAdmin(user, env)) return json({ error: "Owner access required." }, 403);
   const input = await readBody(request);
   if (input?.action === "unlock") {
     if (!await hitRateLimit(env, "admin-unlock:" + user.id, 15 * 60_000, 6, Date.now())) {
@@ -71,7 +73,7 @@ export async function onRequestPost(context) {
     if (typeof password !== "string" || password.length > 128) return json({ error: "Invalid password." }, 400);
     const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password));
     const candidate = Array.from(new Uint8Array(bytes), x => x.toString(16).padStart(2,"0")).join("");
-    if (!sameHash(candidate, ADMIN_PASSWORD_SHA256)) return json({ error: "Incorrect admin password." }, 403);
+    if (!sameHash(candidate, env.ADMIN_PASSWORD_SHA256 || ADMIN_PASSWORD_SHA256)) return json({ error: "Incorrect admin password." }, 403);
     const expires = Date.now() + ADMIN_TTL;
     const token = expires + "." + await digest("admin-unlock:" + user.id + ":" + expires, env.AUTH_PEPPER);
     return json({ ok: true, unlocked: true }, 200, {
@@ -93,20 +95,12 @@ export async function onRequestPost(context) {
   if (input.action === "balance" || input.action === "add" || input.action === "subtract") {
     const cents = input.cents;
     if (!Number.isSafeInteger(cents) || cents < 0 || cents > MAX_CENTS) return json({ error: "Enter a valid non-negative Play USD amount." }, 400);
-    const wallet = await env.DB.prepare("SELECT cents FROM playusd_wallets WHERE user_id=?1").bind(target.id).first();
-    const before = wallet?.cents ?? 0;
-    const next = input.action === "balance" ? cents : input.action === "add" ? before + cents : before - cents;
-    if (!Number.isSafeInteger(next) || next < 0 || next > MAX_CENTS) return json({ error: "Amount exceeds the available balance or supported range." }, 400);
-    await env.DB.batch([
-      env.DB.prepare(
-        "INSERT INTO auth_account_controls (user_id,balance_cents,balance_revision,balance_mode) VALUES(?1,?2,?3,'set') " +
-        "ON CONFLICT(user_id) DO UPDATE SET balance_cents=excluded.balance_cents,balance_revision=excluded.balance_revision,balance_mode='set'"
-      ).bind(target.id,next,crypto.randomUUID()),
-      env.DB.prepare(
-        "INSERT INTO playusd_wallets(user_id,cents,initialized,updated_ms) VALUES(?1,?2,1,?3) " +
-        "ON CONFLICT(user_id) DO UPDATE SET cents=excluded.cents,initialized=1,updated_ms=excluded.updated_ms"
-      ).bind(target.id,next,Date.now()),
-    ]);
+    try {
+      await env.DB.prepare("INSERT INTO admin_account_actions(id,actor_id,target_id,action,cents,at_ms) VALUES(?1,?2,?3,?4,?5,?6)")
+        .bind(crypto.randomUUID(),user.id,target.id,input.action,cents,Date.now()).run();
+    } catch {
+      return json({ error: "Balance update failed. Refresh the account and check the amount." }, 409);
+    }
   } else if (input.action === "ban" || input.action === "unban") {
     if (target.id === user.id || isAdmin(target, env)) return json({ error: "You cannot ban your own owner account." }, 400);
     const banned = input.action === "ban";
@@ -115,10 +109,12 @@ export async function onRequestPost(context) {
       "ON CONFLICT(user_id) DO UPDATE SET banned=excluded.banned"
     ).bind(target.id,Number(banned))];
     if (banned) statements.push(env.DB.prepare("DELETE FROM auth_sessions WHERE user_id=?1").bind(target.id));
+    statements.push(env.DB.prepare("INSERT INTO admin_account_actions(id,actor_id,target_id,action,at_ms) VALUES(?1,?2,?3,?4,?5)").bind(crypto.randomUUID(),user.id,target.id,input.action,Date.now()));
     await env.DB.batch(statements);
   } else {
     return json({ error: "Unknown account action." }, 400);
   }
+  // Balance changes are applied atomically by admin_balance_apply, including balance_mode='set'.
   const account = await env.DB.prepare(accountColumns + "WHERE u.email=?1").bind(email).first();
   return json({ ok: true, account });
 }

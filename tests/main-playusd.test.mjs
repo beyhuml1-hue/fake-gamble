@@ -56,27 +56,27 @@ test("The normal Play USD wallet covers game wins, Rain, transfers, and cross-ac
    assert.equal((await post("alice",wallet,{action:"game",...op})).status,200);
    assert.equal((await post("alice",wallet,{action:"game",...op})).status,200,"Game ops are idempotent");
   }
-  assert.equal((await (await get("alice",wallet)).json()).balance,8600);
+  assert.equal((await (await get("alice",wallet)).json()).balance,8602);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM playusd_game_ops").get().n,2);
-  assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:-8601})).status,409);
-  assert.equal((await (await get("alice",wallet)).json()).balance,8600);
+  assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:-8603})).status,409);
+  assert.equal((await (await get("alice",wallet)).json()).balance,8602);
 
   const bobChat=(await (await get("bob",chat)).json());
   const aliceChat=(await (await get("alice",chat)).json());
   const cap=Number.MAX_SAFE_INTEGER;
   assert.equal((await post("alice",wallet,{action:"initialize",balance:cap+1})).status,200);
-  assert.equal((await (await get("alice",wallet)).json()).balance,8600,"Client cannot reset or inflate balance");
+  assert.equal((await (await get("alice",wallet)).json()).balance,8602,"Client cannot reset or inflate balance");
   const edge=crypto.randomUUID();
-  assert.equal((await post("alice",wallet,{action:"game",id:edge,delta:cap-8600})).status,200);
+  assert.equal((await post("alice",wallet,{action:"game",id:edge,delta:cap-8602})).status,200);
   assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:10000})).status,409,"Overflow must not silently destroy credits");
   assert.equal((await (await get("alice",wallet)).json()).balance,cap);
-  assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:-cap+8600})).status,200);
+  db.exec("UPDATE playusd_wallets SET cents=8602 WHERE user_id='alice'"); // Resume ordinary transfer fixture after the cap boundary checks.
 
   // Bob hasn't imported his main balance. His first $30 gift is held safely.
   const first={action:"transfer",id:crypto.randomUUID(),recipient:bobChat.profile.id,cents:3000};
   assert.equal((await post("alice",chat,first)).status,200);
   assert.equal((await post("alice",chat,first)).status,200);
-  assert.equal((await (await get("alice",wallet)).json()).balance,5600);
+  assert.equal((await (await get("alice",wallet)).json()).balance,5602);
   assert.equal((await (await get("bob",wallet)).json()).ready,false);
   assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='bob'").get().cents,3000);
   assert.equal((await post("bob",wallet,{action:"initialize",balance:2000})).status,200);
@@ -95,10 +95,10 @@ test("The normal Play USD wallet covers game wins, Rain, transfers, and cross-ac
   assert.equal((await post("charlie",chat,{action:"join",round})).status,200);
   db.prepare("UPDATE community_rain SET round=?").run(round-1);
   assert.equal((await (await get("charlie",chat)).json()).rain.round,round);
-  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='charlie'").get().cents,100000);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='charlie'").get().cents,10000);
   assert.equal(db.prepare("PRAGMA table_info(community_profiles)").all().some(row=>row.name==="cents"),false);
   assert.equal((await post("charlie",wallet,{action:"initialize",balance:2000})).status,200);
-  assert.equal((await (await get("charlie",wallet)).json()).balance,200000);
+  assert.equal((await (await get("charlie",wallet)).json()).balance,110000);
   assert.equal((await (await get("charlie",chat)).json()).profile.cents,undefined);
 
   // No duplicate transfers despite retries and social events.

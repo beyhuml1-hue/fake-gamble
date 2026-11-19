@@ -26,8 +26,9 @@ export type LedgerRow = {
 };
 
 export type WalletNotification={id:string;sender:string;cents:number;at:number};
-type PendingOp = {id:string;delta:number};
+type PendingOp = {id:string;delta:number;generation?:number};
 type Saved = {
+  generation?:number;
   pendingOps?: PendingOp[];
   socialCursor?: number;
   balanceRevision?: string;
@@ -59,7 +60,7 @@ type WalletValue = {
 const WalletContext = createContext<WalletValue | null>(null);
 
 function walletKey(email: string) {
-  return `blockbet.wallet.v1:${email}`;
+  return `blockbet.wallet.v2:${email}`;
 }
 
 function clamp(cents: number): number {
@@ -95,6 +96,7 @@ function load(email: string): Saved {
     try {
       const parsed = JSON.parse(raw) as Saved;
       return {
+        generation:Number.isSafeInteger(parsed.generation)?parsed.generation:1,
         balanceRevision: typeof parsed.balanceRevision === "string" ? parsed.balanceRevision : undefined,
         pendingOps: Array.isArray(parsed.pendingOps) ? parsed.pendingOps.filter(op=>
           typeof op?.id==="string"&&/^[0-9a-f-]{36}$/i.test(op.id)&&Number.isSafeInteger(op.delta)&&Math.abs(op.delta)<=MAX_BALANCE&&op.delta!==0
@@ -113,6 +115,11 @@ function load(email: string): Saved {
   try {
     const migrated = localStorage.getItem(MIGRATED);
     const existing = localStorage.getItem(walletKey(email));
+    if (!existing) {
+      const previous=localStorage.getItem(`blockbet.wallet.v1:${email}`);
+      const old=previous?parse(previous):null;
+      return {...fresh(),history:old?.history??[],ledger:old?.ledger??[]};
+    }
     if (existing && migrated && migrated !== "undefined") return parse(existing) ?? fresh();
     if (!migrated || migrated === "undefined") {
       const saved: Saved = {
@@ -155,6 +162,7 @@ export function WalletProvider({ email, children, adjustment }: {
   const [cashierNonce, setCashierNonce] = useState(0);
   const [notifications,setNotifications] = useState<WalletNotification[]>([]);
   const opsRef=useRef<PendingOp[]>(saved.pendingOps||[]);
+  const generationRef=useRef(saved.generation??1);
   const seedBalance=useRef(clamp(saved.balance-(saved.pendingOps||[]).reduce((total,op)=>total+op.delta,0)));
   const flushRef=useRef<Promise<boolean>|null>(null);
   const bootRef=useRef(false);
@@ -188,7 +196,7 @@ export function WalletProvider({ email, children, adjustment }: {
           const op=opsRef.current[0]!;
           const response=await fetch("/api/auth/playusd",{
             method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({action:"game",id:op.id,delta:op.delta})
+            body:JSON.stringify({action:"game",id:op.id,delta:op.delta,generation:op.generation??1})
           });
           if(!response.ok){
             if(response.status===409){
@@ -213,7 +221,7 @@ export function WalletProvider({ email, children, adjustment }: {
     try{
       let response=await fetch("/api/auth/playusd",{cache:"no-store",credentials:"same-origin"});
       if(!response.ok)return null;
-      let data=await response.json() as {ready?:boolean;balance?:number};
+      let data=await response.json() as {ready?:boolean;balance?:number;generation?:number};
       if(!data.ready){
         response=await fetch("/api/auth/playusd",{
           method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},
@@ -223,6 +231,7 @@ export function WalletProvider({ email, children, adjustment }: {
         data=await response.json();
       }
       if(typeof data.balance!=="number"||!Number.isSafeInteger(data.balance)||data.balance<0||data.balance>MAX_BALANCE)return null;
+      generationRef.current=data.generation??1;
       walletReadyRef.current=true;
       setWalletReady(true);
       if(opsRef.current.length){
@@ -235,7 +244,7 @@ export function WalletProvider({ email, children, adjustment }: {
       }
       if(Number.isSafeInteger(data.balance)&&data.balance!>=0&&data.balance!<=MAX_BALANCE&&!opsRef.current.length){
         balanceRef.current=data.balance!;
-        setSaved(prev=>prev.balance===data.balance?prev:{...prev,balance:data.balance!});
+        setSaved(prev=>({...prev,balance:data.balance!,generation:generationRef.current}));
         return data.balance!;
       }
     }catch{/* Network failure is retried; pending operations remain on disk. */}
@@ -274,7 +283,7 @@ export function WalletProvider({ email, children, adjustment }: {
 
   function queueDelta(delta:number){
     if(email==="phone")return;
-    const op={id:crypto.randomUUID(),delta};
+    const op={id:crypto.randomUUID(),delta,generation:generationRef.current};
     opsRef.current=[...opsRef.current,op];
     setSaved(prev=>({...prev,pendingOps:[...(prev.pendingOps||[]),op]}));
     window.dispatchEvent(new Event("blockbet:wallet-sync"));
@@ -309,6 +318,7 @@ export function WalletProvider({ email, children, adjustment }: {
     },
     syncSocialWallet: () => window.dispatchEvent(new Event("blockbet:wallet-sync")),
     debit: (cents) => {
+      if(email!=="phone"&&!walletReadyRef.current)return false;
       if (!Number.isSafeInteger(cents) || cents <= 0 || balanceRef.current < cents) return false;
       assign(balanceRef.current - cents);
       queueDelta(-cents);
@@ -356,6 +366,7 @@ export function WalletProvider({ email, children, adjustment }: {
         card: nextCard,
         ledger: [row, ...prev.ledger].slice(0, 40),
       }));
+      queueDelta(-cents);
       sound.cash();
       return null;
     },

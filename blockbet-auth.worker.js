@@ -5,6 +5,7 @@
  * Reuses the same handlers as Pages Functions, preserving one source of truth.
  */
 import { onRequestPost as requestCode } from "./functions/api/auth/request.js";
+import { onRequestPost as openCardCase } from "./functions/api/auth/cases.js";
 import { onRequestPost as signup } from "./functions/api/auth/signup.js";
 import { onRequestPost as login } from "./functions/api/auth/login.js";
 import { onRequestPost as verifyCode } from "./functions/api/auth/verify.js";
@@ -24,6 +25,7 @@ import { onRequestGet as listMatches, onRequestPost as matchAction } from "./fun
 import { onRequestGet as demoCardStatus, onRequestPost as chargeDemoCard } from "./functions/api/auth/demo-card.js";
 
 const routes = {
+  "POST /api/auth/cases": openCardCase,
   "GET /api/auth/matches": listMatches,
   "POST /api/auth/matches": matchAction,
   "GET /api/auth/playusd": playUsdBalance,

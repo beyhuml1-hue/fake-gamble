@@ -16,7 +16,7 @@ const FLIP_MS = 1700;
 type Pending = { stake: number; pay: number; win: boolean; heads: boolean };
 
 export function Flip({ game = "Flip" }: { game?: "Flip" | "Coinflip" } = {}) {
-  const multiplier = game === "Coinflip" ? 1.85 : MULT;
+  const multiplier = MULT;
   const { balance, debit, credit, record } = useWallet();
   const [amount, setAmount] = useState(1);
   const [side, setSide] = useState<"heads" | "tails">("heads");
@@ -109,7 +109,7 @@ export function Flip({ game = "Flip" }: { game?: "Flip" | "Coinflip" } = {}) {
   return (
     <GameLayout
       title={game}
-      note={game === "Coinflip" ? "1.85× payout" : "99% RTP"}
+      note={"98% base RTP"}
       panel={
         <BetPanel
           amount={amount}

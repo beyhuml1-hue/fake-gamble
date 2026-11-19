@@ -69,7 +69,7 @@ export function Limbo() {
   return (
     <GameLayout
       title="Limbo"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}

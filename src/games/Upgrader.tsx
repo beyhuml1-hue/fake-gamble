@@ -52,7 +52,7 @@ export function Upgrader() {
   return (
     <GameLayout
       title="Upgrader"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}

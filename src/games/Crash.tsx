@@ -138,7 +138,7 @@ export function Crash() {
   return (
     <GameLayout
       title="Crash"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}

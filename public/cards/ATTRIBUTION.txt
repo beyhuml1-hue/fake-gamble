@@ -1,0 +1,12 @@
+Card-face images sourced from the exact user-supplied reference:
+https://codepen.io/simeydotme/pen/PrQKgo
+https://assets.codepen.io/13471/eevee-gx.webp
+https://assets.codepen.io/13471/pikachu-gx.webp
+https://assets.codepen.io/13471/mewtwo-gx.webp
+https://assets.codepen.io/13471/charizard-gx.webp
+Pokemon / Pokemon TCG artwork belongs to its respective owners.
+The wrapper, rarity finishes, multiplier layout and foil CSS are original adaptations.
+The user also supplied the reference CSS/JS directly. Sparkle and holo textures:
+https://assets.codepen.io/13471/sparkles.gif
+https://assets.codepen.io/13471/holo.png
+The React implementation adapts its color-dodge layers, pointer mapping and keyframes.

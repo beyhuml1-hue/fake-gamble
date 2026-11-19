@@ -1,6 +1,6 @@
 import { random } from "./random";
 
-export const EDGE = 0.01;
+export const EDGE = 0.02;
 
 export function comb(n: number, k: number): number {
   if (k < 0 || k > n) return 0;

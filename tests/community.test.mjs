@@ -5,7 +5,7 @@ import test from "node:test";
 import worker from "../blockbet-auth.worker.js";
 import { issueSession } from "../functions/_shared/auth.js";
 
-test("chat authenticates requests, Rain splits exactly $1,000, and transfers are atomic and retryable", async () => {
+test("chat authenticates requests, Rain splits exactly $100, and transfers are atomic and retryable", async () => {
   const db = new DatabaseSync(":memory:");
   try {
     const migrations = new URL("../migrations/", import.meta.url);
@@ -78,7 +78,7 @@ test("chat authenticates requests, Rain splits exactly $1,000, and transfers are
       const response=await worker.fetch(new Request(walletUrl,{headers:{cookie}}),env);
       totals.push((await response.json()).balance);
     }
-    assert.deepEqual(totals,[35334,33333,33333]);
+    assert.deepEqual(totals,[5334,3333,3333]);
     assert.equal((await (await get(cookies[0])).json()).profile.cents,undefined);
 
     assert.equal((await post(cookies[1],{action:"message",body:"Hello"})).status,201);
@@ -92,7 +92,7 @@ test("chat authenticates requests, Rain splits exactly $1,000, and transfers are
     assert.equal((await post(cookies[0],{...transfer,id:crypto.randomUUID(),cents:40000})).status,409);
     const after=[];
     for(const cookie of cookies)after.push((await (await worker.fetch(new Request(walletUrl,{headers:{cookie}}),env)).json()).balance);
-    assert.deepEqual(after,[34334,34333,33333]);
+    assert.deepEqual(after,[4334,4333,3333]);
     assert.equal((await (await get(cookies[1])).json()).profile.cents,undefined);
   } finally {
     db.close();

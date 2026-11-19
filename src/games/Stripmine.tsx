@@ -89,7 +89,7 @@ export function Stripmine() {
   return (
     <GameLayout
       title="Stripmine"
-      note="99% RTP"
+      note="98% base RTP"
       panel={
         <BetPanel
           amount={amount}
