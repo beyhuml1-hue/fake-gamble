@@ -73,11 +73,11 @@ test("Rain and transfers issue idempotent normal-wallet events, notify recipient
   assert.equal((await post("alice",chat,{action:"join",round})).status,200);
   db.prepare("UPDATE community_rain SET round=?").run(round-1);
   const payout=await Promise.all(accounts.map(async name=>(await (await get(name,wallet+"?after=0")).json())));
-  assert.deepEqual(payout.map(x=>x.events.reduce((sum,e)=>sum+e.delta,0)),[334,333,333]);
+  assert.deepEqual(payout.map(x=>x.events.reduce((sum,e)=>sum+e.delta,0)),[33334,33333,33333]);
   assert.deepEqual(payout.map(x=>x.events[0].kind),["rain","rain","rain"]);
-  assert.equal(payout.flatMap(x=>x.events).reduce((s,e)=>s+e.delta,0),1000);
+  assert.equal(payout.flatMap(x=>x.events).reduce((s,e)=>s+e.delta,0),100000);
   const balanceBefore=db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='alice'").get().cents;
-  assert.equal(balanceBefore,9334);
+  assert.equal(balanceBefore,42334);
   const eventCountBefore=db.prepare("SELECT COUNT(*) AS n FROM community_wallet_events").get().n;
   assert.equal((await (await get("alice",wallet+"?after=0")).json()).events.length,1);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM community_wallet_events").get().n,eventCountBefore);
@@ -90,14 +90,14 @@ test("Rain and transfers issue idempotent normal-wallet events, notify recipient
   assert.equal((await post("alice",chat,{...transfer,id:crypto.randomUUID(),cents:9000})).status,409);
   const aliceEvents=(await (await get("alice",wallet+"?after=0")).json()).events;
   const bobSync=(await (await get("bob",wallet+"?after=0")).json());
-  assert.deepEqual(aliceEvents.map(x=>x.delta),[334,-7000]);
-  assert.deepEqual(bobSync.events.map(x=>x.delta),[333,7000]);
+  assert.deepEqual(aliceEvents.map(x=>x.delta),[33334,-7000]);
+  assert.deepEqual(bobSync.events.map(x=>x.delta),[33333,7000]);
   assert.equal(bobSync.notifications.length,1);
   assert.equal(bobSync.notifications[0].cents,7000);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM community_transfers").get().n,1);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM community_notifications").get().n,1);
-  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='alice'").get().cents,2334);
-  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='bob'").get().cents,10333);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='alice'").get().cents,35334);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='bob'").get().cents,43333);
   assert.equal(db.prepare("PRAGMA table_info(community_profiles)").all().some(row=>row.name==="cents"),false);
 
   const endCursor=bobSync.events.at(-1).seq;
