@@ -87,7 +87,7 @@ test("Rain and transfers issue idempotent normal-wallet events, notify recipient
   const transfer={action:"transfer",id:transferId,recipient:initial[1].profile.id,cents:7000};
   assert.equal((await post("alice",chat,transfer)).status,200);
   assert.equal((await post("alice",chat,transfer)).status,200);
-  assert.equal((await post("alice",chat,{...transfer,id:crypto.randomUUID(),cents:9000})).status,409);
+  assert.equal((await post("alice",chat,{...transfer,id:crypto.randomUUID(),cents:40000})).status,409);
   const aliceEvents=(await (await get("alice",wallet+"?after=0")).json()).events;
   const bobSync=(await (await get("bob",wallet+"?after=0")).json());
   assert.deepEqual(aliceEvents.map(x=>x.delta),[33334,-7000]);
