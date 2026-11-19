@@ -12,6 +12,9 @@ DROP TABLE auth_account_controls;
 ALTER TABLE auth_account_controls_unlimited RENAME TO auth_account_controls;
 
 -- Allow stakes as high as the player's available wallet balance.
+DROP TRIGGER IF EXISTS pvp_host_escrow;
+DROP TRIGGER IF EXISTS pvp_guest_escrow;
+DROP TRIGGER IF EXISTS pvp_settle;
 CREATE TABLE IF NOT EXISTS pvp_rooms_unlimited (
  id TEXT PRIMARY KEY,
  game TEXT NOT NULL CHECK(game IN ('pool','connect-four','mines-battles','uno','chess')),
