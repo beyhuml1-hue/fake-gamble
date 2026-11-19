@@ -6,7 +6,6 @@ import { Baccarat } from "../games/Baccarat";
 import { Cases } from "../games/Cases";
 import { Packs } from "../games/Packs";
 import { Chicken } from "../games/Chicken";
-import { Stripmine } from "../games/Stripmine";
 import { Blackjack } from "../games/Blackjack";
 import { Crash } from "../games/Crash";
 import { Darts } from "../games/Darts";
@@ -52,7 +51,6 @@ const PAGES: Partial<Record<GameId, ComponentType>> = {
   packs: Packs,
   upgrader: Upgrader,
   chicken: Chicken,
-  stripmine: Stripmine,
   darts: Darts,
 };
 
