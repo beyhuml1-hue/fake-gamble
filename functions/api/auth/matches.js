@@ -158,8 +158,8 @@ export async function onRequestPost({request,env}) {
     await expire(env,now);
     if(action==="create"){
       const game=input.game,stake=input.stakeCents;
-      if(!GAMES.has(game)||!Number.isSafeInteger(stake)||stake<10||stake>1_000_000)
-        return json({error:"Choose a game and a stake between $0.10 and $10,000."},400);
+      if(!GAMES.has(game)||!Number.isSafeInteger(stake)||stake<10||stake>Number.MAX_SAFE_INTEGER)
+        return json({error:"Choose a game and stake at least $0.10, up to your available wallet balance."},400);
       const id=crypto.randomUUID();
       const statement=env.DB.prepare("INSERT INTO pvp_rooms(id,game,host_id,stake_cents,status,state_json,created_ms,updated_ms) "+
         "SELECT ?1,?2,?3,?4,'waiting',?5,?6,?6 FROM playusd_wallets w "+
