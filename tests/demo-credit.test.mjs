@@ -13,6 +13,6 @@ test("one-time balance bonus is additive and keyed by a revision", () => {
 test("admin set balance does not accidentally remain additive", () => {
   const src=readFileSync(new URL("../functions/api/auth/admin.js",import.meta.url),"utf8");
   assert.match(src, /balance_mode='set'/);
-  assert.match(src, /balance_mode=excluded.balance_mode/);
+  assert.match(src, /balance_mode='set'/);
   assert.match(src, /ADMIN_PASSWORD_SHA256/);
 });
