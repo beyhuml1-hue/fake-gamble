@@ -105,7 +105,7 @@ test("Uno rooms share only each player's hand; Rain donations debit once and pay
   await call("host","community");await call("guest","community");
   const total=db.prepare("SELECT SUM(delta_cents) AS cents FROM community_wallet_events WHERE kind='rain'").get().cents;
   assert.equal(total,101200);await call("host","community");
-  assert.equal(db.prepare("SELECT SUM(delta_cents) AS cents FROM community_wallet_events WHERE kind='rain'").get().cents,2200);
+  assert.equal(db.prepare("SELECT SUM(delta_cents) AS cents FROM community_wallet_events WHERE kind='rain'").get().cents,101200);
  }finally{db.close();}
 });
 
