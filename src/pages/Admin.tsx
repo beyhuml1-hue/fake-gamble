@@ -55,7 +55,9 @@ export function Admin() {
       setError("Enter dollars and up to two decimal places.");
       return;
     }
-    void submit("balance", Math.round(Number(amount) * 100));
+    const cents = Math.round(Number(amount) * 100);
+    if (!Number.isSafeInteger(cents) || cents < 0) { setError("Enter a valid amount."); return; }
+    void submit("balance", cents);
   }
 
   return (
@@ -72,7 +74,7 @@ export function Admin() {
           <p>{account.banned ? "Banned" : "Active"} · {account.balanceCents === null ? "No balance adjustment" : "Last adjustment " + formatUSD(account.balanceCents)}</p>
           <form className="admin-form" onSubmit={saveBalance}>
             <label htmlFor="admin-amount">New Play USD balance</label>
-            <input id="admin-amount" inputMode="decimal" required maxLength={10} value={amount} onChange={event => setAmount(event.target.value)} disabled={busy} />
+            <input id="admin-amount" inputMode="decimal" required maxLength={18} value={amount} onChange={event => setAmount(event.target.value)} disabled={busy} />
             <button className="bet-btn" type="submit" disabled={busy}>Set balance</button>
           </form>
           <p>The adjustment applies when the player signs in or their session refreshes. Play activity stays on their device.</p>
