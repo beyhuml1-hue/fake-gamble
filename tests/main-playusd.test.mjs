@@ -63,12 +63,12 @@ test("The normal Play USD wallet covers game wins, Rain, transfers, and cross-ac
 
   const bobChat=(await (await get("bob",chat)).json());
   const aliceChat=(await (await get("alice",chat)).json());
-  const cap=10_000_000_000;
+  const cap=Number.MAX_SAFE_INTEGER;
   assert.equal((await post("alice",wallet,{action:"initialize",balance:cap+1})).status,200);
   assert.equal((await (await get("alice",wallet)).json()).balance,8600,"Client cannot reset or inflate balance");
   const edge=crypto.randomUUID();
   assert.equal((await post("alice",wallet,{action:"game",id:edge,delta:cap-8600})).status,200);
-  assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:10000})).status,200);
+  assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:10000})).status,409,"Overflow must not silently destroy credits");
   assert.equal((await (await get("alice",wallet)).json()).balance,cap);
   assert.equal((await post("alice",wallet,{action:"game",id:crypto.randomUUID(),delta:-cap+8600})).status,200);
 
