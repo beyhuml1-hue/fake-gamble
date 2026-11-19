@@ -156,7 +156,7 @@ export function WalletProvider({ email, children, adjustment }: {
   const [notifications,setNotifications] = useState<WalletNotification[]>([]);
   const opsRef=useRef<PendingOp[]>(saved.pendingOps||[]);
   const seedBalance=useRef(clamp(saved.balance-(saved.pendingOps||[]).reduce((total,op)=>total+op.delta,0)));
-  const flushRef=useRef(false);
+  const flushRef=useRef<Promise<boolean>|null>(null);
   const bootRef=useRef(false);
   const walletReadyRef=useRef(email==="phone");
   const [walletReady,setWalletReady]=useState(email==="phone");
@@ -176,35 +176,37 @@ export function WalletProvider({ email, children, adjustment }: {
   // Signed-in accounts have ONE canonical server Play USD balance.
   // The existing browser balance is imported once, preserving old games/history.
   // Individual game debits and credits are recorded with durable UUID receipts.
-  async function flushGameOps():Promise<boolean>{
-    if(email==="phone")return true;
-    if(!walletReadyRef.current)return false;
-    if(flushRef.current)return false;
-    flushRef.current=true;
-    let success=true;
-    try{
-      while(opsRef.current.length){
-        const op=opsRef.current[0]!;
-        const response=await fetch("/api/auth/playusd",{
-          method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({action:"game",id:op.id,delta:op.delta})
-        });
-        if(!response.ok){
-          if(response.status===409){
-            // Concurrent transfer on another device can invalidate an
-            // optimistic local game action. Use the canonical server balance.
-            opsRef.current=[];
-            setSaved(prev=>({...prev,pendingOps:[]}));
+  // Share a single in-flight flush between periodic polling and user transfers.
+  // Previously a concurrent call returned false and wrongly blocked sending money.
+  function flushGameOps():Promise<boolean>{
+    if(email==="phone")return Promise.resolve(true);
+    if(!walletReadyRef.current)return Promise.resolve(false);
+    if(flushRef.current)return flushRef.current;
+    const operation=(async()=>{
+      try{
+        while(opsRef.current.length){
+          const op=opsRef.current[0]!;
+          const response=await fetch("/api/auth/playusd",{
+            method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({action:"game",id:op.id,delta:op.delta})
+          });
+          if(!response.ok){
+            if(response.status===409){
+              // A server balance mismatch requires a canonical refresh.
+              opsRef.current=[];
+              setSaved(prev=>({...prev,pendingOps:[]}));
+            }
+            return false;
           }
-          success=false;
-          break;
+          opsRef.current=opsRef.current.filter(item=>item.id!==op.id);
+          setSaved(prev=>({...prev,pendingOps:(prev.pendingOps||[]).filter(item=>item.id!==op.id)}));
         }
-        opsRef.current=opsRef.current.filter(item=>item.id!==op.id);
-        setSaved(prev=>({...prev,pendingOps:(prev.pendingOps||[]).filter(item=>item.id!==op.id)}));
-      }
-    }catch{success=false;}
-    finally{flushRef.current=false;}
-    return success&&opsRef.current.length===0;
+        return true;
+      }catch{return false;}
+    })();
+    flushRef.current=operation;
+    void operation.finally(()=>{if(flushRef.current===operation)flushRef.current=null;});
+    return operation;
   }
   async function refreshMainWallet():Promise<number|null>{
     if(email==="phone")return balanceRef.current;
