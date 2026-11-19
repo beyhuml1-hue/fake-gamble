@@ -140,13 +140,6 @@ export const GAMES = [
     gradient: "linear-gradient(160deg,#422006 0%,#eab308 55%,#fef9c3 140%)",
   },
   {
-    id: "stripmine",
-    name: "Stripmine",
-    blurb: "Dig the tunnel. Cash out before lava.",
-    note: "99% RTP",
-    gradient: "linear-gradient(160deg,#3f2a16 0%,#b45309 55%,#fde68a 140%)",
-  },
-  {
     id: "darts",
     name: "Darts",
     blurb: "Throw. Closer to the middle pays more.",
