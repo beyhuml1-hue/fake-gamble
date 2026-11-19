@@ -32,8 +32,8 @@ export async function onRequestPost(context) {
 
   if (input.action === "balance") {
     const cents = input.cents;
-    if (!Number.isInteger(cents) || cents < 0 || cents > 100_000_000) {
-      return json({ error: "Enter an amount from $0.00 to $1,000,000.00." }, 400);
+    if (!Number.isSafeInteger(cents) || cents < 0 || cents > Number.MAX_SAFE_INTEGER) {
+      return json({ error: "Enter a valid non-negative Play USD amount." }, 400);
     }
     await env.DB.batch([
       env.DB.prepare(
