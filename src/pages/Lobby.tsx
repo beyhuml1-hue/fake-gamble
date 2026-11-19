@@ -27,7 +27,7 @@ export function Lobby(){
           <div><small>Play USD balance</small><strong>{formatUSD(balance)}</strong></div>
           <div><small>Recent plays</small><strong>{history.length}</strong></div>
         </div>
-        <button type="button" className="bet-btn" onClick={openCashier}>Open demo wallet</button>
+        <button type="button" className="bet-btn" onClick={openCashier}>Open wallet</button>
         <p className="arcade-wallet-note">Simulated credits · Bet up to your available balance</p>
       </section>
       <Link to="/race" className="arcade-hero-card arcade-race-link">
