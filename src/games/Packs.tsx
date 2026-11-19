@@ -57,13 +57,11 @@ export function Packs(){
  const prizes=PACK_ODDS[level];
  const best=packMax(level);
  const recent=useMemo(()=>history.filter(h=>h.game==="Packs").slice(0,4),[history]);
- const maxBet=Math.floor(MAX_BALANCE/best);
  const wager=Math.round(amount*100);
  const open=()=>{
    if(active.current)return;
    const bet=betCents(amount,balance);
    if(bet===null){setError("Enter a bet of at least $0.10 within your Play USD balance.");return;}
-   if(bet>maxBet){setError("Maximum "+level+" bet is "+formatUSD(maxBet)+" so all prizes can be paid in full.");return;}
    active.current=true;
    if(!debit(bet)){active.current=false;setError("Insufficient Play USD.");return;}
    const prize=luckOn() ? PACK_ODDS[level].reduce((best, item)=>item.mult>best.mult?item:best) : pickPackPrize(level);
@@ -156,11 +154,11 @@ export function Packs(){
        <label className="packs-amount-field">
          <span>Amount in Play USD</span>
          <div><span className="packs-dollar">$</span>
-           <input inputMode="decimal" type="number" min="0.10" max={Math.min(balance/100,maxBet/100)} step="0.01"
+           <input inputMode="decimal" type="number" min="0.10" max={balance/100} step="0.01"
               aria-label="Pack bet amount" value={amount} disabled={spinning}
               onChange={event=>setAmount(Number(event.target.value))}/>
            <button type="button" disabled={spinning} onClick={()=>setAmount(Math.max(.1,Math.round(amount*50)/100))}>½</button>
-           <button type="button" disabled={spinning} onClick={()=>setAmount(Math.min(balance/100,maxBet/100,Math.round(amount*200)/100))}>2×</button>
+           <button type="button" disabled={spinning} onClick={()=>setAmount(Math.min(balance/100,Math.round(amount*200)/100))}>2×</button>
          </div>
        </label>
        <div className="packs-difficulty-head"><label htmlFor="packs-difficulty">Difficulty</label><b>Max {multLabel(best)}</b></div>
