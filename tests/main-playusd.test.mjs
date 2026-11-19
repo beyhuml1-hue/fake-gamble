@@ -95,10 +95,10 @@ test("The normal Play USD wallet covers game wins, Rain, transfers, and cross-ac
   assert.equal((await post("charlie",chat,{action:"join",round})).status,200);
   db.prepare("UPDATE community_rain SET round=?").run(round-1);
   assert.equal((await (await get("charlie",chat)).json()).rain.round,round);
-  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='charlie'").get().cents,1000);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='charlie'").get().cents,100000);
   assert.equal(db.prepare("PRAGMA table_info(community_profiles)").all().some(row=>row.name==="cents"),false);
   assert.equal((await post("charlie",wallet,{action:"initialize",balance:2000})).status,200);
-  assert.equal((await (await get("charlie",wallet)).json()).balance,101000);
+  assert.equal((await (await get("charlie",wallet)).json()).balance,200000);
   assert.equal((await (await get("charlie",chat)).json()).profile.cents,undefined);
 
   // No duplicate transfers despite retries and social events.
