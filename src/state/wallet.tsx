@@ -227,7 +227,8 @@ export function WalletProvider({ email, children, adjustment }: {
       setWalletReady(true);
       if(opsRef.current.length){
         const completed=await flushGameOps();
-        if(!completed)return null;
+        // If a conflicting game operation was discarded, refresh from server now.
+        if(!completed&&opsRef.current.length)return null;
         response=await fetch("/api/auth/playusd",{cache:"no-store",credentials:"same-origin"});
         if(!response.ok)return null;
         data=await response.json();
