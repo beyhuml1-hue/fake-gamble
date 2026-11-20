@@ -133,7 +133,7 @@ test('Rift Packs have real losses, visible 10x+ rewards and the rare matte 36x a
  assert.match(css,/\.rift-spotlight\.void/);
  assert.match(css,/\.card-foil/);
  assert.match(games,/name: "Rift Packs"/);
- assert.doesNotMatch(page,/pikachu|eevee|mewtwo|charizard|poke-holo|\/cards\//i);
+ assert.doesNotMatch(page,/pikachu|eevee|mewtwo|charizard|poke-holo/i);
 });
 
 
@@ -148,8 +148,8 @@ test('Rift cards track cursor, tilt in 3D and keep independent glossy/void finis
  assert.match(page,/setProperty\('--my'/);
  assert.match(page,/setProperty\('--sx'/);
  assert.match(page,/setProperty\('--sy'/);
- assert.match(page,/function ArenaArtwork/);
- assert.match(page,/className="arena-art"/);
+ assert.match(page,/className="rift-card-image"/);
+ assert.match(page,/\/cards\/rift\//);
  assert.match(page,/className="card-foil"/);
  assert.match(page,/className="card-sparkles"/);
  assert.match(css,/\.collectible\[data-active=true\]/);
@@ -159,4 +159,23 @@ test('Rift cards track cursor, tilt in 3D and keep independent glossy/void finis
  assert.match(css,/\.collectible\.void-card \.card-sparkles\{display:none\}/);
  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.doesNotMatch(page,/pikachu|eevee|mewtwo|charizard|\/cards\/.+\.webp/i);
+});
+
+test('Every Rift multiplier has a separate lightweight illustrated card image with an X emblem',()=>{
+ const multipliers=[...new Set(CARD_BUNDLES.flatMap(b=>b.cards))];
+ assert.equal(multipliers.length,16);
+ const assets=multipliers.map(mult=>{
+   const file='../public/cards/rift/'+String(mult).replace('.','-')+'.svg';
+   const art=text(file);
+   assert.match(art,/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+   assert.match(art,/<path d="M-82 -86H-39L0 -33/,'Missing original X artwork');
+   assert.ok(art.includes(String(mult)+'×'),'Multiplier should appear directly on its card');
+   assert.doesNotMatch(art,/<image |xlink:href=|<script|pokemon/i);
+   return art;
+ });
+ assert.equal(new Set(assets).size,multipliers.length,'Each multiplier must have distinct art');
+ const common=multipliers.filter(mult=>mult<=.16).map(m=>text('../public/cards/rift/'+String(m).replace('.','-')+'.svg'));
+ assert.ok(common.every(s=>!s.includes('class="arena-stage"')&&!s.includes('class="arena-stadium"')),'Common cards should be plain without scenes');
+ const css=text('../src/games/card-cases.css');
+ assert.match(css,/\.game-shell:has\(\.card-cases\) \.content\{background:#151b1d!important\}/);
 });
