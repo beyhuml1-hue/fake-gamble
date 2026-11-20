@@ -6,6 +6,7 @@ import { LuckHotkey } from "./components/LuckHotkey";
 import { Lobby } from "./pages/Lobby";
 import { Play } from "./pages/Play";
 import { Admin } from "./pages/Admin";
+import { Shop } from "./pages/Shop";
 import { Community } from "./pages/Community";
 import { HighlightPage } from "./components/Highlights";
 import { Race } from "./pages/Race";
@@ -24,6 +25,7 @@ export default function App() {
                 <Route element={<AppShell />}>
                   <Route index element={<Lobby />} />
                   <Route path="admin" element={<Admin />} />
+                  <Route path="shop" element={<Shop />} />
                   <Route path="chat" element={<Community />} />
                   <Route path="highlight" element={<HighlightPage />} />
                   <Route path="race" element={<Race />} />

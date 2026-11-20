@@ -52,6 +52,7 @@ export function AppShell() {
   }
   const { displayName, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [shopBadge, setShopBadge] = useState(false);
   const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
   const [query, setQuery] = useState("");
@@ -73,6 +74,16 @@ export function AppShell() {
   useEffect(() => {
     if (cashierNonce > 0) setWalletOpen(true);
   }, [cashierNonce]);
+
+  useEffect(() => {
+    if (!accountOpen || isGuest) return;
+    const controller = new AbortController();
+    void fetch("/api/auth/shop", { credentials: "same-origin", cache: "no-store", signal: controller.signal })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => { if (!controller.signal.aborted) setShopBadge(data?.adminBadge === true); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [accountOpen, isGuest]);
 
   const showChat = chatOpen && location.pathname !== "/chat";
 
@@ -97,6 +108,7 @@ export function AppShell() {
           Stats
         </NavLink>
         <NavLink to="/race" className={({isActive}) => isActive?"nav-item active":"nav-item"}>Race</NavLink>
+        <NavLink to="/shop" className={({isActive}) => isActive?"nav-item active":"nav-item"}>Credit shop</NavLink>
         <a className="nav-item" href="/#live-bets">
           <span className="live-nav-dot" aria-hidden="true" />
           Live Bets
@@ -140,6 +152,7 @@ export function AppShell() {
               Stats
             </NavLink>
             <NavLink to="/race">Race</NavLink>
+            <NavLink to="/shop">Shop</NavLink>
             <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
           <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
@@ -178,6 +191,8 @@ export function AppShell() {
               <div className="account-menu">
                 <strong>{displayName || "Guest profile"}</strong>
                 <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · synced Play USD wallet"}</p>
+                {shopBadge && !isGuest && <p className="account-menu-note">✦ Admin-style badge · cosmetic</p>}
+                <NavLink to="/shop" onClick={() => setAccountOpen(false)}>Credit shop</NavLink>
                 {isAdmin && <NavLink to="/admin" onClick={() => setAccountOpen(false)}>Manage accounts</NavLink>}
                 {isGuest
                   ? (canSignIn

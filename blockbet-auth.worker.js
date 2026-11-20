@@ -23,6 +23,7 @@ import { onRequestGet as playUsdBalance, onRequestPost as postPlayUsd } from "./
 import { onRequestGet as weeklyLeaderboard } from "./functions/api/auth/leaderboard.js";
 import { onRequestGet as listMatches, onRequestPost as matchAction } from "./functions/api/auth/matches.js";
 import { onRequestGet as demoCardStatus, onRequestPost as chargeDemoCard } from "./functions/api/auth/demo-card.js";
+import { onRequestGet as shopStatus, onRequestPost as shopBuy } from "./functions/api/auth/shop.js";
 
 const routes = {
   "POST /api/auth/cases": openCardCase,
@@ -31,6 +32,8 @@ const routes = {
   "GET /api/auth/playusd": playUsdBalance,
   "POST /api/auth/playusd": postPlayUsd,
   "GET /api/auth/leaderboard": weeklyLeaderboard,
+  "GET /api/auth/shop": shopStatus,
+  "POST /api/auth/shop": shopBuy,
   "GET /api/auth/demo-card": demoCardStatus,
   "POST /api/auth/demo-card": chargeDemoCard,
   "GET /api/auth/wallet-events": walletEvents,

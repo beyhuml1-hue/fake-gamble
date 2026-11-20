@@ -8,5 +8,5 @@ export function Cashier({open,onClose}:{open:boolean;onClose:()=>void}){
  <header className="cashier-head"><h2 id="cashier-title">Play-money wallet</h2><button className="text-btn" onClick={onClose}>Close</button></header>
  <h3>{formatUSD(balance)}</h3><p>Every account starts with $1,000 once. Top-ups are disabled.</p><p>Keep playing with your winnings, receive money from another player, or join Rain in chat.</p>
  <p>Signed-in house-game wagers earn 0.2% rakeback automatically. Fractions accumulate until they reach a cent. Player matches and transfers are excluded.</p>
- <Link className="bet-btn" to="/chat" onClick={onClose}>Open chat and Rain</Link><p className="wallet-plain-foot">Play money only - no cash value.</p></section></div>;
+ <Link className="bet-btn" to="/chat" onClick={onClose}>Open chat and Rain</Link><p><Link to="/shop" onClick={onClose}>Credit shop and badges</Link></p><p className="wallet-plain-foot">Play money only - no cash value.</p></section></div>;
 }
