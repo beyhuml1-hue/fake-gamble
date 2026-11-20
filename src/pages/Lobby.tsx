@@ -5,7 +5,6 @@ import { GAMES } from "../data/games";
 import { HomeSpotlight } from "./HomeSpotlight";
 import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
-import { GamePreview } from "../components/GamePreview";
 
 const order = ["mines","cases","case-battles","flip","blackjack","dice","dragon","mines-battles","coinflip","crash","uno","connect-four","poker","pool","chess","floor-is-lava","draw","rps","upgrader","hilo","limbo","plinko","double","roulette","pig-race","stocks","slide","keno","blitz","snakes","chicken","baccarat","diamonds","packs","wheel","pump","darts"];
 const table = new Set(["blackjack","baccarat","roulette","hilo","poker","chess","uno","pool","connect-four"]);
@@ -46,8 +45,8 @@ export function Lobby(){
     </div>
     {games.length?<div className="arcade-grid">
       {games.map(game=><Link key={game.id} to={"/game/"+game.id} className="arcade-tile">
-        <GamePreview game={game.id}/>
-        <span className="game-card-copy"><strong>{game.name}</strong><span className="game-card-description">{game.blurb}</span><span className="game-card-bottom"><small>{game.id==='mines-battles'?"Player match":table.has(game.id)?"Table game":"Instant game"}</small><span className="game-card-play">Play <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 6 5-6 5Z"/></svg></span></span></span>
+        <span className="arcade-art" data-game={game.id} aria-hidden="true"/>
+        <strong>{game.name}</strong>
       </Link>)}
     </div>:<p className="empty-row">No games found.</p>}
     <HomeSpotlight history={history} />

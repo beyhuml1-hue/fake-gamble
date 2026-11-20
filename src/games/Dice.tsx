@@ -30,23 +30,11 @@ export function Dice() {
   const [spinning, setSpinning] = useState(false);
   const [error, setError] = useState("");
   const live = useRef(true);
-  const frame = useRef(0);
-  const pending = useRef<{stake:number;pay:number}|null>(null);
-  const actions = useRef({credit,record});
-  actions.current={credit,record};
-  const settle=()=>{
-    const due=pending.current;if(!due)return;
-    pending.current=null;
-    const paid=due.pay?actions.current.credit(due.pay):0;
-    actions.current.record("Dice",due.stake,paid);
-  };
 
   useEffect(() => {
     live.current = true;
     return () => {
       live.current = false;
-      cancelAnimationFrame(frame.current);
-      settle();
     };
   }, []);
 
@@ -56,7 +44,6 @@ export function Dice() {
   const line = mode === "under" ? chance : 100 - chance;
 
   const roll = () => {
-    if(pending.current)return;
     const stake = betCents(amount, balance);
     if (stake == null) {
       setError("Minimum bet is $0.10, and it can't be more than your balance.");
@@ -70,26 +57,25 @@ export function Dice() {
     if (luckOn()) result = mode === "under" ? chance * 0.45 : 100 - chance * 0.45;
     const didWin = mode === "under" ? result < chance : result > 100 - chance;
     const pay = didWin ? payout(stake, mult) : 0;
-    pending.current={stake,pay};
+    if (pay) credit(pay);
+    record("Dice", stake, pay);
     const from = shown;
     const start = performance.now();
-    const duration=window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:860;
     const step = (now: number) => {
       if (!live.current) return;
-      const t = duration?Math.min(1, (now - start) / duration):1;
+      const t = Math.min(1, (now - start) / 860);
       const wobble = (1 - t) ** 2;
       const noise = (random() - 0.5) * 64 * wobble;
       const eased = from + (result - from) * (1 - (1 - t) ** 3);
       setShown(t < 1 ? eased + noise : result);
-      if (t < 1) frame.current=requestAnimationFrame(step);
+      if (t < 1) requestAnimationFrame(step);
       else {
-        settle();
         setFace(Math.min(6, 1 + Math.floor(result / (100 / 6))));
         setWin(didWin);
         setSpinning(false);
       }
     };
-    frame.current=requestAnimationFrame(step);
+    requestAnimationFrame(step);
   };
 
   return (

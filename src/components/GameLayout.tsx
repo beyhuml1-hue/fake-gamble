@@ -2,7 +2,6 @@ import { useEffect, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { formatMult, formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
-import { RoundFeedback } from "./RoundFeedback";
 
 const historicalNames: Record<string, string> = { dragon: "Dragon Tower", diamonds: "Diamonds" };
 
@@ -24,7 +23,6 @@ export function GameLayout({ title, note, panel, children }: {
 
   return (
     <section className="game-page play-surface" data-play={id} aria-label={title}>
-      <RoundFeedback game={title}/>
       <div className="game-card">
         <div className="game-panel">{panel}</div>
         <div className="game-stage">{children}</div>
