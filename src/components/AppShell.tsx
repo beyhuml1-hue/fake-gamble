@@ -57,7 +57,7 @@ export function AppShell() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(() => window.matchMedia("(min-width: 1080px)").matches);
+  const [chatOpen, setChatOpen] = useState(false);
   const [muted, setMuted] = useState(false);
   const location = useLocation();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -77,7 +77,7 @@ export function AppShell() {
   const showChat = chatOpen && location.pathname !== "/chat";
 
   return (
-    <div className={"app arcade-shell" + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
+    <div className={"app arcade-shell crafted" + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
       <aside className={open ? "sidebar open" : "sidebar"}>
         <NavLink to="/" className="brand" end>
           <span className="brand-mark">B</span>
@@ -200,10 +200,10 @@ export function AppShell() {
 
       {location.pathname !== "/chat" && <button type="button" className={"chat-drawer-toggle"+(chatOpen?" active":"")} aria-expanded={chatOpen}
         aria-label={chatOpen?"Close live chat":"Open live chat"} onClick={()=>setChatOpen(v=>!v)}>
-        {chatOpen?"✕":"💬"} <span>{chatOpen?"Close chat":"Live Chat"}</span>
+        <Icon name={chatOpen?"close":"chat"}/> <span>{chatOpen?"Close chat":"Live chat"}</span>
       </button>}
       {showChat&&<aside className="chat-drawer" aria-label="Live BlockBet chat">
-        <header className="chat-drawer-head"><div><strong>Live Chat</strong><small>BlockBet community</small></div>
+        <header className="chat-drawer-head"><div><strong>Live chat</strong><small>BlockBet community</small></div>
           <button type="button" aria-label="Close chat" onClick={()=>setChatOpen(false)}>✕</button>
         </header>
         <Community compact/>
@@ -211,7 +211,7 @@ export function AppShell() {
       {notifications.length>0&&<section className={"transfer-notifications"+(chatOpen?" drawer-open":"")} role="region" aria-label="Transfer notifications">
         {notifications.map(item=><div key={item.id} className="transfer-notification" role="status">
           <span className="transfer-notification-icon">✦</span>
-          <div><b>Play USD received!</b><p>{item.sender} sent you <strong>{formatAmount(item.cents)} Play USD</strong>.</p></div>
+          <div><b>Play USD received</b><p>{item.sender} sent you <strong>{formatAmount(item.cents)} Play USD</strong>.</p></div>
           <button type="button" aria-label="Dismiss transfer notification" onClick={()=>dismissNotification(item.id)}>✕</button>
         </div>)}
       </section>}
@@ -219,4 +219,3 @@ export function AppShell() {
     </div>
   );
 }
-

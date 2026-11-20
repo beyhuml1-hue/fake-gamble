@@ -4,13 +4,15 @@ const common = {
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: 1.8,
+  strokeWidth: 1.5,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
 export function Icon({ name }: { name: string }) {
   const paths: Record<string, ReactNode> = {
+    close: <path d="m6 6 12 12M18 6 6 18"/>,
+    chat: <path d="M4 4h16v12H9l-5 4V4Z"/>,
     dice: (
       <>
         <rect x="4" y="4" width="16" height="16" rx="3" />

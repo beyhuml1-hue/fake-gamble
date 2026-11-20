@@ -22,17 +22,17 @@ export function Lobby(){
     <div className="arcade-hero">
       <section className="arcade-hero-card arcade-account">
         <div className="arcade-art" data-game="account-coins" aria-hidden="true"/>
-        <p className="arcade-kicker">BlockBet</p><h1>Welcome to the arcade</h1>
+        <p className="arcade-kicker">BlockBet</p><h1>Your table is ready</h1>
         <div className="arcade-wallet-stats">
           <div><small>Play USD balance</small><strong>{formatUSD(balance)}</strong></div>
           <div><small>Recent plays</small><strong>{history.length}</strong></div>
         </div>
         <button type="button" className="bet-btn" onClick={openCashier}>Open wallet</button>
-        <p className="arcade-wallet-note">Simulated credits · Bet up to your available balance</p>
+        <p className="arcade-wallet-note">Play money · No cash value</p>
       </section>
       <Link to="/race" className="arcade-hero-card arcade-race-link">
         <div className="arcade-art" data-game="race" aria-hidden="true"/>
-        <div><p className="arcade-kicker">Daily leaderboard</p><h2>Race</h2><span>View standings →</span></div>
+        <div><p className="arcade-kicker">Daily leaderboard</p><h2>Race</h2><span>View standings</span></div>
       </Link>
     </div>
     <div className="arcade-toolbar">

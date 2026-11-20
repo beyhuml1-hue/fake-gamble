@@ -34,9 +34,9 @@ export function HomeSpotlight({history}:{history:BetRecord[]}){
  const [offline,setOffline]=useState(false);
 
  useEffect(()=>{
-  const cycle=window.setInterval(()=>setActive(s=>s==="leaderboard"?"stats":"leaderboard"),7500);
+
   const clock=window.setInterval(()=>setNow(Date.now()),15000);
-  return()=>{window.clearInterval(cycle);window.clearInterval(clock);};
+  return()=>{window.clearInterval(clock);};
  },[]);
  useEffect(()=>{
   let disposed=false;
@@ -67,21 +67,21 @@ export function HomeSpotlight({history}:{history:BetRecord[]}){
  },[history,bounds.start,bounds.reset]);
  return <section className="home-spotlight" aria-label="Weekly BlockBet results">
    <div className="home-spotlight-nav" role="tablist" aria-label="Homepage weekly panels">
-      <button type="button" role="tab" aria-selected={active==="leaderboard"} className={active==="leaderboard"?"active":""} onClick={()=>setActive("leaderboard")}>🏆 Weekly leaderboard</button>
+      <button type="button" role="tab" aria-selected={active==="leaderboard"} className={active==="leaderboard"?"active":""} onClick={()=>setActive("leaderboard")}>Weekly leaderboard</button>
       <button type="button" role="tab" aria-selected={active==="stats"} className={active==="stats"?"active":""} onClick={()=>setActive("stats")}>Your stats</button>
    </div>
    <div className="home-spotlight-frame" role="tabpanel">
     <div className="home-spotlight-heading">
-      <div><p>{active==="leaderboard"?"🏆 THIS WEEK'S TOP PLAYERS":"✦ YOUR WEEK IN PLAY USD"}</p>
+      <div><p>{active==="leaderboard"?"This week’s top players":"Your week in Play USD"}</p>
         <small>{active==="leaderboard"?"Player-reported simulated profits · resets every Monday 00:00 UTC":"Your games on this device · resets every Monday 00:00 UTC"}</small>
       </div>
-      <div className="home-spotlight-clock"><span>⏱</span><strong>{remaining(bounds.reset,now)}</strong><small>UNTIL RESET</small></div>
+      <div className="home-spotlight-clock"><span></span><strong>{remaining(bounds.reset,now)}</strong><small>Until reset</small></div>
     </div>
     {active==="leaderboard"?<div className="home-leader-list">
       {loading?<div className="home-leader-empty">Loading community leaderboard…</div>:
        offline?<div className="home-leader-empty">Leaderboard is temporarily unavailable.</div>:
        leaders.length?leaders.map((row,index)=><div className="home-leader-row" key={row.label+index}>
-         <span className={"home-medal rank-"+index}>{["🥇","🥈","🥉"][index]}</span>
+         <span className={"home-medal rank-"+index}>{index+1}</span>
          <span className="home-leader-avatar" aria-hidden="true">{row.label.slice(0,1).toUpperCase()}</span>
          <span className="home-leader-name">{row.label}<small>{row.bets} recorded bets</small></span>
          <b>+{compactMoney(row.profitCents)}</b>
@@ -89,10 +89,10 @@ export function HomeSpotlight({history}:{history:BetRecord[]}){
       <Link to="/stats" className="home-spotlight-bottom">See your play statistics</Link>
     </div>:<div className="home-stat-panel">
        <div className="home-stat-cards">
-        <div><small>NET RESULT</small><strong className={stat.net>=0?"pos":"neg"}>{formatUSD(stat.net)}</strong></div>
-        <div><small>TOTAL WAGERED</small><strong>{formatUSD(stat.wagered)}</strong></div>
-        <div><small>BETS PLACED</small><strong>{stat.bets}</strong></div>
-        <div><small>WIN RATE</small><strong>{stat.winRate}%</strong></div>
+        <div><small>Net result</small><strong className={stat.net>=0?"pos":"neg"}>{formatUSD(stat.net)}</strong></div>
+        <div><small>Total wagered</small><strong>{formatUSD(stat.wagered)}</strong></div>
+        <div><small>Bets placed</small><strong>{stat.bets}</strong></div>
+        <div><small>Win rate</small><strong>{stat.winRate}%</strong></div>
        </div>
        <Link to="/stats" className="home-spotlight-bottom">View detailed stats</Link>
      </div>}
