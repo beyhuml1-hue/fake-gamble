@@ -118,7 +118,7 @@ export function Cases(){
        result=await apiJSON<Opening>('/api/auth/cases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
        syncSocialWallet();
      }
-     record('Cases',result.stake,result.payout);
+     record('Rift Packs',result.stake,result.payout);
      receipt.current=null;
      try{localStorage.removeItem(receiptKey);}catch{/* Optional storage. */}
      if(mounted.current){
