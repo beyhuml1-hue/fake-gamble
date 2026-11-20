@@ -6,6 +6,7 @@ import "./styles.css";
 import "./arcade.css";
 import "./game-screens.css";
 import "./design-system.css";
+import "./game-polish.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
