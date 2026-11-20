@@ -113,3 +113,24 @@ test('owner account controls set, add, subtract and ban with atomic audited bala
   assert.equal((await s.post('owner','admin',{action:'ban',email:'beyhuml@gmail.com'})).status,400);
  }finally{s.db.close();}
 });
+
+test('Rift Packs have real losses, visible 10x+ rewards and the rare matte 36x arena card',()=>{
+ const low= CARD_BUNDLES.filter(bundle=>bundle.cards.reduce((sum,m)=>sum+m,0)<1);
+ assert.ok(low.reduce((sum,b)=>sum+b.weight,0)>=7500,'Losing packs must be genuinely frequent');
+ assert.equal(CARD_BUNDLES.at(-1).weight,10,'36x card odds are 0.10%');
+ assert.ok(CARD_BUNDLES.at(-1).cards.includes(36),'Top drop must contain a 36x card');
+ assert.ok(CARD_BUNDLES.some(b=>b.cards.reduce((sum,m)=>sum+m,0)>=10),'10x+ celebration must be attainable');
+ const page=text('../src/games/Cases.tsx');
+ const css=text('../src/games/card-cases.css');
+ const games=text('../src/data/games.ts');
+ assert.match(page,/Rift Packs/);
+ assert.match(page,/setPhase\('dealing'\)/);
+ assert.match(page,/setPhase\('revealing'\)/);
+ assert.match(page,/setRevealed\(prev=>/);
+ assert.match(page,/LOSING PACK/);
+ assert.match(page,/void-card/);
+ assert.match(css,/\.rift-spotlight\.void/);
+ assert.match(css,/\.card-foil/);
+ assert.match(games,/name: "Rift Packs"/);
+ assert.doesNotMatch(page,/pikachu|eevee|mewtwo|charizard|poke-holo|\/cards\//i);
+});
