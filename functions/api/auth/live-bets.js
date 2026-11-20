@@ -3,7 +3,7 @@ import { json, currentUser, dbReady, sameOrigin, readBody, publicDisplayName, hi
 const GAMES = new Set([
   "Dice","Mines","Plinko","Crash","Limbo","Keno","Wheel","Hi-Lo",
   "Blackjack","Roulette","Dragon Tower","Flip","Diamonds","Baccarat",
-  "Pump","Cases","Packs","Upgrader","Chicken Road","Darts",
+  "Pump","Cases","Rift Packs","Packs","Upgrader","Chicken Road","Darts",
   "Case Battles","Coinflip","Uno","Connect Four","Poker","8-Ball Pool","Chess","Floor is Lava","Draw","Rock Paper Scissors","Double","Derby","Stocks","Slide","Blitz","Snakes",
 ]);
 const HEADERS = {"Cache-Control":"no-store"};
