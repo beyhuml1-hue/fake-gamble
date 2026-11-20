@@ -113,9 +113,9 @@ export const GAMES = [
   },
   {
     id: "cases",
-    name: "Cases",
-    blurb: "Apple Box, cars, Nike. You get the item's price.",
-    note: "99% RTP",
+    name: "Rift Packs",
+    blurb: "Open four original arena cards, including the rare 36× void card.",
+    note: "98% RTP · Four-card reveal",
     gradient: "linear-gradient(180deg,#0f212e,#1a2c38)",
   },
   {

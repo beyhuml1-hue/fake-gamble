@@ -1,10 +1,10 @@
-// Four distinct stake multipliers. Weighted base return is exactly 98%.
+// Original four-card drops; 10,000 basis points and exactly 98% base RTP. The 36x void card is possible at 0.10%; existing server receipt IDs stay compatible.
 export const CARD_BUNDLES = [
-  { weight: 5000, cards: [0.02, 0.04, 0.08, 0.16] },
-  { weight: 3000, cards: [0.05, 0.1, 0.2, 0.4] },
-  { weight: 1500, cards: [0.1, 0.2, 0.5, 1.2] },
-  { weight: 400, cards: [0.2, 0.4, 1, 3.4] },
-  { weight: 100, cards: [0.5, 1, 3, 6] },
+  { weight: 4975, cards: [0.02, 0.04, 0.08, 0.16] },
+  { weight: 3024, cards: [0.05, 0.1, 0.2, 0.4] },
+  { weight: 1796, cards: [0.1, 0.2, 0.5, 1.2] },
+  { weight: 195, cards: [0.5, 1, 3, 6] },
+  { weight: 10, cards: [0.5, 1, 2.5, 36] },
 ];
 export function pickBundle(roll) {
   if (!Number.isFinite(roll) || roll < 0 || roll >= 1) throw new RangeError('Invalid roll');
