@@ -172,7 +172,7 @@ export function Cases(){
        {complete&&<div className={'rift-result '+(net>0?'positive':net<0?'negative':'even')+(totalMult>=10?' jackpot':'')} role="status">
          <span className="result-kicker">{net>0?'WINNING PACK':net<0?'LOSING PACK':'BREAK EVEN'}</span>
          <strong>{multLabel(totalMult)} <small>total</small></strong>
-         <div className="rift-result-meta"><span>Returned <b>{formatUSD(opening.payout)}</b></span><span>{net>0?'Profit':net<0?'Lost':'Net'} <b>{net>0?'+':net<0?'−':''}{formatUSD(Math.abs(net))}</b></span></div>
+         <div className="rift-result-meta"><span>Returned <b>{formatUSD(opening!.payout)}</b></span><span>{net>0?'Profit':net<0?'Lost':'Net'} <b>{net>0?'+':net<0?'−':''}{formatUSD(Math.abs(net))}</b></span></div>
        </div>}
      </div>
      <form className="pack-purchase" onSubmit={open}>
