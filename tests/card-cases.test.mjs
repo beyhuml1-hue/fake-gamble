@@ -162,7 +162,7 @@ test('Rift cards track cursor, tilt in 3D and keep independent glossy/void finis
 });
 
 test('Every Rift multiplier has a separate lightweight illustrated card image with an X emblem',()=>{
- const multipliers=[...new Set(CARD_BUNDLES.flatMap(b=>b.cards))];
+ const multipliers=[...new Set([...CARD_BUNDLES.flatMap(b=>b.cards),3.4])]; // 3.4x remains an extra ready-to-use design
  assert.equal(multipliers.length,16);
  const assets=multipliers.map(mult=>{
    const file='../public/cards/rift/'+String(mult).replace('.','-')+'.svg';
