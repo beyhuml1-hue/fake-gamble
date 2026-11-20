@@ -33,67 +33,6 @@ const multLabel=(mult:number)=>Number(mult.toFixed(2)).toString()+'×';
 const RETURN_LIMIT=100_000_000;
 
 
-function ArenaArtwork({arena,index,voidCard}:{arena:Arena;index:number;voidCard:boolean}){
- const sky='rift-sky-'+index;
- const bloom='rift-bloom-'+index;
- const platform='rift-platform-'+index;
- const edge='rift-edge-'+index;
- const cx=index%2===0?180:122;
- return <svg className="arena-art" viewBox="0 0 320 450" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-   <defs>
-     <linearGradient id={sky} x1="0" y1="0" x2=".25" y2="1"><stop stopColor={arena.sky}/><stop offset=".58" stopColor={arena.horizon}/><stop offset="1" stopColor={arena.floor}/></linearGradient>
-     <radialGradient id={bloom}><stop stopColor={arena.accent} stopOpacity=".9"/><stop offset=".24" stopColor={arena.glow} stopOpacity=".65"/><stop offset=".75" stopColor={arena.glow} stopOpacity=".04"/><stop offset="1" stopColor={arena.glow} stopOpacity="0"/></radialGradient>
-     <linearGradient id={platform} x1="0" y1="0" x2=".3" y2="1"><stop stopColor={arena.accent}/><stop offset=".18" stopColor={arena.floor}/><stop offset=".75" stopColor={arena.sky}/><stop offset="1" stopColor="#020c1a"/></linearGradient>
-     <linearGradient id={edge} x1="0" y1="0" x2="1" y2="1"><stop stopColor={arena.glow}/><stop offset=".45" stopColor={arena.accent}/><stop offset="1" stopColor={arena.glow}/></linearGradient>
-   </defs>
-   <rect width="320" height="450" fill={'url(#'+sky+')'}/>
-   <ellipse cx={cx} cy="138" rx="220" ry="155" fill={'url(#'+bloom+')'} opacity=".84"/>
-   <g opacity=".9" fill={arena.accent}>
-     <circle cx="20" cy="25" r="1.5"/><circle cx="61" cy="72" r="1"/><circle cx="276" cy="49" r="1.5"/><circle cx="238" cy="108" r="1.1"/>
-     <circle cx="102" cy="27" r=".9"/><circle cx="290" cy="116" r=".9"/><circle cx="38" cy="131" r=".75"/><circle cx="169" cy="76" r=".9"/>
-     <path d="M257 25v9M253 29.5h9M76 111v8M72 115h8" fill="none" stroke={arena.accent} strokeWidth="1.3"/>
-   </g>
-   {voidCard?
-     <g className="arena-void">
-       <ellipse cx="160" cy="132" rx="120" ry="47" stroke={arena.glow} strokeWidth="6" fill="none" opacity=".65" transform="rotate(-18 160 132)"/>
-       <circle cx="160" cy="132" r="72" fill="#050508" stroke="#8a7e92" strokeWidth="2"/>
-       <circle cx="160" cy="132" r="58" fill="#000" stroke={arena.accent} strokeOpacity=".6" strokeWidth="2"/>
-       <ellipse cx="160" cy="132" rx="92" ry="33" fill="none" stroke="#d1b4cf" strokeWidth="8" strokeOpacity=".55" transform="rotate(-19 160 132)"/>
-     </g>:
-     <g>
-       <circle cx={cx} cy="116" r="57" fill={'url(#'+bloom+')'} opacity=".8"/>
-       <circle cx={cx} cy="113" r="34" fill={arena.accent} opacity=".64"/>
-       <circle cx={cx} cy="113" r="25" fill="#fffbe2" opacity=".56"/>
-       <path d="M-10 222L33 145l40 42 40-75 37 60 22-24 48 62 53-75 47 72 22-18v73H-10z" fill={arena.sky} opacity=".82"/>
-       <path d="M-10 235L28 186l38 30 38-32 48 35 26-21 38 30 40-48 46 47 28-24v55H-10z" fill={arena.floor} opacity=".72"/>
-     </g>}
-   <g className="arena-stadium">
-     <path d="M-35 224Q160 170 355 224L355 317Q160 245 -35 317Z" fill="#091b2f" opacity=".93"/>
-     <path d="M-35 224Q160 170 355 224" fill="none" stroke={arena.accent} strokeWidth="4" opacity=".9"/>
-     <path d="M-35 243Q160 190 355 243M-35 263Q160 212 355 263M-35 287Q160 233 355 287" stroke={arena.glow} strokeOpacity=".47" strokeWidth="2" fill="none"/>
-     <path d="M-35 244Q160 203 355 244M-35 272Q160 228 355 272" stroke="#ffffff" strokeOpacity=".15" strokeWidth="1" strokeDasharray="2 7" fill="none"/>
-     <path d="M-8 296L12 180h19l17 111M272 291l17-111h19l20 116" fill={arena.sky} stroke={arena.accent} strokeWidth="2" strokeOpacity=".75"/>
-     <rect x="9" y="173" width="22" height="9" rx="3" fill={arena.accent}/>
-     <rect x="289" y="173" width="22" height="9" rx="3" fill={arena.accent}/>
-     <path d="M9 195h22M289 195h22" stroke={arena.glow} strokeWidth="3"/>
-   </g>
-   <g className="arena-stage">
-     <ellipse cx="160" cy="367" rx="235" ry="95" fill="#040c1d" opacity=".77"/>
-     <ellipse cx="160" cy="343" rx="225" ry="91" fill={'url(#'+platform+')'} stroke={'url(#'+edge+')'} strokeWidth="6"/>
-     <ellipse cx="160" cy="343" rx="195" ry="70" fill="none" stroke={arena.glow} strokeWidth="3" opacity=".85"/>
-     <ellipse cx="160" cy="343" rx="154" ry="51" fill="none" stroke={arena.accent} strokeWidth="2" opacity=".95"/>
-     <ellipse cx="160" cy="343" rx="96" ry="30" fill="#00111f" opacity=".52" stroke={arena.accent} strokeWidth="3"/>
-     <path d="M160 284v122M-17 343h354M64 286l192 114M255 284L60 407" stroke={arena.glow} strokeWidth="1.6" strokeOpacity=".6"/>
-     <path d="M126 345l34-24 34 24-34 25z" fill={arena.accent} fillOpacity=".24" stroke={arena.accent} strokeWidth="2"/>
-     <path d="M143 345l17-12 17 12-17 12z" fill={arena.accent} fillOpacity=".5"/>
-     <path d="M-40 345q200 110 400 0" fill="none" stroke={arena.accent} strokeOpacity=".7" strokeWidth="5"/>
-   </g>
-   <path d="M0 0h320v450H0z" fill="none" stroke={arena.accent} strokeOpacity=".2" strokeWidth="7"/>
-   <rect x="0" y="0" width="320" height="450" fill="#000" opacity={voidCard?.25:.07}/>
- </svg>;
-}
-
-
 function Collectible({mult,index,stake,revealed}:{mult:number;index:number;stake:number;revealed:boolean}){
  const arena=ARENAS[String(mult)]??DEFAULT_ARENA;
  const voidCard=mult===36;
@@ -131,7 +70,7 @@ function Collectible({mult,index,stake,revealed}:{mult:number;index:number;stake
        <span className="back-core"/><span className="back-brand">BLOCKBET</span>
      </div>
      <div className="collectible-front" aria-hidden="true">
-       <div className="arena-scene"><ArenaArtwork arena={arena} index={index} voidCard={voidCard}/></div>
+       <div className="arena-scene"><img className="rift-card-image" src={"/cards/rift/"+String(mult).replace(".", "-")+".svg"} alt="" draggable={false} loading="eager"/></div>
        <span className="card-foil"/><span className="card-sparkles"/><span className="card-glare"/><span className="card-etching"/><span className="card-face-frame"/>
      </div>
    </div>
@@ -230,13 +169,10 @@ export function Cases(){
  }
  const changePrice=(value:string)=>{if(busy||retry)return;setAmount(value);setOpening(null);setPhase('ready');setSpotlight(null);};
  return <section className="card-cases" data-screen="card-cases">
-   <header className="card-cases-title">
-     <div><span className="rift-eyebrow">BLOCKBET ORIGINALS / FOUR-CARD DROP</span><h1>Rift Packs</h1><p>One opening. Four arena cards. Every outcome is real.</p></div>
-     <span className="rift-rarity"><i/> RARE 36× VOID CARD</span>
-   </header>
+   <header className="card-cases-title"><h1>Rift Packs</h1></header>
    <div className="card-cases-layout">
      <div className={'card-cases-stage '+phase+(spotlightActive?' spotlight-on':'')}>
-       <div className="rift-stage-top"><span>THE REVEAL</span><small>{showCards?'4 CARD DRAW':'SEALED PACK'}</small></div>
+       <div className="rift-stage-top"><span>4 CARDS</span><small>{showCards?'REVEAL':'READY'}</small></div>
        {spotlightActive&&<div className={'rift-spotlight '+spotlight} aria-hidden="true"><div className="rift-event-disc"/><div className="rift-event-orbit"/></div>}
        {showCards&&opening?
          <div className="collectible-grid">{opening.cards.map((mult,index)=><Collectible key={opening.id+'-'+index} mult={mult} index={index} stake={opening.stake} revealed={revealed.includes(index)}/>)}</div>:
@@ -265,7 +201,7 @@ export function Cases(){
      </div>
      <form className="pack-purchase" onSubmit={open}>
        <div className="pack-control-heading"><div><small>OPENING TERMINAL</small><h2>{pack} Rift</h2></div><span>4 CARDS</span></div>
-       <p>Four distinct arena designs per pack. Each tier has its own shimmering wrapper; the published drop odds stay the same.</p>
+       <p>Four cards per pack. Different designs and returns.</p>
        <label htmlFor="case-price">Bet amount · Play USD</label>
        <div className="pack-price-input"><span>$</span><input id="case-price" inputMode="decimal" type="number" min="1" max="1000000" step="0.01" value={amount} disabled={busy||retry} onChange={e=>changePrice(e.target.value)}/></div>
        <div className="pack-price-actions">
@@ -286,7 +222,7 @@ export function Cases(){
        const total=bundle.cards.reduce((sum,m)=>sum+m,0);
        return <div key={i}><span>{bundle.cards.map(multLabel).join(' + ')}</span><strong>{multLabel(total)} total</strong><small>{(bundle.weight/100).toFixed(2)}%</small></div>;
      })}</div>
-     <p>Weighted base return: 98%. Rakeback: 0.2% of the pack price, giving a 98.2% theoretical total return. Original illustrated arena backgrounds and card backs; no Pokémon artwork or characters.</p>
+     <p>Weighted base return: 98%. Rakeback: 0.2% of the pack price, giving a 98.2% theoretical total return. Each multiplier uses its own original card image, from plain commons to full-art rares.</p>
    </details>
  </section>;
 }

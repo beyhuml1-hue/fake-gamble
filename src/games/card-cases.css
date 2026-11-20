@@ -250,3 +250,50 @@
  .card-cases .collectible[data-active=true]{transform:none;filter:none}
  .card-cases .card-foil,.card-cases .card-sparkles,.card-cases .card-glare{animation:none!important}
 }
+
+
+/* Restrained artwork-first Rift card revision. Card art is shipped as 16
+   standalone SVG images. Common cards are deliberately plain. */
+.game-shell:has(.card-cases) .content{background:#151b1d!important}
+.card-cases{max-width:1160px;color:#eef3f4}
+.card-cases .card-cases-title{padding:14px 0 19px;justify-content:flex-start}
+.card-cases .card-cases-title h1{margin:0;font-size:clamp(27px,3vw,34px);font-weight:850;letter-spacing:-.035em}
+.card-cases .card-cases-stage{background:#192126;border-color:#303c42;border-radius:8px}
+.card-cases .card-cases-stage:before{display:none}
+.card-cases .card-cases-stage:after{opacity:.4}
+.card-cases .rift-stage-top{border-color:#ffffff0c;color:#b8c4c9}
+.card-cases .rift-stage-top small{color:#8da59e}
+.card-cases .pack-purchase{background:#1d252a;border-color:#313d42;border-radius:8px}
+.card-cases .pack-control-heading small{color:#93b3a4}
+.card-cases .arena-scene{background:transparent}
+.card-cases .rift-card-image{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:fill;user-select:none;pointer-events:none}
+.card-cases .collectible-front{border:0;box-shadow:0 14px 24px #0008}
+.card-cases .collectible .card-face-frame{display:none}
+.card-cases .collectible .card-payout{top:calc(100% + 8px);gap:0}
+.card-cases .collectible .card-payout strong,.card-cases .collectible .card-payout span{display:none}
+.card-cases .collectible .card-payout small{font-size:12px;font-weight:800;color:#bcd2c6}
+.card-cases .collectible.silver{--sparkle:0}
+.card-cases .collectible.silver .card-foil,.card-cases .collectible.silver .card-sparkles,.card-cases .collectible.silver .card-glare{display:none!important}
+.card-cases .collectible.holo{--sparkle:.08}
+.card-cases .collectible.holo .card-foil{opacity:.1}
+.card-cases .collectible.prismatic{--sparkle:.28}
+.card-cases .collectible.gold{--sparkle:.36}
+.card-cases .collectible.mythic{--sparkle:.43}
+.card-cases .collectible:not(.void-card):not(.silver) .card-sparkles{opacity:var(--sparkle);filter:brightness(.9)}
+.card-cases .collectible:not(.void-card):not(.silver) .card-glare{opacity:.2}
+.card-cases .collectible.void-card .rift-card-image{filter:none}
+.card-cases .collectible.void-card .card-glare{display:none}
+.card-cases .collectible.void-card .card-foil{display:none}
+.card-cases .collectible.void-card .card-sparkles{display:none}
+.card-cases .card-payout{pointer-events:none}
+.card-cases .pack-purchase>.pack-economy{font-size:10px}
+.card-cases .pack-status{font-size:11px;color:#879da6}
+.card-cases .rift-result{border-radius:7px}
+@media(max-width:620px){
+ .card-cases .card-cases-title{padding:12px 0 18px}
+ .card-cases .card-cases-stage{padding:58px 14px 20px}
+ .card-cases .collectible-grid{max-width:390px;gap:40px 12px;padding:8px 0 38px}
+ .card-cases .collectible{aspect-ratio:480 / 680}
+ .card-cases .card-payout small{font-size:11px}
+ .card-cases .pack-purchase{padding:19px 18px 90px}
+}
