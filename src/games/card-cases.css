@@ -105,7 +105,7 @@
 .pack-purchase label{font-size:12px;font-weight:700;color:#bbcdd6;margin-top:12px}
 .pack-price-input{display:flex;align-items:center;background:#10212e;border:1px solid #446071;border-radius:8px;overflow:hidden}
 .pack-price-input span{padding-left:13px;color:#87e3a3;font-size:18px}
-.pack-price-input input{border:0;outline-offset:-4px;background:none;color:#fff;min-width:0;width:100%;font:750 19px inherit;padding:12px 11px;font-variant-numeric:tabular-nums}
+.pack-price-input input{border:0;outline-offset:-4px;background:none;color:#fff;min-width:0;width:100%;font-family:inherit;font-size:19px;font-weight:750;padding:12px 11px;font-variant-numeric:tabular-nums}
 .pack-price-actions{display:flex;gap:8px}.pack-price-actions button{flex:1;border:1px solid #3c5665;border-radius:6px;padding:9px;background:#223b49;color:#dcebf2;font-size:12px;font-weight:800;cursor:pointer}
 .pack-price-actions button:disabled{opacity:.55;cursor:default}.pack-price-actions button:hover:not(:disabled){background:#2c4f5f}
 .pack-balance{display:flex;justify-content:space-between;gap:12px;padding-top:12px;color:#a1b5c1;font-size:12px}
