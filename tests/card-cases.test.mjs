@@ -7,6 +7,7 @@ import worker from '../blockbet-auth.worker.js';
 import {issueSession,digest} from '../functions/_shared/auth.js';
 
 const dir=new URL('../migrations/',import.meta.url);
+const text=(path)=>readFileSync(new URL(path,import.meta.url),'utf8');
 function setup(){
  const db=new DatabaseSync(':memory:');
  db.exec('PRAGMA recursive_triggers=ON');
