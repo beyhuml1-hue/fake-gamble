@@ -97,6 +97,7 @@ export function AppShell() {
           Stats
         </NavLink>
         <NavLink to="/race" className={({isActive}) => isActive?"nav-item active":"nav-item"}>Race</NavLink>
+        <NavLink to="/shop" className={({isActive}) => isActive?"nav-item active":"nav-item"}>Credit shop</NavLink>
         <a className="nav-item" href="/#live-bets">
           <span className="live-nav-dot" aria-hidden="true" />
           Live Bets
@@ -140,6 +141,7 @@ export function AppShell() {
               Stats
             </NavLink>
             <NavLink to="/race">Race</NavLink>
+            <NavLink to="/shop">Shop</NavLink>
             <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
           <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
@@ -178,6 +180,7 @@ export function AppShell() {
               <div className="account-menu">
                 <strong>{displayName || "Guest profile"}</strong>
                 <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · synced Play USD wallet"}</p>
+                <NavLink to="/shop" onClick={() => setAccountOpen(false)}>Credit shop</NavLink>
                 {isAdmin && <NavLink to="/admin" onClick={() => setAccountOpen(false)}>Manage accounts</NavLink>}
                 {isGuest
                   ? (canSignIn
