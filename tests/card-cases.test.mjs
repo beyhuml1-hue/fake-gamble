@@ -135,3 +135,28 @@ test('Rift Packs have real losses, visible 10x+ rewards and the rare matte 36x a
  assert.match(games,/name: "Rift Packs"/);
  assert.doesNotMatch(page,/pikachu|eevee|mewtwo|charizard|poke-holo|\/cards\//i);
 });
+
+
+test('Rift cards track cursor, tilt in 3D and keep independent glossy/void finishes',()=>{
+ const page=readFileSync(new URL('../src/games/Cases.tsx',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/games/card-cases.css',import.meta.url),'utf8');
+ assert.match(page,/onPointerMove=/);
+ assert.match(page,/onPointerLeave=\{reset\}/);
+ assert.match(page,/setProperty\('--rx'/);
+ assert.match(page,/setProperty\('--ry'/);
+ assert.match(page,/setProperty\('--mx'/);
+ assert.match(page,/setProperty\('--my'/);
+ assert.match(page,/setProperty\('--sx'/);
+ assert.match(page,/setProperty\('--sy'/);
+ assert.match(page,/function ArenaArtwork/);
+ assert.match(page,/className="arena-art"/);
+ assert.match(page,/className="card-foil"/);
+ assert.match(page,/className="card-sparkles"/);
+ assert.match(css,/\.collectible\[data-active=true\]/);
+ assert.match(css,/rotateX\(var\(--rx\)\) rotateY\(var\(--ry\)\)/);
+ assert.match(css,/url\('\/cards\/sparkles\.gif'\)/);
+ assert.match(css,/url\('\/cards\/holo\.png'\)/);
+ assert.match(css,/\.collectible\.void-card \.card-sparkles\{display:none\}/);
+ assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.doesNotMatch(page,/pikachu|eevee|mewtwo|charizard|\/cards\/.+\.webp/i);
+});
