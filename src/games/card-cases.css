@@ -139,3 +139,114 @@
 @media(max-width:820px){.card-cases-layout{grid-template-columns:1fr}.card-cases-stage{min-height:500px}.pack-purchase{max-width:none}.card-cases-title{padding-inline:6px}.collectible-grid{max-width:720px}}
 @media(max-width:570px){.card-cases-title{align-items:start;gap:12px;flex-direction:column}.rift-rarity{padding:7px 9px}.card-cases-stage{padding:53px 10px 18px;min-height:480px}.pack-pedestal{min-height:350px}.sealed-pack{transform:scale(.91) rotate(-5deg)}.collectible-grid{gap:7px;padding-bottom:70px}.collectible{aspect-ratio:.63}.collectible-back,.collectible-front{border-width:1px;border-radius:5px}.back-brand{font-size:6px}.card-payout strong{font-size:18px}.card-payout span{font-size:8px;max-width:100%;overflow:hidden;text-overflow:ellipsis}.card-payout small{font-size:9px}.pack-odds-rows>div{grid-template-columns:1fr auto 52px;gap:5px;font-size:10px}.pack-odds-rows strong{font-size:11px}.rift-result{margin-top:10px}.rift-event-disc{width:65%}.rift-event-orbit{width:95%}}
 @media(prefers-reduced-motion:reduce){.card-cases *{animation:none!important;transition:none!important}.collectible{opacity:1;transform:none}.collectible.revealed .collectible-inner{transform:rotateY(180deg)}.card-cases-stage.tearing .sealed-pack{opacity:0}}
+
+/* Rift collectible revision: restored interactive foil and true pointer-controlled
+   3D rotation from the original holographic-card experience. */
+.card-cases .collectible{
+ --rx:0deg;--ry:0deg;--mx:50%;--my:50%;--sx:50%;--sy:50%;
+ --glare:.45;--sparkle:.36;--zoom:1;
+ cursor:default;touch-action:pan-y;transform-style:preserve-3d;
+ transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(var(--zoom));
+ transition:transform .3s cubic-bezier(.22,.8,.26,1),filter .28s;
+}
+.card-cases .collectible.revealed{cursor:crosshair}
+.card-cases .collectible.revealed:focus-visible{outline:2px solid #dcf8ff;outline-offset:5px;border-radius:10px}
+.card-cases .collectible[data-active=true]{--zoom:1.055;z-index:15;animation:none!important;filter:drop-shadow(0 16px 25px #000a)}
+.card-cases .collectible[data-active=true] .collectible-inner{transform:rotateY(180deg)}
+.card-cases .collectible-inner{transform-style:preserve-3d}
+.card-cases .arena-scene{background:#12263a}
+.card-cases .arena-art{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(1.28) contrast(1.07)}
+.card-cases .collectible .collectible-front{border-width:2px}
+.card-cases .collectible.revealed .card-foil{
+ background-image:linear-gradient(115deg,transparent 10%,#ed78b784 24%,#ffd87796 36%,#8dfad9a8 48%,#8eb4ff9a 59%,#dc88fc94 74%,transparent 88%);
+ background-size:280% 280%;
+ background-position:var(--mx) var(--my);
+ mix-blend-mode:color-dodge;
+ filter:brightness(.72) contrast(1.2);
+ opacity:.66;
+ animation:case-foil-roam 12s ease-in-out infinite;
+}
+.card-cases .card-sparkles{
+ position:absolute;inset:0;z-index:2;border-radius:inherit;pointer-events:none;
+ background-image:url('/cards/sparkles.gif'),url('/cards/holo.png'),linear-gradient(135deg,#ff007a50 4%,#fca40048 21%,#ffff0040 40%,#00ff9830 58%,#00aaff40 75%,#c34dff55 92%);
+ background-position:var(--sx) var(--sy),var(--mx) var(--my),var(--mx) var(--my);
+ background-size:180%,220%,240%;
+ background-blend-mode:screen,overlay,normal;
+ mix-blend-mode:color-dodge;
+ opacity:var(--sparkle);
+ filter:brightness(1.05) contrast(1.24);
+ animation:case-sparkle-roam 10s ease-in-out infinite;
+}
+.card-cases .card-glare{
+ z-index:3;
+ background:radial-gradient(ellipse at var(--mx) var(--my),#fff,transparent 58%),linear-gradient(110deg,transparent 38%,#fff8 47%,transparent 58%);
+ background-size:100% 100%,280% 100%;
+ background-position:center,var(--mx) var(--my);
+ mix-blend-mode:overlay;
+ opacity:calc(.18 + var(--glare) * .37);
+ animation:case-glare-roam 12s ease-in-out infinite;
+}
+.card-cases .card-etching{z-index:4}
+.card-cases .card-face-frame{z-index:5;border:1px solid #ffffffa3;box-shadow:inset 0 0 0 1px #0008,0 0 12px #ffffff25}
+.card-cases .collectible.silver{--sparkle:.2}
+.card-cases .collectible.holo{--sparkle:.58}
+.card-cases .collectible.prismatic{--sparkle:.8}
+.card-cases .collectible.gold{--sparkle:.68}
+.card-cases .collectible.gold .collectible-front{border-color:#ffd989;box-shadow:0 0 0 2px #664a23,0 0 20px #ffc65c66,0 18px 26px #000b}
+.card-cases .collectible.gold .card-etching{opacity:.85;background-image:repeating-linear-gradient(136deg,#fff7c131 0 1px,transparent 1px 11px),linear-gradient(180deg,#ffdd774d,transparent 25%,transparent 72%,#ffde7e40)}
+.card-cases .collectible.mythic{--sparkle:.98}
+.card-cases .collectible.mythic:not(.void-card) .collectible-front{box-shadow:0 0 0 2px #e1bcf3,0 0 40px #d182fcad,0 15px 30px #000b}
+.card-cases .collectible.mythic:not(.void-card) .card-foil{opacity:.94}
+.card-cases .collectible.void-card{--sparkle:0}
+.card-cases .collectible.void-card .arena-art{filter:grayscale(.85) contrast(1.33) brightness(.7)}
+.card-cases .collectible.void-card .card-foil{opacity:0;animation:none}
+.card-cases .collectible.void-card .card-sparkles{display:none}
+.card-cases .collectible.void-card .card-glare{opacity:.13;filter:grayscale(1);animation:none}
+.card-cases .collectible.void-card .card-etching{
+ z-index:4;opacity:.9;
+ background-image:repeating-linear-gradient(45deg,#ffffff0d 0 1px,transparent 2px 14px),repeating-conic-gradient(from 13deg,#77717b1c 0 8deg,#05050911 9deg 30deg);
+ background-size:100% 100%,22px 22px;
+ mix-blend-mode:soft-light;
+ mask-image:linear-gradient(#000e 0 14%,transparent 37%,transparent 60%,#000c 100%);
+}
+.card-cases .collectible.void-card[data-active=true] .collectible-front{box-shadow:0 0 0 2px #121016,0 0 0 4px #6b596e,0 0 36px #b7a9c478,0 22px 33px #000e}
+.card-cases .collectible[data-active=true] .card-foil,
+.card-cases .collectible[data-active=true] .card-sparkles,
+.card-cases .collectible[data-active=true] .card-glare{animation:none!important}
+.card-cases .collectible[data-active=true]:not(.void-card) .card-foil{background-position:var(--mx) var(--my);opacity:.97;filter:brightness(.85) contrast(1.4)}
+.card-cases .collectible[data-active=true]:not(.void-card) .card-sparkles{background-position:var(--sx) var(--sy),var(--mx) var(--my),var(--mx) var(--my);opacity:calc(var(--sparkle) * var(--glare))}
+.card-cases .collectible[data-active=true]:not(.void-card) .card-glare{background-position:center,var(--mx) var(--my);opacity:calc(.32 + var(--glare) * .55)}
+.card-cases .collectible[data-active=true].void-card .card-glare{opacity:.2}
+.card-cases .collectible .card-payout{pointer-events:none}
+@keyframes case-foil-roam{
+ 0%,100%{background-position:50% 50%;filter:brightness(.6) contrast(1.25)}
+ 15%{background-position:100% 15%;filter:brightness(.85) contrast(1.35)}
+ 38%{background-position:15% 95%;filter:brightness(.65) contrast(1.25)}
+ 60%{background-position:90% 85%;filter:brightness(.95) contrast(1.2)}
+ 83%{background-position:5% 10%;filter:brightness(.7) contrast(1.4)}
+}
+@keyframes case-sparkle-roam{
+ 0%,100%{background-position:50% 50%,45% 55%,55% 50%;filter:brightness(.9)}
+ 25%{background-position:15% 90%,70% 15%,20% 75%;filter:brightness(1.2)}
+ 55%{background-position:95% 5%,20% 95%,75% 45%;filter:brightness(.85)}
+ 80%{background-position:35% 25%,85% 50%,30% 15%;filter:brightness(1.35)}
+}
+@keyframes case-glare-roam{
+ 0%,100%{background-position:center,15% 40%}
+ 50%{background-position:center,85% 70%}
+}
+@media(max-width:620px){
+ .card-cases .card-cases-stage{min-height:0;padding:65px 12px 26px}
+ .card-cases .collectible-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:440px;gap:86px 16px;padding:12px 0 78px;margin:0 auto 4px}
+ .card-cases .collectible{aspect-ratio:.715}
+ .card-cases .card-payout{top:calc(100% + 9px);gap:4px}
+ .card-cases .card-payout strong{font-size:25px}
+ .card-cases .card-payout span{font-size:10px;max-width:100%;text-overflow:ellipsis;overflow:hidden}
+ .card-cases .card-payout small{font-size:11px}
+ .card-cases .pack-purchase{padding:19px 18px 95px}
+ .card-cases .rift-result{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ .card-cases .collectible[data-active=true]{transform:none;filter:none}
+ .card-cases .card-foil,.card-cases .card-sparkles,.card-cases .card-glare{animation:none!important}
+}
