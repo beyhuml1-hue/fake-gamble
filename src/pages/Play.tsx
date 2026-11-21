@@ -41,7 +41,6 @@ const PAGES: Partial<Record<GameId, ComponentType>> = {
   blackjack: Blackjack,
   roulette: Roulette,
   dragon: Dragon,
-  flip: Flip,
   coinflip: () => <Flip game="Coinflip" />,
   diamonds: Diamonds,
   baccarat: Baccarat,
@@ -54,6 +53,7 @@ const PAGES: Partial<Record<GameId, ComponentType>> = {
 
 export function Play() {
   const { id } = useParams();
+  if (id === "flip") return <Navigate to="/game/coinflip" replace />;
   const game = gameById(id);
   if (!game) return <Navigate to="/" replace />;
   const Page = PAGES[game.id];

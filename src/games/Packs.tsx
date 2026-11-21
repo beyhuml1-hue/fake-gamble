@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { BetPanel } from "../components/BetPanel";
+import { GameLayout } from "../components/GameLayout";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PACK_LEVELS,PACK_ODDS,packMax,packRtp,pickPackPrize,type PackDifficulty,type PackPrize } from "../data/packs";
 import { betCents,formatUSD,payout } from "../lib/money";
 import { sound } from "../lib/sound";
@@ -115,12 +117,16 @@ export function Packs(){
    setStrip(Array.from({length:12},()=>pickPackPrize(chosen)));
    setResult(null);setShift(0);setReelReady(false);setError("");
  };
- const submit=(event:FormEvent)=>{
-   event.preventDefault();open();
- };
- const maxPayout=payout(Math.max(0,wager),best);
- return <section className="packs-page" data-screen="packs">
-   <div className="packs-game">
+ return <GameLayout title="Packs" note={`${(packRtp(level)*100).toFixed(2)}% expected return`}
+   panel={<BetPanel amount={amount} onAmount={setAmount} profitCents={Math.max(0,payout(wager,best)-wager)}
+     label={spinning?"Opening…":"Open pack"} onAction={open} disabled={spinning} locked={spinning} error={error}>
+     <label className="field"><span className="field-label">Difficulty</span>
+       <select disabled={spinning} value={level} onChange={e=>changeLevel(e.target.value as PackDifficulty)}>
+         {PACK_LEVELS.map(tier=><option key={tier} value={tier}>{tier}</option>)}
+       </select>
+     </label>
+   </BetPanel>}>
+   <div className="packs-layout">
      <div className="packs-stage">
        <div className="packs-stage-head">
          <span><i/> PACKS REEL</span>
@@ -145,29 +151,6 @@ export function Packs(){
            result.mult===1?"Your stake was returned.":"Returned "+formatUSD(payout(stake,result.mult))+"."}</span>
        </div>:<div className="packs-prompt" role="status">{spinning?"Opening your pack…":"The white pointer shows the winning pack."}</div>}
      </div>
-     <form className="packs-bet-controls" onSubmit={submit}>
-       <button type="submit" className="packs-open-button" disabled={spinning}>
-         {spinning?"Opening…":"Open pack"}
-       </button>
-       <div className="packs-bet-line"><span>Bet Amount</span><span>Balance: <strong>{formatUSD(balance)}</strong></span></div>
-       <div className="packs-manual"><span>Manual</span><small>Every spin is independent</small></div>
-       <label className="packs-amount-field">
-         <span>Amount in Play USD</span>
-         <div><span className="packs-dollar">$</span>
-           <input inputMode="decimal" type="number" min="0.10" max={balance/100} step="0.01"
-              aria-label="Pack bet amount" value={amount} disabled={spinning}
-              onChange={event=>setAmount(Number(event.target.value))}/>
-           <button type="button" disabled={spinning} onClick={()=>setAmount(Math.max(.1,Math.round(amount*50)/100))}>½</button>
-           <button type="button" disabled={spinning} onClick={()=>setAmount(Math.min(balance/100,Math.round(amount*200)/100))}>2×</button>
-         </div>
-       </label>
-       <div className="packs-difficulty-head"><label htmlFor="packs-difficulty">Difficulty</label><b>Max {multLabel(best)}</b></div>
-       <select id="packs-difficulty" disabled={spinning} value={level} onChange={e=>changeLevel(e.target.value as PackDifficulty)}>
-         {PACK_LEVELS.map(tier=><option key={tier} value={tier}>{tier}</option>)}
-       </select>
-       <div className="packs-pay-stat"><span>Max potential return</span><strong>{formatUSD(maxPayout)}</strong></div>
-       {error&&<p className="form-error" role="alert">{error}</p>}
-     </form>
      <section className="packs-odds" aria-label="Published Packs odds">
        <header><h2>{level} drops</h2><span>Expected return {(packRtp(level)*100).toFixed(2)}%</span></header>
        <div className="packs-odds-grid">{prizes.map(prize=><div key={prize.color} className="packs-odd-item">
@@ -177,5 +160,5 @@ export function Packs(){
        <p>All multipliers include your original bet. Odds are fixed for each difficulty. The reel animation illustrates the weighted result; it does not change it. Play USD is fictional.</p>
      </section>
    </div>
- </section>;
+ </GameLayout>;
 }

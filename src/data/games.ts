@@ -166,7 +166,7 @@ const gameCatalog = [
 
 export type GameId = (typeof gameCatalog)[number]["id"];
 
-export const GAMES = gameCatalog.filter(game => game.id !== "cases" && game.id !== "case-battles");
+export const GAMES = gameCatalog.filter(game => game.id !== "flip" && game.id !== "cases" && game.id !== "case-battles");
 
 export function gameById(id: string | undefined) {
   return GAMES.find((game) => game.id === id);

@@ -110,3 +110,29 @@
   min-inline-size: 0;
   margin: 0;
 }
+
+.app .play-surface .packs-layout { width: 100%; min-width: 0; }
+.app .play-surface .packs-layout .packs-stage,
+.app .play-surface .packs-layout .packs-odds { background: transparent; }
+.app .play-surface .packs-layout .packs-viewport { background: #171d1a; border-color: #303833; }
+.app .play-surface .premium-roulette .roulette-table-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr)) minmax(44px, 1.4fr);
+}
+.premium-roulette .felt button { position: relative; min-width: 0; }
+.roulette-placed-chip {
+  position: absolute; bottom: 0; left: 50%; translate: -50% 0;
+  padding: 1px 3px; border-radius: 3px; background: #d7eadd; color: #11241a;
+  white-space: nowrap; font-size: 9px; z-index: 1;
+}
+.roulette-orbit {
+  position: absolute; width: min(100%,430px); aspect-ratio: 1;
+  left: 50%; translate: -50% 0; top: 0; z-index: 4; pointer-events: none;
+}
+.roulette-orbit i {
+  position: absolute; left: 50%; top: 2%; translate: -50% 0;
+  height: 10px; width: 10px; background: #fff3d6; border-radius: 50%;
+}
+.roulette-orbit[data-spinning="true"] { animation: roulette-ball-spin 3.1s cubic-bezier(.12,.68,.22,1) both; }
+@keyframes roulette-ball-spin { to { transform: rotate(-1440deg); } }
+@media (max-width: 650px) { .roulette-orbit { max-width: 310px; } }
+@media (prefers-reduced-motion: reduce) { .roulette-orbit[data-spinning="true"] { animation: none; } }

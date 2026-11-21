@@ -15,11 +15,12 @@ type Bet =
   | { kind: "color"; color: "red" | "black" }
   | { kind: "parity"; even: boolean }
   | { kind: "half"; low: boolean }
-  | { kind: "dozen"; d: 1 | 2 | 3 };
+  | { kind: "dozen"; d: number }
+  | { kind: "column"; column: number };
 
 function multFor(bet: Bet): number {
   if (bet.kind === "straight") return 36;
-  if (bet.kind === "dozen") return 3;
+  if (bet.kind === "dozen" || bet.kind === "column") return 3;
   return 2;
 }
 
@@ -30,30 +31,27 @@ function wins(bet: Bet, n: number): boolean {
   if (bet.kind === "parity") return (n % 2 === 0) === bet.even;
   if (bet.kind === "half") return bet.low ? n <= 18 : n >= 19;
   if (bet.kind === "dozen") return n >= (bet.d - 1) * 12 + 1 && n <= bet.d * 12;
-  return false;
-}
-
-function forcedNumber(bet: Bet): number {
-  if (bet.kind === "straight") return bet.n;
-  if (bet.kind === "color") return bet.color === "red" ? 1 : 2;
-  if (bet.kind === "parity") return bet.even ? 2 : 1;
-  if (bet.kind === "half") return bet.low ? 1 : 19;
-  return bet.d === 1 ? 1 : bet.d === 2 ? 13 : 25;
-}
-
-function label(bet: Bet | null): string {
-  if (!bet) return "Pick a pocket";
-  if (bet.kind === "straight") return bet.n === 0 ? "0" : String(bet.n);
-  if (bet.kind === "color") return bet.color;
-  if (bet.kind === "parity") return bet.even ? "Even" : "Odd";
-  if (bet.kind === "half") return bet.low ? "1–18" : "19–36";
-  return `${bet.d}${bet.d === 1 ? "st" : bet.d === 2 ? "nd" : "rd"} 12`;
+  return bet.kind === "column" && n % 3 === bet.column % 3;
 }
 
 export function Roulette() {
   const { balance, debit, credit, record } = useWallet();
   const [amount, setAmount] = useState(1);
-  const [bet, setBet] = useState<Bet | null>({ kind: "color", color: "red" });
+  const [chips, setChips] = useState<Record<string, { bet: Bet; cents: number }>>({});
+  const placed = Object.values(chips);
+  const stake = placed.reduce((total, chip) => total + chip.cents, 0);
+  const addChip = (bet: Bet) => {
+    if (spinLock.current) return;
+    const cents = betCents(amount, balance - stake);
+    if (cents == null) { setError("Choose a chip value you can cover."); return; }
+    const key = JSON.stringify(bet);
+    setChips(previous => {
+      const total = Object.values(previous).reduce((sum, chip) => sum + chip.cents, 0);
+      if (total + cents > balance) return previous;
+      return { ...previous, [key]: { bet, cents: (previous[key]?.cents ?? 0) + cents } };
+    });
+    setError("");
+  };
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<number | null>(null);
   const [win, setWin] = useState<boolean | null>(null);
@@ -72,30 +70,17 @@ export function Roulette() {
     [slice],
   );
 
-  const mult = bet ? multFor(bet) : 0;
-  const cents = Math.round(amount * 100);
-  const profit = Math.max(0, payout(Math.max(cents, 0), mult) - Math.max(cents, 0));
-
   const spin = () => {
-    if (spinLock.current) return;
-    if (!bet) {
-      setError("Choose a bet on the table.");
-      return;
-    }
-    const stake = betCents(amount, balance);
-    if (stake == null) {
-      setError("Minimum bet is $0.10, and it can't be more than your balance.");
-      return;
-    }
+    if (spinLock.current || !stake) return;
+    if (stake > balance) { setError("Your chips exceed your available balance."); return; }
     if (!debit(stake)) return;
     setError("");
     spinLock.current=true;
     setBusy(true);
     sound.roll();
     setResult(null);
-    const n = luckOn() ? forcedNumber(bet) : ORDER[randInt(ORDER.length)]!;
-    const didWin = wins(bet, n);
-    const pay = didWin ? payout(stake, multFor(bet)) : 0;
+    const n = luckOn() ? ORDER.find(number => wins(placed[0]!.bet, number))! : ORDER[randInt(ORDER.length)]!;
+    const pay = placed.reduce((total, chip) => wins(chip.bet, n) ? total + payout(chip.cents, multFor(chip.bet)) : total, 0);
     const index = ORDER.indexOf(n);
     const center = index * slice + slice / 2;
     setRotation((prev) => Math.ceil(prev / 360) * 360 + 360 * 5 + (360 - center));
@@ -103,14 +88,23 @@ export function Roulette() {
       if (pay) credit(pay);
       record("Roulette", stake, pay);
       setResult(n);
-      setWin(didWin);
+      setWin(pay > stake);
+      setChips({});
       setRecent(prior=>[n,...prior].slice(0,20));
       spinLock.current=false;
       setBusy(false);
     }, 3100);
   };
 
-  const numbers = [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34];
+  const spot = (bet: Bet, name: string | number, className = "") => {
+    const key = JSON.stringify(bet);
+    const cents = chips[key]?.cents ?? 0;
+    return <button key={key} type="button" className={`${className}${cents ? " on" : ""}`}
+      data-winner={result !== null && !busy && bet.kind === "straight" && bet.n === result}
+      onClick={() => addChip(bet)}>
+      {name}{cents > 0 && <small className="roulette-placed-chip">{formatUSD(cents)}</small>}
+    </button>;
+  };
 
   return (
     <GameLayout
@@ -120,10 +114,10 @@ export function Roulette() {
         <BetPanel
           amount={amount}
           onAmount={setAmount}
-          profitCents={profit}
-          label="Bet"
+          profitCents={0}
+          label="Spin"
           onAction={spin}
-          disabled={busy}
+          disabled={busy || !stake}
           locked={busy}
           error={error}
           amountLabel="Chip value"
@@ -136,8 +130,9 @@ export function Roulette() {
                 onClick={()=>setAmount(chip)}>{chip>=1000000?chip/1000000+"M":chip>=1000?chip/1000+"K":chip}</button>)}
           </div></div>
           <p className="hint">
-            On {label(bet)} · pays {formatUSD(profit)} profit
+            On table {formatUSD(stake)}
           </p>
+          <button className="ghost-btn" type="button" onClick={() => setChips({})} disabled={busy || !stake}>Clear chips</button>
         </BetPanel>
       }
     >
@@ -145,7 +140,7 @@ export function Roulette() {
         <div className="roulette-history" aria-label="Recent roulette results">{recent.length?recent.map((n,i)=><span key={i} data-red={RED.has(n)} data-zero={n===0}>{n}</span>):<small>No recent rounds</small>}</div>
         <div className={busy ? "wheel-scene compact spinning" : "wheel-scene compact"}>
           <div className="pointer" />
-          <span className={busy?"roulette-ball is-rolling":"roulette-ball"} aria-hidden="true" />
+          <div className="roulette-orbit" data-spinning={busy} aria-hidden="true"><i /></div>
           <div className="wheel-disc small" style={{ background: gradient, transform: `rotate(${rotation}deg)` }}>
             {ORDER.map((n,i)=><span key={n} className="roulette-pocket-label" data-winner={result===n&&!busy} style={{"--pocket-angle":`${(i+0.5)*slice}deg`} as CSSProperties}><b>{n}</b></span>)}
             <span className="roulette-wheel-hub" aria-live="polite"><small>{busy?"Rolling":result!==null?"Round over":"Place your bet"}</small><b>{busy?"●":result!==null?result:"—"}</b></span>
@@ -155,53 +150,26 @@ export function Roulette() {
           </p>
         </div>
         <fieldset className="felt" disabled={busy} aria-label="Roulette bets">
-          <button
-            type="button"
-            className={bet?.kind === "straight" && bet.n === 0 ? "zero on" : "zero"}
-            onClick={() => setBet({ kind: "straight", n: 0 })}
-          >
-            0
-          </button>
-          <div className="pockets">
-            {numbers.map((n) => (
-              <button
-                key={n}
-                type="button"
-                disabled={busy}
-                data-winner={result===n&&!busy}
-                className={`pocket ${RED.has(n) ? "red" : "black"} ${bet?.kind === "straight" && bet.n === n ? "on" : ""}`}
-                onClick={() => setBet({ kind: "straight", n })}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-          <div className="outside">
-            <button type="button" className={bet?.kind === "half" && bet.low ? "on" : ""} onClick={() => setBet({ kind: "half", low: true })}>
-              1–18
-            </button>
-            <button type="button" className={bet?.kind === "parity" && bet.even ? "on" : ""} onClick={() => setBet({ kind: "parity", even: true })}>
-              Even
-            </button>
-            <button type="button" className={bet?.kind === "color" && bet.color === "red" ? "on red" : "red"} onClick={() => setBet({ kind: "color", color: "red" })}>
-              Red
-            </button>
-            <button type="button" className={bet?.kind === "color" && bet.color === "black" ? "on" : ""} onClick={() => setBet({ kind: "color", color: "black" })}>
-              Black
-            </button>
-            <button type="button" className={bet?.kind === "parity" && !bet.even ? "on" : ""} onClick={() => setBet({ kind: "parity", even: false })}>
-              Odd
-            </button>
-            <button type="button" className={bet?.kind === "half" && !bet.low ? "on" : ""} onClick={() => setBet({ kind: "half", low: false })}>
-              19–36
-            </button>
+          {spot({ kind: "straight", n: 0 }, 0, "zero pocket")}
+          <div className="pockets roulette-table-grid">
+            {[3, 2, 1].flatMap(column => [
+              ...Array.from({ length: 12 }, (_, i) => {
+                const n = column + i * 3;
+                return spot({ kind: "straight", n }, n, `pocket ${RED.has(n) ? "red" : "black"}`);
+              }),
+              spot({ kind: "column", column }, "2 to 1", "pocket roulette-column"),
+            ])}
           </div>
           <div className="outside dozens">
-            {[1, 2, 3].map((d) => (
-              <button key={d} type="button" className={bet?.kind === "dozen" && bet.d === d ? "on" : ""} onClick={() => setBet({ kind: "dozen", d: d as 1 | 2 | 3 })}>
-                {d === 1 ? "1st 12" : d === 2 ? "2nd 12" : "3rd 12"}
-              </button>
-            ))}
+            {[1, 2, 3].map(d => spot({ kind: "dozen", d }, `${d === 1 ? "1st" : d === 2 ? "2nd" : "3rd"} 12`))}
+          </div>
+          <div className="outside">
+            {spot({ kind: "half", low: true }, "1–18")}
+            {spot({ kind: "parity", even: true }, "Even")}
+            {spot({ kind: "color", color: "red" }, "Red", "red")}
+            {spot({ kind: "color", color: "black" }, "Black")}
+            {spot({ kind: "parity", even: false }, "Odd")}
+            {spot({ kind: "half", low: false }, "19–36")}
           </div>
         </fieldset>
       </div>
