@@ -104,16 +104,14 @@ export function Multiplayer({game}:{game:Game}){
       {!email?<div className="room-setup">
         <p>Sign in to create a match and play against another player.</p>
         <button className="bet-btn" type="button" onClick={showSignIn}>Sign in to play</button>
-      </div>:working?<div className="room-setup">
-        <p className="field-label">{current.status==="waiting"?"Waiting for opponent":"Match in progress"}</p>
+      </div>:current?.status==="waiting"?null:working?<div className="room-setup">
+        <p className="field-label">Match in progress</p>
         <strong className="pvp-stake">{formatUSD(current.stakeCents)} each</strong>
-        <p>{current.host} vs {current.guest??"Waiting for a challenger"}</p>
-        {current.status==="waiting"&&<p className="hint">Your match is visible to anyone who opens {names[game]}. Your stake is reserved until someone joins or you cancel.</p>}
-        {current.status==="active"&&<p className="hint">{current.myTurn?"Your turn.":"Opponent's turn. You can leave this page and return."}</p>}
+        <p>{current.host} vs {current.guest}</p>
+        <p className="hint">{current.myTurn?"Your turn.":"Opponent's turn."}</p>
         <button type="button" className="ghost-btn" disabled={busy}
-          onClick={()=>{if(window.confirm(current.status==="waiting"?"Cancel and refund your waiting stake?":"Forfeit the match to your opponent?"))
-            void act("leave",{id:current.id});}}>
-          {current.status==="waiting"?"Cancel waiting match":"Forfeit match"}
+          onClick={()=>{if(window.confirm("Forfeit the match to your opponent?")) void act("leave",{id:current.id});}}>
+          Forfeit match
         </button>
       </div>:<BetPanel amount={amount} onAmount={setAmount} profitCents={Math.round(amount*100)}
         label={busy?"Creating…":"Create match"} onAction={()=>void act("create",{game,stakeCents:Math.round(amount*100)})}
@@ -135,15 +133,24 @@ export function Multiplayer({game}:{game:Game}){
       {game==="chess"&&current.state.fen?<ChessMatch fen={current.state.fen} moves={current.state.moves||[]} lastMove={current.state.lastMove} role={current.role} myTurn={current.myTurn} busy={busy} onMove={move=>void act("move",{id:current.id,move})}/>:game==="uno"?<UnoMatch room={current} busy={busy} play={move=>void act("move",{id:current.id,move})}/>:game==="pool"?<PoolMatch room={current} busy={busy} shoot={move=>void act("move",{id:current.id,move})}/>:
         game==="connect-four"?<FourMatch room={current} busy={busy} move={column=>void act("move",{id:current.id,move:{column}})}/>:
         <MinesMatch room={current} busy={busy} move={tile=>void act("move",{id:current.id,move:{tile}})}/>}
-      {current.status==="finished"&&<div className="match-outcome"><h2>{current.winner===current.role?"You won!":current.winner?"Opponent won":"Match drawn"}</h2><p>{current.result}</p><button type="button" className="bet-btn" onClick={()=>{idRef.current=null;setMatch(null);setRoomId(null);void refresh();}}>Back to open matches</button></div>}
+      {current.status==="finished"&&<div className="match-outcome"><h2>{current.winner===current.role?"You won!":current.winner?"Opponent won":"Match drawn"}</h2><p>{current.result}</p><button type="button" className="bet-btn" onClick={()=>{idRef.current=null;setMatch(null);setRoomId(null);void refresh();}}>Back to lobby</button></div>}
       <p className="hint">Moves are verified on the server. Refreshing or changing pages will not reset the match.</p>
     </div>:
     current&&["finished","expired","cancelled"].includes(current.status)?<div className="pvp-empty">
       <h2>{current.status==="cancelled"?"Match cancelled":current.winner===null?"Draw":current.winner===current.role?"You won!":"Opponent won"}</h2>
       <p>{current.result??"Match finished."}</p>
       <strong>{current.winner===current.role?formatUSD(current.stakeCents*2):current.winner===null?formatUSD(current.stakeCents)+" refunded":"No payout"}</strong>
-      <button type="button" className="bet-btn" onClick={()=>{idRef.current=null;setMatch(null);setRoomId(null);void refresh();}}>Back to open matches</button>
+      <button type="button" className="bet-btn" onClick={()=>{idRef.current=null;setMatch(null);setRoomId(null);void refresh();}}>Back to lobby</button>
     </div>:
+    current?.status==="waiting"?<section className="waiting-felt" aria-label="Waiting table">
+      <p>Winner takes <strong>{formatUSD(current.stakeCents*2)}</strong></p>
+      <div className="waiting-seats">
+        <div><strong>{current.host}</strong><span>Ready · {formatUSD(current.stakeCents)} buy-in</span></div>
+        <div><strong>Open seat</strong><span>{formatUSD(current.stakeCents)} buy-in</span></div>
+      </div>
+      <div><p>Waiting for a player</p><button type="button" className="ghost-btn" disabled={busy}
+        onClick={()=>{if(window.confirm("Cancel and refund your waiting stake?")) void act("leave",{id:current.id});}}>Cancel and refund</button></div>
+    </section>:
     <div className="pvp-lobby">
       <div className="pvp-list-head"><h2>Waiting to play</h2><button className="ghost-btn" type="button" onClick={()=>void refresh()}>Refresh</button></div>
       {waiting.length===0?<div className="pvp-empty"><p>No players waiting yet. Create a match to appear here.</p></div>:
@@ -198,13 +205,13 @@ export function PoolMatch({room,busy,shoot}:{room:Room;busy:boolean;shoot:(move:
       onPointerDown={event=>{aimAt(event);event.currentTarget.setPointerCapture(event.pointerId);}}
       onPointerUp={event=>{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);}}>
       <defs>
-        <linearGradient id="room-wood" x2=".25" y2="1"><stop stopColor="#9b6339"/><stop offset=".3" stopColor="#412718"/><stop offset=".65" stopColor="#825333"/><stop offset="1" stopColor="#492a1c"/></linearGradient>
-        <radialGradient id="room-felt"><stop stopColor="#179656"/><stop offset="1" stopColor="#07532e"/></radialGradient>
+        <linearGradient id="room-wood" x2=".25" y2="1"><stop stopColor="#59655d"/><stop offset=".3" stopColor="#303a34"/><stop offset=".65" stopColor="#4e5952"/><stop offset="1" stopColor="#242c27"/></linearGradient>
+        <radialGradient id="room-felt"><stop stopColor="#327b63"/><stop offset="1" stopColor="#215543"/></radialGradient>
         <radialGradient id="room-ball" cx=".3" cy=".2" r=".8"><stop stopColor="#fff" stopOpacity=".8"/><stop offset=".3" stopColor="#fff" stopOpacity=".1"/><stop offset=".6" stopColor="#000" stopOpacity="0"/><stop offset="1" stopColor="#000" stopOpacity=".6"/></radialGradient>
         <pattern id="room-grain" width="70" height="8" patternUnits="userSpaceOnUse"><path d="M0 2Q32 -1 70 3M0 6Q40 10 70 5" stroke="#241408" strokeWidth=".5" opacity=".5" fill="none"/></pattern>
         <pattern id="room-cloth" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 0h4M0 2h4" stroke="#d4ffe9" strokeOpacity=".04"/></pattern>
       </defs>
-      <rect x="-32" y="-32" width="764" height="414" rx="25" fill="url(#room-wood)" stroke="#b49a67" strokeWidth="2"/>
+      <rect x="-32" y="-32" width="764" height="414" rx="25" fill="url(#room-wood)" stroke="#798b80" strokeWidth="2"/>
       <rect x="-31" y="-31" width="762" height="412" rx="24" fill="url(#room-grain)"/>
       <rect x="-10" y="-10" width="720" height="370" rx="14" fill="#103c24" stroke="#24965b" strokeWidth="6"/>
       <rect width="700" height="350" rx="9" fill="url(#room-felt)"/>

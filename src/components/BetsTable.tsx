@@ -83,7 +83,7 @@ export function BetsTable() {
         <span>{tab==="live" ? status==="online" ? "LIVE" : status==="offline" ? "FEED OFFLINE" : "CONNECTING…" : "THIS DEVICE"}</span>
         <span>{tab==="live" ? updatedAt ? "Refreshes every 5 seconds" : "Connecting to players…" : "Saved on this device"}</span>
       </div>
-      <div className="bets-scroll">
+      <div className="bets-scroll" tabIndex={0} role="region" aria-label="Recent bet results">
         <table>
           <thead>
             <tr>

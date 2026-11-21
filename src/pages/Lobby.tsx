@@ -6,7 +6,7 @@ import { HomeSpotlight } from "./HomeSpotlight";
 import { formatUSD } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
-const order = ["mines","cases","case-battles","flip","blackjack","dice","dragon","mines-battles","coinflip","crash","uno","connect-four","poker","pool","chess","floor-is-lava","draw","rps","upgrader","hilo","limbo","plinko","double","roulette","pig-race","stocks","slide","keno","blitz","snakes","chicken","baccarat","diamonds","packs","wheel","pump","darts"];
+const order = ["mines","flip","blackjack","dice","dragon","mines-battles","coinflip","crash","uno","connect-four","poker","pool","chess","floor-is-lava","draw","rps","upgrader","hilo","limbo","plinko","double","roulette","pig-race","stocks","slide","keno","blitz","snakes","chicken","baccarat","diamonds","packs","wheel","pump","darts"];
 const table = new Set(["blackjack","baccarat","roulette","hilo","poker","chess","uno","pool","connect-four"]);
 const groups = ["All games","Instant","Tables"] as const;
 

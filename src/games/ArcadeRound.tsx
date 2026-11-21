@@ -311,7 +311,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
           onClick={()=>setChoice(i)}>{option}</button>)}</div>
       </div>}
       {isSlide && <label className="field"><span className="field-label">Target multiplier</span>
-        <div className="game-number-step"><input type="number" min={1.01} max={1000} step={0.1} value={target} disabled={animating}
+        <div className="game-number-step"><input type="number" min={1.01} max={1000} step={0.01} value={target} disabled={animating}
           onChange={event=>setTarget(event.target.valueAsNumber||1.01)}/></div>
       </label>}
       {isRps && <div className="field"><span className="field-label">Throw</span>
@@ -326,7 +326,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
           <button key={index} type="button" disabled={!stake||animating} data-sunk={sunken.includes(index)} data-chosen={stone===index}
             aria-label={"Stone "+(index+1)} onClick={()=>move(index)} />)}</div>
       </>}
-      {isRps && <div className="rps-stage"><div className="rps-figures" aria-hidden="true">{["✊","✋","✌️"].map((hand,i)=><span key={i} data-picked={lastThrow===i}>{hand}</span>)}</div>
+      {isRps && <div className="rps-stage"><div className="rps-figures" aria-hidden="true">{["Rock","Paper","Scissors"].map((hand,i)=><span key={hand} data-picked={lastThrow===i}>{hand}</span>)}</div>
         <div className="play-stats-pair"><span>Win streak <b>{turn}</b></span><span>Next win <b>{rpsPayout(turn+1).toFixed(2)}×</b></span></div>
         <div className="rps-multipliers">{Array.from({length:6},(_,i)=><span key={i} data-current={i===turn}>{rpsPayout(i+1).toFixed(2)}×</span>)}</div>
       </div>}

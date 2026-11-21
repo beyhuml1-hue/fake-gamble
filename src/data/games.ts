@@ -1,4 +1,4 @@
-export const GAMES = [
+const gameCatalog = [
   {
     id: "dice",
     name: "Dice",
@@ -164,7 +164,9 @@ export const GAMES = [
   { id: "snakes", name: "Snakes", blurb: "Roll two dice and cash out before hitting a snake.", note: "Play USD", gradient: "linear-gradient(160deg,#104735,#092d24)" },
 ] as const;
 
-export type GameId = (typeof GAMES)[number]["id"];
+export type GameId = (typeof gameCatalog)[number]["id"];
+
+export const GAMES = gameCatalog.filter(game => game.id !== "cases" && game.id !== "case-battles");
 
 export function gameById(id: string | undefined) {
   return GAMES.find((game) => game.id === id);

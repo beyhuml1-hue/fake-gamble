@@ -1,0 +1,76 @@
+/* Quiet graphite controls leave the game equipment as the focal point. */
+.app .sidebar { scrollbar-width: thin; scrollbar-color: #555d59 transparent; }
+.app .sidebar .nav-item { min-height: 36px; border-radius: 6px; }
+.app .sidebar .nav-item.active { background: #252d29; color: #b0e2c6; border-color: transparent; }
+.app .sidebar .nav-item:focus:not(:focus-visible) { outline: none; }
+.app .main > .header { background: #181b1a; }
+.app .head-links { align-items: center; gap: 4px; }
+.app .head-links a { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; }
+.app .head-live-dot { position: static; transform: none; box-shadow: none; }
+
+.app .live-bets .bets-scroll { max-height: 322px; overflow: auto; scrollbar-width: thin; }
+.app .live-bets th { position: sticky; top: 0; z-index: 1; background: #1d211f; }
+.app .live-bets th, .app .live-bets td { padding: 10px 12px; white-space: nowrap; }
+.app .live-bets td:nth-child(n+4), .app .live-bets th:nth-child(n+4) { text-align: right; font-variant-numeric: tabular-nums; }
+
+.app .wallet-card { background: #1a1e1c; padding: 24px; }
+.wallet-card .cashier-head, .wallet-card-heading { display: flex; align-items: flex-start; gap: 12px; }
+.wallet-card .cashier-head { justify-content: space-between; }
+.wallet-card-heading svg { width: 36px; height: 36px; padding: 8px; border-radius: 6px; background: #293b31; color: #b0e2c6; }
+.wallet-card-heading h2 { margin: 0 0 8px; font-size: 16px; }
+.wallet-card-heading strong { display: block; font-size: 28px; font-variant-numeric: tabular-nums; }
+.wallet-card-heading span { color: #aab7af; font-size: 13px; }
+.wallet-card-details { display: grid; gap: 12px; margin: 20px 0; }
+.wallet-card-details > div { background: #232825; padding: 12px; border-radius: 6px; }
+.wallet-card-details p { margin: 4px 0 0; color: #b3bdb7; font-size: 13px; }
+.wallet-card > .bet-btn { display: block; text-align: center; }
+
+.app .packs-game, .app .packs-stage, .app .packs-bet-controls, .app .packs-odds,
+.app .mb-page, .app .pvp-lobby { color: #e6ebe8; background-color: #1a1e1c; }
+.app .packs-bet-controls { border-color: #303833; }
+.app .packs-open-button { background: #9cdbb7; color: #16241c; }
+
+.waiting-felt {
+  margin: 12px;
+  min-height: 340px;
+  display: grid;
+  place-items: center;
+  gap: 24px;
+  text-align: center;
+  padding: 24px;
+  background: #24463a;
+  border: 10px solid #313d36;
+  border-radius: clamp(28px, 7vw, 100px);
+  box-shadow: inset 0 2px 14px #172d26;
+}
+.waiting-seats { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; width: min(100%, 480px); }
+.waiting-seats > div { padding: 16px 8px; background: #192c24; border-radius: 8px; overflow-wrap: anywhere; }
+.waiting-seats span { display: block; margin-top: 4px; color: #b8c9bf; font-size: 13px; }
+.app .match-outcome { background: #20352b; margin: 16px auto; padding: 16px; border-radius: 8px; text-align: center; }
+.app .premium-pool-table, .app .pvp-pool { filter: drop-shadow(0 8px 4px #0009); }
+.app .pool-scorebar, .app .pvp-versus { background-color: #252d29; }
+
+.app .play-surface .dice-layout .readout { transition: none; }
+.app .dice-layout .readout.win { background: #99deb6; color: #142c20; }
+.app .dart-board { box-shadow: 0 0 0 5px #303833, 0 8px 16px #0008; }
+.app .dart.fly { transition-timing-function: cubic-bezier(.45,.05,.75,.65); }
+.app .racing-world .racing-car { transition-timing-function: cubic-bezier(.32,.02,.32,1); }
+.app .racing-world .racing-lane { background-color: #303733; }
+.app .rps-figures > span { font-size: clamp(12px, 2vw, 19px); color: #e5ece7; background: #26332d; }
+.app .rps-figures > span[data-picked=true] { background: #355244; color: #c9f1d9; }
+
+@media (prefers-reduced-motion: reduce) {
+  .app .dart.fly, .app .racing-world .racing-car { transition-duration: 0.01s; }
+}
+
+.app .flip-outcome.flip-win { background: #20392f; box-shadow: none; animation: settled-result .22s ease-out both; }
+.app .flip-outcome.flip-loss { background: #34262a; box-shadow: none; animation: settled-result .22s ease-out both; }
+.app .flip-outcome .flip-sparks { display: none; }
+.app .flip-outcome-details { letter-spacing: normal; font-weight: 600; }
+@keyframes settled-result {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app .flip-outcome.flip-win, .app .flip-outcome.flip-loss { animation: none; }
+}

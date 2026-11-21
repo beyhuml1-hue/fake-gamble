@@ -3,7 +3,6 @@ import { Navigate, useParams } from "react-router-dom";
 import type { GameId } from "../data/games";
 import { gameById } from "../data/games";
 import { Baccarat } from "../games/Baccarat";
-import { Cases } from "../games/Cases";
 import { Packs } from "../games/Packs";
 import { Chicken } from "../games/Chicken";
 import { Blackjack } from "../games/Blackjack";
@@ -47,7 +46,6 @@ const PAGES: Partial<Record<GameId, ComponentType>> = {
   diamonds: Diamonds,
   baccarat: Baccarat,
   pump: Pump,
-  cases: Cases,
   packs: Packs,
   upgrader: Upgrader,
   chicken: Chicken,

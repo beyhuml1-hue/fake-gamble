@@ -64,10 +64,8 @@ export function Dice() {
     const step = (now: number) => {
       if (!live.current) return;
       const t = Math.min(1, (now - start) / 860);
-      const wobble = (1 - t) ** 2;
-      const noise = (random() - 0.5) * 64 * wobble;
       const eased = from + (result - from) * (1 - (1 - t) ** 3);
-      setShown(t < 1 ? eased + noise : result);
+      setShown(eased);
       if (t < 1) requestAnimationFrame(step);
       else {
         setFace(Math.min(6, 1 + Math.floor(result / (100 / 6))));

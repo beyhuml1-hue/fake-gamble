@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
 import "./pool-uno.css";
+import { Link } from "react-router-dom";
 
 export type PoolBall = { id: number; x: number; y: number; vx: number; vy: number; sunk: boolean };
 const WIDTH = 1000, HEIGHT = 500, RADIUS = 12;
@@ -136,7 +137,7 @@ export function Pool() {
       <defs>
         <linearGradient id={id + "wood"} x2="0.3" y2="1"><stop stopColor="#9c6940"/><stop offset=".12" stopColor="#4a2415"/><stop offset=".4" stopColor="#815130"/><stop offset=".62" stopColor="#48261a"/><stop offset="1" stopColor="#a66a3d"/></linearGradient>
         <linearGradient id={id + "brass"} x2=".7" y2="1"><stop stopColor="#fff0b1"/><stop offset=".35" stopColor="#bb9650"/><stop offset=".65" stopColor="#59431f"/><stop offset="1" stopColor="#efd48b"/></linearGradient>
-        <radialGradient id={id + "felt"}><stop stopColor="#159354"/><stop offset="1" stopColor="#07542e"/></radialGradient>
+        <radialGradient id={id + "felt"}><stop stopColor="#327b63"/><stop offset="1" stopColor="#215543"/></radialGradient>
         <radialGradient id={id + "pocket"}><stop stopColor="#030707"/><stop offset=".78" stopColor="#030606"/><stop offset="1" stopColor="#29322c"/></radialGradient>
         <radialGradient id={id + "shine"} cx=".3" cy=".25" r=".8"><stop stopColor="#ffffff" stopOpacity=".9"/><stop offset=".25" stopColor="#ffffff" stopOpacity=".16"/><stop offset=".6" stopColor="#000000" stopOpacity="0"/><stop offset="1" stopColor="#000000" stopOpacity=".7"/></radialGradient>
         <pattern id={id + "grain"} width="85" height="10" patternUnits="userSpaceOnUse"><path d="M0 2Q35 -1 85 3M0 6Q40 10 85 5M0 9Q38 5 85 10" stroke="#210d08" strokeWidth=".6" fill="none" opacity=".35"/></pattern>
@@ -177,6 +178,7 @@ export function Pool() {
       <label>Shot power <input aria-label="Shot power" type="range" min="1" max="100" value={power} disabled={moving} onChange={event=>setPower(Number(event.target.value))}/><b>{power}%</b></label>
       <div className="pool-fine-aim"><button type="button" disabled={moving} aria-label="Aim left" onClick={()=>setAngle(angle-Math.PI/360)}>↶</button><span>Fine aim</span><button type="button" disabled={moving} aria-label="Aim right" onClick={()=>setAngle(angle+Math.PI/360)}>↷</button></div>
       <button className="bet-btn" type="button" disabled={moving||Boolean(result)} onClick={shoot}>{moving?"In motion…":"Shoot"}</button>
+      {result && <Link className="ghost-btn" to="/">Back to lobby</Link>}
       <button className="ghost-btn" type="button" onClick={reset}>New rack</button>
     </div>
   </div>;
