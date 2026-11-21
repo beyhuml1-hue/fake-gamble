@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sound } from "../lib/sound";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { DIAMOND_LABEL, DIAMOND_PAY, diamondHand } from "../lib/math";
@@ -35,14 +36,15 @@ export function Diamonds() {
     const hand = diamondHand(drawn);
     const mult = DIAMOND_PAY[hand];
     const pay = payout(stake, mult);
-    if (pay) credit(pay);
-    record("Diamonds", stake, pay);
     let i = 0;
     const timer = window.setInterval(() => {
       i += 1;
+      sound.gem();
       setGems(drawn.slice(0, i).concat(Array(5 - i).fill(-1)));
       if (i >= 5) {
         window.clearInterval(timer);
+        if (pay) credit(pay);
+        record("Diamonds", stake, pay);
         setLabel(`${DIAMOND_LABEL[hand]} · ${mult.toFixed(2)}×`);
         setWin(mult > 0);
         setBusy(false);

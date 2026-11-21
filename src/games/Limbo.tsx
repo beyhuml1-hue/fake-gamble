@@ -48,20 +48,22 @@ export function Limbo() {
     const result = luckOn() ? Math.max(rolled, safeTarget) : rolled;
     const didWin = result >= safeTarget;
     const pay = didWin ? payout(stake, safeTarget) : 0;
-    const credited = pay ? credit(pay) : 0;
-    record("Limbo", stake, credited);
+    window.setTimeout(() => {
+      const credited = pay ? credit(pay) : 0;
+      record("Limbo", stake, credited);
+      running.current = false;
+      if (!live.current) return;
+      setShown(result);
+      setWin(didWin);
+      setBusy(false);
+    }, 900);
     const start = performance.now();
     const step = (now: number) => {
-      if (!live.current) return;
+      if (!live.current || !running.current) return;
       const t = Math.min(1, (now - start) / 900);
       const eased = 1 - (1 - t) ** 3;
       setShown(1 + (result - 1) * eased);
       if (t < 1) frame.current=requestAnimationFrame(step);
-      else {
-        setWin(didWin);
-        setBusy(false);
-        running.current = false;
-      }
     };
     frame.current=requestAnimationFrame(step);
   };

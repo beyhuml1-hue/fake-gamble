@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sound } from "../lib/sound";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { KENO_PAY } from "../lib/math";
@@ -51,15 +52,16 @@ export function Keno() {
     const hitCount = picks.filter((n) => draw.includes(n)).length;
     const mult = KENO_PAY[picks.length]?.[hitCount] ?? 0;
     const pay = payout(stake, mult);
-    if (pay) credit(pay);
-    record("Keno", stake, pay);
     setDrawn([]);
     let i = 0;
     const timer = window.setInterval(() => {
       i += 1;
+      sound.tick();
       setDrawn(draw.slice(0, i));
       if (i >= draw.length) {
         window.clearInterval(timer);
+        if (pay) credit(pay);
+        record("Keno", stake, pay);
         setBusy(false);
       }
     }, 80);

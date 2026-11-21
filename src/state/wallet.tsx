@@ -331,11 +331,10 @@ export function WalletProvider({ email, children, adjustment }: {
       if (credited <= 0) return 0;
       assign(balanceRef.current + credited);
       queueDelta(credited);
-      sound.win();
       return credited;
     },
     record: (game, wager, payout) => {
-      if (payout <= 0) sound.lose();
+      sound.result(wager, payout);
       const row: BetRecord = { id: crypto.randomUUID(), game, wager, payout, at: Date.now() };
       setSaved((prev) => ({ ...prev, history: [row, ...prev.history].slice(0, 250) }));
       window.dispatchEvent(new CustomEvent("blockbet:settled", { detail: row }));

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
+import { sound } from "../lib/sound";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatUSD, payout } from "../lib/money";
@@ -60,8 +61,6 @@ export function Roulette() {
   const [error, setError] = useState("");
   const [recent,setRecent] = useState<number[]>([]);
   const spinLock = useRef(false);
-  const timer = useRef(0);
-  useEffect(()=>()=>window.clearTimeout(timer.current),[]);
 
   const slice = 360 / ORDER.length;
   const gradient = useMemo(
@@ -92,16 +91,17 @@ export function Roulette() {
     setError("");
     spinLock.current=true;
     setBusy(true);
+    sound.roll();
     setResult(null);
     const n = luckOn() ? forcedNumber(bet) : ORDER[randInt(ORDER.length)]!;
     const didWin = wins(bet, n);
     const pay = didWin ? payout(stake, multFor(bet)) : 0;
-    if (pay) credit(pay);
-    record("Roulette", stake, pay);
     const index = ORDER.indexOf(n);
     const center = index * slice + slice / 2;
     setRotation((prev) => Math.ceil(prev / 360) * 360 + 360 * 5 + (360 - center));
-    timer.current = window.setTimeout(() => {
+    window.setTimeout(() => {
+      if (pay) credit(pay);
+      record("Roulette", stake, pay);
       setResult(n);
       setWin(didWin);
       setRecent(prior=>[n,...prior].slice(0,20));
@@ -147,14 +147,14 @@ export function Roulette() {
           <div className="pointer" />
           <span className={busy?"roulette-ball is-rolling":"roulette-ball"} aria-hidden="true" />
           <div className="wheel-disc small" style={{ background: gradient, transform: `rotate(${rotation}deg)` }}>
-            {ORDER.map((n,i)=><span key={n} className="roulette-pocket-label" data-winner={result===n&&!busy} style={{"--pocket-angle":`${(i+0.5)*slice}deg`} as CSSProperties}>{n}</span>)}
+            {ORDER.map((n,i)=><span key={n} className="roulette-pocket-label" data-winner={result===n&&!busy} style={{"--pocket-angle":`${(i+0.5)*slice}deg`} as CSSProperties}><b>{n}</b></span>)}
             <span className="roulette-wheel-hub" aria-live="polite"><small>{busy?"Rolling":result!==null?"Round over":"Place your bet"}</small><b>{busy?"●":result!==null?result:"—"}</b></span>
           </div>
           <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>
             {result == null ? "European wheel" : result === 0 ? "0" : `${result} ${RED.has(result) ? "red" : "black"}`}
           </p>
         </div>
-        <div className="felt">
+        <fieldset className="felt" disabled={busy} aria-label="Roulette bets">
           <button
             type="button"
             className={bet?.kind === "straight" && bet.n === 0 ? "zero on" : "zero"}
@@ -203,7 +203,7 @@ export function Roulette() {
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
       </div>
     </GameLayout>
   );

@@ -35,16 +35,22 @@ export const sound = {
     return muted;
   },
   bet() {
-    tone(640, 0.07, "square", 0.03);
+    tone(420, 0.07, "triangle", 0.035);
+    tone(620, 0.055, "sine", 0.02, 0.025);
   },
   win() {
     tone(523, 0.09, "triangle", 0.05);
     tone(659, 0.1, "triangle", 0.05, 0.08);
     tone(784, 0.16, "triangle", 0.05, 0.16);
   },
+  result(wager: number, payout: number) {
+    if (payout > wager) sound.win();
+    else if (payout < wager) sound.lose();
+    else tone(392, 0.14, "triangle", 0.035);
+  },
   lose() {
-    tone(180, 0.22, "sawtooth", 0.04);
-    tone(110, 0.24, "sine", 0.04, 0.05);
+    tone(220, 0.14, "triangle", 0.045);
+    tone(147, 0.21, "sine", 0.04, 0.07);
   },
   gem() {
     tone(920, 0.06, "sine", 0.04);
@@ -63,6 +69,10 @@ export const sound = {
   },
   tick() {
     tone(980, 0.025, "square", 0.012);
+  },
+  roll() {
+    tone(240, 0.07, "triangle", 0.025);
+    tone(315, 0.06, "triangle", 0.018, 0.07);
   },
   flip() {
     tone(520, 0.05, "triangle", 0.03);

@@ -47,14 +47,14 @@ export function Wheel() {
     }
     const mult = segments[index] ?? 0;
     const pay = payout(stake, mult);
-    if (pay) credit(pay);
-    record("Wheel", stake, pay);
     const center = index * slice + slice / 2;
     setRotation((prev) => {
       const base = Math.ceil(prev / 360) * 360 + 360 * 5;
       return base + (360 - center);
     });
     window.setTimeout(() => {
+      if (pay) credit(pay);
+      record("Wheel", stake, pay);
       setWin(mult);
       setBusy(false);
     }, 3100);

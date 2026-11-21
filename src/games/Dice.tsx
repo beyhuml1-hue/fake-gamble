@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { sound } from "../lib/sound";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, payout } from "../lib/money";
@@ -30,6 +31,7 @@ export function Dice() {
   const [spinning, setSpinning] = useState(false);
   const [error, setError] = useState("");
   const live = useRef(true);
+  const running = useRef(false);
 
   useEffect(() => {
     live.current = true;
@@ -44,6 +46,7 @@ export function Dice() {
   const line = mode === "under" ? chance : 100 - chance;
 
   const roll = () => {
+    if (running.current) return;
     const stake = betCents(amount, balance);
     if (stake == null) {
       setError("Minimum bet is $0.10, and it can't be more than your balance.");
@@ -51,27 +54,32 @@ export function Dice() {
     }
     if (!debit(stake)) return;
     setError("");
+    running.current = true;
     setSpinning(true);
+    sound.roll();
     setWin(null);
     let result = random() * 100;
     if (luckOn()) result = mode === "under" ? chance * 0.45 : 100 - chance * 0.45;
     const didWin = mode === "under" ? result < chance : result > 100 - chance;
     const pay = didWin ? payout(stake, mult) : 0;
-    if (pay) credit(pay);
-    record("Dice", stake, pay);
+    window.setTimeout(() => {
+      const credited = pay ? credit(pay) : 0;
+      record("Dice", stake, credited);
+      running.current = false;
+      if (!live.current) return;
+      setShown(result);
+      setFace(Math.min(6, 1 + Math.floor(result / (100 / 6))));
+      setWin(didWin);
+      setSpinning(false);
+    }, 860);
     const from = shown;
     const start = performance.now();
     const step = (now: number) => {
-      if (!live.current) return;
+      if (!live.current || !running.current) return;
       const t = Math.min(1, (now - start) / 860);
       const eased = from + (result - from) * (1 - (1 - t) ** 3);
       setShown(eased);
       if (t < 1) requestAnimationFrame(step);
-      else {
-        setFace(Math.min(6, 1 + Math.floor(result / (100 / 6))));
-        setWin(didWin);
-        setSpinning(false);
-      }
     };
     requestAnimationFrame(step);
   };
