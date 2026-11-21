@@ -3,9 +3,10 @@ import { useAuth } from "../components/AuthProvider";
 import { formatUSD } from "../lib/money";
 
 type Account = { email: string; label: string | null; banned: 0 | 1; balanceCents: number | null; walletReady: 0 | 1; lastAdjustment: number | null };
-type AdminAction = "balance" | "add" | "subtract" | "ban" | "unban";
+type Economy = { wallets: number; circulationCents: number; wageredCents: number; treasuryUnits: number; strength: number };
+type AdminAction = "balance" | "add" | "subtract" | "ban" | "unban" | "supply" | "strength";
 
-async function adminRequest(params?: { action: AdminAction | "unlock" | "lock"; email?: string; cents?: number; password?: string }, query?: string) {
+async function adminRequest(params?: { action: AdminAction | "unlock" | "lock"; email?: string; cents?: number; password?: string; strength?: number }, query?: string) {
   const url = "/api/auth/admin" + (!params ? "?view=session" : "");
   const response = await fetch(query !== undefined ? "/api/auth/admin?" + new URLSearchParams({ q: query }) : url, {
     method: params ? "POST" : "GET",
@@ -15,7 +16,14 @@ async function adminRequest(params?: { action: AdminAction | "unlock" | "lock"; 
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || "Admin request failed.");
-  return result as { ok?: boolean; unlocked?: boolean; account?: Account; accounts?: Account[] };
+  return result as { ok?: boolean; unlocked?: boolean; account?: Account; accounts?: Account[]; economy?: Economy };
+}
+
+async function readEconomy() {
+  const response = await fetch("/api/auth/admin?view=economy", { credentials: "same-origin", cache: "no-store" });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Could not read the economy.");
+  return result.economy as Economy;
 }
 
 export function Admin() {
@@ -31,13 +39,20 @@ export function Admin() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [confirmBan, setConfirmBan] = useState(false);
+  const [economy, setEconomy] = useState<Economy | null>(null);
+  const [supply, setSupply] = useState("");
+  const [strength, setStrength] = useState("");
 
   useEffect(() => {
     let alive = true;
     void adminRequest().then(() => {
       if (!alive) return;
       setUnlocked(true);
-      return adminRequest(undefined, "").then(data => { if (alive) setAccounts(data.accounts || []); });
+      return Promise.all([adminRequest(undefined, ""), readEconomy()]).then(([data, next]) => {
+        if (!alive) return;
+        setAccounts(data.accounts || []);
+        setEconomy(next);
+      });
     }).catch(() => { if (alive) setUnlocked(false); }).finally(() => { if (alive) setChecking(false); });
     return () => { alive = false; };
   }, []);
@@ -52,8 +67,9 @@ export function Admin() {
     try {
       await adminRequest({ action: "unlock", password });
       setPassword("");
-      const data = await adminRequest(undefined, "");
+      const [data, next] = await Promise.all([adminRequest(undefined, ""), readEconomy()]);
       setAccounts(data.accounts || []);
+      setEconomy(next);
       setUnlocked(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Incorrect password.");
@@ -132,6 +148,55 @@ export function Admin() {
         finally { setBusy(false); }
       }}>Lock admin</button>
     </div>
+    {economy && <article className="admin-account">
+      <h2>Economy</h2>
+      <div className="admin-economy">
+        <div><span>Money in the world</span><strong>{formatUSD(economy.circulationCents)}</strong></div>
+        <div><span>Strength</span><strong>{economy.strength} / 100</strong></div>
+        <div><span>Wagered</span><strong>{formatUSD(economy.wageredCents)}</strong></div>
+      </div>
+      <p>{economy.wallets} signed-in wallet{economy.wallets === 1 ? "" : "s"}. Strength 50 means those wallets average $1,000.00. House units waiting: {economy.treasuryUnits}.</p>
+      <form className="admin-form" onSubmit={event => {
+        event.preventDefault();
+        const trimmed = supply.trim();
+        if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) { setError("Use a total such as 1000000 or 1000000.50."); return; }
+        const cents = Math.round(Number(trimmed) * 100);
+        if (!Number.isSafeInteger(cents) || cents < 0) { setError("That total is outside the Play USD range."); return; }
+        setBusy(true); clearMessages();
+        void adminRequest({ action: "supply", cents }).then(data => {
+          if (data.economy) setEconomy(data.economy);
+          setSupply("");
+          setNotice("Money in the world was scaled to that total.");
+          return adminRequest(undefined, "");
+        }).then(data => { if (data?.accounts) setAccounts(data.accounts); }).catch(err => {
+          setError(err instanceof Error ? err.message : "Could not change the money supply.");
+        }).finally(() => setBusy(false));
+      }}>
+        <label htmlFor="admin-supply">Set all money in the world (Play USD)</label>
+        <input id="admin-supply" inputMode="decimal" placeholder="e.g. 250000" maxLength={18}
+          value={supply} onChange={event => setSupply(event.target.value)} disabled={busy} required />
+        <button className="bet-btn" type="submit" disabled={busy}>Scale every wallet</button>
+      </form>
+      <form className="admin-form" onSubmit={event => {
+        event.preventDefault();
+        const next = Number(strength);
+        if (!Number.isInteger(next) || next < 0 || next > 100) { setError("Strength is a whole number from 0 to 100."); return; }
+        setBusy(true); clearMessages();
+        void adminRequest({ action: "strength", strength: next }).then(data => {
+          if (data.economy) setEconomy(data.economy);
+          setStrength("");
+          setNotice("Economy strength updated.");
+          return adminRequest(undefined, "");
+        }).then(data => { if (data?.accounts) setAccounts(data.accounts); }).catch(err => {
+          setError(err instanceof Error ? err.message : "Could not change the strength.");
+        }).finally(() => setBusy(false));
+      }}>
+        <label htmlFor="admin-strength">Set strength from 0 to 100</label>
+        <input id="admin-strength" inputMode="numeric" placeholder="50" maxLength={3}
+          value={strength} onChange={event => setStrength(event.target.value)} disabled={busy} required />
+        <button className="bet-btn" type="submit" disabled={busy}>Set strength</button>
+      </form>
+    </article>}
     <form className="admin-form" onSubmit={event => void findPlayers(event)}>
       <label htmlFor="admin-search">Find players by name or email</label>
       <input id="admin-search" type="search" placeholder="Search players…" value={search}

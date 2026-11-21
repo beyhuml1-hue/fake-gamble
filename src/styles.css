@@ -1884,6 +1884,11 @@ tbody tr:first-child { animation: row-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .admin-player strong { overflow-wrap: anywhere; font-size: 14px; }
 .admin-player small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .admin-account { margin-top: 22px; }
+.admin-economy { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.admin-economy div { background: var(--bg-2); border-radius: 8px; padding: 12px; }
+.admin-economy span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+.admin-economy strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .admin-economy { grid-template-columns: 1fr; } }
 .admin-account .admin-actions { margin: 8px 0; }
 .admin-account .admin-actions button { flex: 1 1 125px; justify-content: center; }
 @media (max-width: 540px) { .admin-page { padding: 0 6px 24px; } .admin-player { padding: 12px 10px; gap: 6px; } .admin-player strong { font-size: 12px; } .admin-player small { font-size: 10px; } }

@@ -18,3 +18,56 @@
 .wallet-plain .amount:focus-within{border-color:#51b976;box-shadow:0 0 0 2px #00e70122}
 .wallet-plain input{width:100%;min-width:0;background:none;border:0;box-shadow:none!important;outline:none;color:#f4f9fc;font-variant-numeric:tabular-nums;font-size:14px}
 .wallet-plain input::placeholder{color:#7b96a4}
+
+.wallet-fold{
+  width:min(320px,100%);
+  background:#161618;
+  color:#f4f4f5;
+  border:1px solid #2a2a2e;
+  border-radius:20px;
+  padding:0 0 10px;
+  position:relative;
+  overflow:hidden;
+  max-height:560px;
+  transition:max-height .3s ease,padding .3s ease;
+}
+.wallet-fold.is-folded{max-height:84px;padding:0}
+.wallet-fold.is-folded .wallet-fold-x{opacity:0;pointer-events:none;visibility:hidden}
+.wallet-fold.is-folded .wallet-fold-body{visibility:hidden}
+.wallet-fold.is-folded .wallet-fold-open{opacity:1;pointer-events:auto}
+.wallet-fold-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 15px;border-bottom:1px solid #2a2a2e}
+.wallet-fold.is-folded .wallet-fold-head{border-bottom-color:transparent}
+.wallet-fold-id{display:flex;align-items:center;gap:10px;min-width:0}
+.wallet-fold-icon{width:42px;height:42px;border-radius:15px;background:#232326;display:grid;place-items:center;flex:none}
+.wallet-fold-icon svg,.wallet-fold-x svg,.wallet-fold-open svg{width:20px;height:20px}
+.wallet-fold-id p{margin:0;color:#a1a1a6;font-size:13px}
+.wallet-fold-id strong{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.wallet-fold-x{width:30px;height:30px;border-radius:50%;border:1px solid #2a2a2e;background:transparent;color:#a1a1a6;display:grid;place-items:center;cursor:pointer}
+.wallet-fold-x:hover{background:#232326}
+.wallet-fold-body{padding:0 15px 44px}
+.wallet-fold-rowhead{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.wallet-fold-rowhead p,.wallet-fold-cash p{margin:0;font-weight:700}
+.wallet-fold-pockets{display:flex;flex-direction:column;gap:10px}
+.wallet-fold-pockets label{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#1c1c1f;border-radius:6px;padding:8px 10px;cursor:pointer}
+.wallet-fold-pockets label.on{outline:2px solid #83c49b}
+.wallet-fold-pockets input{accent-color:#83c49b}
+.wallet-fold-pockets b{font-variant-numeric:tabular-nums}
+.wallet-fold-extra{display:grid;gap:6px;margin-top:12px;color:#a1a1a6;font-size:13px}
+.wallet-fold-extra p{margin:0}
+.wallet-fold-extra b{color:#f4f4f5}
+.wallet-fold-extra a{color:#83c49b;font-weight:700}
+.wallet-fold-cash{margin-top:15px}
+.wallet-fold-cash p{color:#a1a1a6;font-size:13px;font-weight:650}
+.wallet-fold-cash div{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.wallet-fold-cash button{border:1px solid #2a2a2e;background:transparent;color:#f4f4f5;border-radius:6px;padding:6px 8px;font-weight:700;cursor:pointer}
+.wallet-fold-cash button:hover{background:#232326}
+.wallet-fold-note{margin:10px 0 0;font-size:13px;color:#d7efe0}
+.wallet-fold .wallet-plain-foot{color:#a1a1a6}
+.wallet-fold-open{
+  position:absolute;right:15px;top:26px;display:flex;align-items:center;gap:6px;
+  border:0;background:#f4f4f5;color:#141416;border-radius:20px;padding:6px 10px;font-weight:700;cursor:pointer;
+  opacity:0;pointer-events:none;transition:opacity .3s ease;
+}
+@media (prefers-reduced-motion: reduce){
+  .wallet-fold,.wallet-fold-open{transition:none}
+}

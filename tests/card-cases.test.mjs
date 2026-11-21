@@ -114,6 +114,27 @@ test('owner account controls set, add, subtract and ban with atomic audited bala
   assert.equal((await s.post('owner','admin',{action:'ban',email:'beyhuml@gmail.com'})).status,400);
  }finally{s.db.close();}
 });
+test('owner can read circulation and scale every wallet without minting outside that total',async()=>{
+ const s=setup();try{
+  await s.add('owner','beyhuml@gmail.com');await s.add('player','p@example.com');
+  const expires=Date.now()+60000;
+  s.cookies.owner+='; bb_admin_unlock='+expires+'.'+await digest('admin-unlock:owner:'+expires,s.env.AUTH_PEPPER);
+  const view=await worker.fetch(new Request('https://playblockbet.com/api/auth/admin?view=economy',{headers:{Cookie:s.cookies.owner}}),s.env);
+  assert.equal(view.status,200);
+  const economy=await view.json();
+  assert.equal(economy.economy.wallets,2);
+  assert.equal(economy.economy.circulationCents,200000);
+  assert.equal(economy.economy.strength,50);
+  const scaled=await s.post('owner','admin',{action:'supply',cents:40000});
+  assert.equal(scaled.status,200);
+  assert.equal(s.balance('player'),20000);
+  assert.equal(s.balance('owner'),20000);
+  const stronger=await s.post('owner','admin',{action:'strength',strength:100});
+  assert.equal(stronger.status,200);
+  assert.equal((await stronger.json()).economy.circulationCents,400000);
+  assert.equal(s.balance('player')+s.balance('owner'),400000);
+ }finally{s.db.close();}
+});
 
 test('Rift Packs have real losses, visible 10x+ rewards and the rare matte 36x arena card',()=>{
  const low= CARD_BUNDLES.filter(bundle=>bundle.cards.reduce((sum,m)=>sum+m,0)<1);
