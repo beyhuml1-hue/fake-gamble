@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, payout } from "../lib/money";
@@ -107,7 +107,7 @@ export function Dice() {
         </BetPanel>
       }
     >
-      <div className="dice-layout">
+      <div className="dice-layout" style={{"--roll-position":Math.max(0,Math.min(100,shown))+"%"} as CSSProperties}>
         <div className="die-scene" aria-hidden="true">
           <div
             className={spinning ? "die tumble" : "die"}

@@ -1,16 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-
-test("Flip uses the site's original gold coin cover art, with heads and tails", () => {
-  const flip=readFileSync(new URL("../src/games/Flip.tsx",import.meta.url),"utf8");
-  const comp=readFileSync(new URL("../src/components/ReferenceGoldCoin.tsx",import.meta.url),"utf8");
-  const style=readFileSync(new URL("../src/styles.css",import.meta.url),"utf8");
-  assert.match(flip, /<ReferenceGoldCoin degrees=\{deg\} spinning=\{busy\}/);
-  assert.match(comp, /HEADS/);
-  assert.match(comp, /TAILS/);
-  assert.match(style, /url\("\/covers\/cover-flip\.jpg"\)/);
-  assert.match(style, /rotateY\(180deg\)/);
-  assert.doesNotMatch(flip, /GoldCoin3D|\/models\/blockbet-gold/);
-  assert.doesNotMatch(comp, /model-viewer|\.glb/);
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
+test('user-supplied thick coin uses readable H and T faces, never Bitcoin artwork',()=>{
+ const coin=read('../src/components/ReferenceGoldCoin.tsx');
+ assert.match(coin,/>H<\/text>/);assert.match(coin,/>T<\/text>/);
+ assert.match(coin,/degrees\+90/);assert.doesNotMatch(coin,/cover-flip|F7931A.*Bitcoin|svg_back/);
+ assert.match(read('../src/visual-fixes.css'),/\.uiverse-coin \.tails\{[^}]*rotateY\(90deg\)/);
+ assert.match(coin,/JohnnyCSilva/);
 });

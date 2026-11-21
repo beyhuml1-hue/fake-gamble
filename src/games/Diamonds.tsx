@@ -71,7 +71,7 @@ export function Diamonds() {
       <div className="center-stage">
         <div className="gems">
           {gems.map((gem, index) => (
-            <span key={`${index}-${gem}`} className={gem < 0 ? "gem" : "gem in"} style={{ background: gem < 0 ? "#213743" : COLORS[gem] }} />
+            <span key={`${index}-${gem}`} className={gem < 0 ? "gem-drop-slot" : "gem-drop-slot revealed"}>{gem >= 0 && <svg viewBox="0 0 64 64" aria-hidden="true"><path fill={COLORS[gem]} stroke="#ffffff70" strokeWidth="2" d="m32 4 24 19-24 37L8 23Z"/><path fill="none" stroke="#ffffff65" strokeWidth="2" d="m8 23 24 10 24-10M32 4v56"/></svg>}</span>
           ))}
         </div>
         <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>{label}</p>

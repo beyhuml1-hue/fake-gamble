@@ -1,0 +1,29 @@
+/* User-supplied JohnnyCSilva / Uiverse coin, scoped away from older coin skins. */
+.uiverse-coin-scene{height:260px;width:100%;display:grid;place-items:center;perspective:1000px}
+.uiverse-coin{font-size:200px;width:.1em;height:1em;background:linear-gradient(#faa504,#141001);position:relative;transform-style:preserve-3d;transition:none;isolation:auto}
+.uiverse-coin .side,.uiverse-coin:before,.uiverse-coin:after{content:"";position:absolute;width:1em;height:1em;border-radius:50%;right:-.4em;overflow:hidden;transform:rotateY(-90deg);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.uiverse-coin .tails{left:-.4em;right:auto;transform:rotateY(90deg)}
+.uiverse-coin:before,.uiverse-coin:after{background:linear-gradient(#faa504,#141001);transform:rotateY(90deg)}.uiverse-coin:after{left:-.4em;right:auto;transform:rotateY(-90deg)}
+.uiverse-coin .side{z-index:1}.uiverse-coin svg{display:block;width:100%;height:100%}.uiverse-coin-scene.is-flipping .uiverse-coin{transition:transform 1.7s cubic-bezier(.15,.52,.12,1)}
+/* Explicit tile geometry prevents percentage-sized images escaping auto-height grid tracks. */
+.app .tower-row .tile-btn{position:relative;overflow:hidden;min-height:40px;display:grid;place-items:center;isolation:isolate}
+.app .tower-row .tile-btn .blockbet-revealed-gem{position:absolute;inset:12%;width:76%;height:76%;max-width:none;object-fit:contain;transform:none;filter:none}
+.app .mine.gem{transform:none;overflow:hidden;position:relative}.app .mine .blockbet-revealed-gem{position:absolute;inset:14%;width:72%;height:72%;object-fit:contain;filter:none}
+.app .gems{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;width:min(100%,440px);align-items:center}
+.gem-drop-slot{aspect-ratio:1;min-width:0;display:grid;place-items:center;background:#303638;border-radius:8px;overflow:hidden}.gem-drop-slot svg{width:80%;height:80%;display:block}.gem-drop-slot.revealed{background:#202a26}.gem-drop-slot.revealed svg{animation:gem-slot-reveal .24s ease both}
+@keyframes gem-slot-reveal{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* Crossfade the two card surfaces instead of allowing a card to stick edge-on. */
+.card-cases .collectible{user-select:none;animation:stable-card-enter .25s ease both;transform-style:flat;--zoom:1}
+.card-cases .collectible-inner,.card-cases .collectible.revealed .collectible-inner,.card-cases .collectible[data-active=true] .collectible-inner{transform:none!important;transform-style:flat;transition:none}
+.card-cases .collectible-front{transform:none!important;opacity:0;transition:opacity .28s ease;backface-visibility:visible}
+.card-cases .collectible-back{opacity:1;transition:opacity .28s ease;background:#1a1c20;border:1px solid #72787c;backface-visibility:visible;box-shadow:0 8px 16px #0004}
+.card-cases .collectible-back:before{background:none;border:1px solid #ffffff20;inset:8px;border-radius:4px}.card-cases .collectible-back:after{display:none}
+.card-cases .back-orbit,.card-cases .back-core{display:none}.card-cases .back-brand{position:static;letter-spacing:.04em;font:500 clamp(10px,1.5vw,18px) Arial,sans-serif;color:#d2d6d7}
+.card-cases .collectible.revealed .collectible-front{opacity:1;animation:none}.card-cases .collectible.revealed .collectible-back{opacity:0;pointer-events:none}
+.card-cases .collectible[data-active=true]{--zoom:1;filter:none}.card-cases .card-payout{user-select:none}.card-cases .collectible{transform:rotateX(clamp(-6deg,var(--rx),6deg)) rotateY(clamp(-8deg,var(--ry),8deg))}
+@keyframes stable-card-enter{from{opacity:0;translate:0 6px}to{opacity:1;translate:0 0}}
+/* The number hexagon travels with the roll threshold instead of staying centred. */
+.play-surface .dice-layout{--roll-position:50%;display:flex;flex-direction:column}
+.app .play-surface .dice-layout .readout{align-self:flex-start;position:relative;left:clamp(0px,calc(var(--roll-position) - 44px),calc(100% - 88px));margin:8px 0 20px;flex:none;color:#222b32;animation:none;transition:left .1s linear}
+@media(prefers-reduced-motion:reduce){.uiverse-coin-scene.is-flipping .uiverse-coin,.card-cases .collectible-front,.card-cases .collectible-back,.app .play-surface .dice-layout .readout{transition:none}.card-cases .collectible,.gem-drop-slot.revealed svg{animation:none;transform:none}}
+@media(max-width:570px){.card-cases .collectible-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:76px 16px;padding-bottom:72px}.card-cases .back-brand{font-size:14px}.card-cases .card-payout span,.card-cases .card-payout small{font-size:12px}.uiverse-coin{font-size:180px}}
