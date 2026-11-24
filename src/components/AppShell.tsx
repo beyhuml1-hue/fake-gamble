@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { GAMES } from "../data/games";
+import { GAMES, classic } from "../data/games";
 import { useAuth } from "./AuthProvider";
 import { formatAmount } from "../lib/money";
 import { sound } from "../lib/sound";
@@ -77,7 +77,7 @@ export function AppShell() {
   const showChat = chatOpen && location.pathname !== "/chat";
 
   return (
-    <div className={"app arcade-shell crafted" + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
+    <div className={"app arcade-shell crafted" + (classic ? "" : " blockbet-edition") + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
       <aside className={open ? "sidebar open" : "sidebar"}>
         <NavLink to="/" className="brand" end>
           <span className="brand-mark">B</span>
@@ -97,10 +97,10 @@ export function AppShell() {
           Stats
         </NavLink>
         <NavLink to="/race" className={({isActive}) => isActive?"nav-item active":"nav-item"}>Race</NavLink>
-        <a className="nav-item" href="/#live-bets">
+        <NavLink className="nav-item" to="/#live-bets">
           <span className="live-nav-dot" aria-hidden="true" />
           Live Bets
-        </a>
+        </NavLink>
 
         <NavLink to="/chat" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
           <span className="live-nav-dot" aria-hidden="true" /> Chat

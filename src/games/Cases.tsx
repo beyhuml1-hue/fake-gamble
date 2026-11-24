@@ -82,7 +82,7 @@ function Collectible({mult,index,stake,revealed}:{mult:number;index:number;stake
  </div>;
 }
 
-export function Cases(){
+export function Cases({title = "Rift Packs"}: {title?: string} = {}){
  const {balance,debit,credit,record,prepareTransfer,syncSocialWallet,walletReady}=useWallet();
  const {isGuest,email}=useAuth();
  const receiptKey='blockbet.case.receipt:'+(email??'guest');
@@ -145,7 +145,7 @@ export function Cases(){
        result=await apiJSON<Opening>('/api/auth/cases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
        syncSocialWallet();
      }
-     record('Rift Packs',result.stake,result.payout);
+     record(title,result.stake,result.payout);
      receipt.current=null;
      try{localStorage.removeItem(receiptKey);}catch{/* Optional storage. */}
      if(mounted.current){
@@ -169,7 +169,7 @@ export function Cases(){
  }
  const changePrice=(value:string)=>{if(busy||retry)return;setAmount(value);setOpening(null);setPhase('ready');setSpotlight(null);};
  return <section className="card-cases" data-screen="card-cases">
-   <header className="card-cases-title"><h1>Rift Packs</h1></header>
+   <header className="card-cases-title"><h1>{title}</h1></header>
    <div className="card-cases-layout">
      <div className={'card-cases-stage '+phase+(spotlightActive?' spotlight-on':'')}>
        <div className="rift-stage-top"><span>4 CARDS</span><small>{showCards?'REVEAL':'READY'}</small></div>
