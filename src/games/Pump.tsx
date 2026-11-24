@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
-import { EDGE } from "../lib/math";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { random } from "../lib/random";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 
-const GROWTH = 1.24;
-const SURVIVE = (1 - EDGE) / GROWTH;
+const GROWTH = 2.25;
+const SURVIVE = 0.42;
 
 export function Pump() {
   const { balance, debit, credit, record } = useWallet();
@@ -38,7 +37,7 @@ export function Pump() {
 
   const pump = () => {
     if (!active) return;
-    if (random() > SURVIVE) {
+    if (random() >= SURVIVE) {
       setPopped(true);
       setActive(false);
       sound.bomb();
@@ -63,13 +62,13 @@ export function Pump() {
   const cents = Math.round(amount * 100);
   const shown = active ? mult : popped ? 0 : GROWTH;
   const profit = Math.max(0, payout(active ? stake : Math.max(cents, 0), Math.max(shown, 1)) - (active ? stake : Math.max(cents, 0)));
-  const scale = Math.min(1.72, 0.78 + (mult - 1) * 0.7);
+  const scale = Math.min(1.15, 0.78 + pumps * 0.08);
   const next = mult * GROWTH;
 
   return (
     <GameLayout
       title="Balloon"
-      note="98% base RTP"
+      note="42% per pump · 2.25× on a successful pump"
       panel={
         <BetPanel
           amount={amount}

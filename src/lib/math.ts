@@ -177,7 +177,7 @@ export const DIAMOND_PAY: Record<DiamondHand, number> = {
   full: Math.round(DIAMOND_BASE.full * diamondFactor * 100) / 100,
   three: Math.round(DIAMOND_BASE.three * diamondFactor * 100) / 100,
   twopair: Math.round(DIAMOND_BASE.twopair * diamondFactor * 100) / 100,
-  pair: Math.round(DIAMOND_BASE.pair * diamondFactor * 100) / 100,
+  pair: 0,
   none: 0,
 };
 

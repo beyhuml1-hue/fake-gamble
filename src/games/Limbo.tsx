@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatMult, payout } from "../lib/money";
-import { limboResult } from "../lib/math";
+import { EDGE, limboResult } from "../lib/math";
 import { useWallet } from "../state/wallet";
 import "./motion-upgrades.css";
 
@@ -27,14 +27,14 @@ export function Limbo() {
     };
   }, []);
 
-  const safeTarget = Math.min(1_000_000, Math.max(1.01, target || 1.01));
+  const safeTarget = Math.min(1_000_000, Math.max(1.50, Math.ceil((target || 1.50) * 100 - 1e-8) / 100));
   const cents = Math.round(amount * 100);
   const profit = Math.max(0, payout(Math.max(cents, 0), safeTarget) - Math.max(cents, 0));
 
   const play = () => {
     const stake = betCents(amount, balance);
-    if (running.current || busy || stake == null || !Number.isFinite(target) || target < 1.01 || target > 1_000_000) {
-      setError("Set a target of at least 1.01× and a bet you can cover.");
+    if (running.current || busy || stake == null || !Number.isFinite(target) || target < 1.50 || target > 1_000_000) {
+      setError("Set a target of at least 1.50× and a bet you can cover.");
       return;
     }
     if (!debit(stake)) return;
@@ -101,7 +101,7 @@ export function Limbo() {
               value={Number.isFinite(target) ? String(target) : ""}
               onChange={(event) => {
                 const next = Number(event.target.value);
-                setTarget(Number.isFinite(next) ? next : 1.01);
+                setTarget(Number.isFinite(next) ? next : 1.50);
               }}
               onBlur={() => setTarget(safeTarget)}
             />
@@ -109,13 +109,13 @@ export function Limbo() {
           </span>
         </label>
         <label className="field limbo-field"><span className="field-label">Win chance</span><span className="amount"><input
-          aria-label="Win chance" inputMode="decimal" disabled={busy} value={(99/safeTarget).toFixed(2)}
-          onChange={event=>{const chance=Number(event.target.value);if(Number.isFinite(chance)&&chance>0)setTarget(99/chance);}}/><span className="amount-suffix">%</span></span></label>
+          aria-label="Win chance" inputMode="decimal" disabled={busy} value={((1 - EDGE) * 100 / safeTarget).toFixed(2)}
+          onChange={event=>{const chance=Number(event.target.value);if(Number.isFinite(chance)&&chance>0)setTarget((1 - EDGE) * 100 / chance);}}/><span className="amount-suffix">%</span></span></label>
         </div>
         <input
           className="range"
           type="range"
-          min={1.01}
+          min={1.50}
           max={100}
           step={0.01}
           value={Math.min(100, safeTarget)}

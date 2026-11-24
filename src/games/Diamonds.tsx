@@ -13,7 +13,7 @@ export function Diamonds() {
   const { balance, debit, credit, record } = useWallet();
   const [amount, setAmount] = useState(1);
   const [gems, setGems] = useState<number[]>([0, 1, 2, 3, 4]);
-  const [label, setLabel] = useState("Five gems. Pairs pay.");
+  const [label, setLabel] = useState("Five gems. Two pairs or better pay.");
   const [win, setWin] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -54,7 +54,7 @@ export function Diamonds() {
   return (
     <GameLayout
       title="Gem Drop"
-      note="98% base RTP"
+      note="Two pairs or better pay"
       panel={
         <BetPanel
           amount={amount}

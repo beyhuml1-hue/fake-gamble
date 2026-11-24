@@ -174,8 +174,8 @@ export type GameId = (typeof gameCatalog)[number]["id"];
 
 export const classic = import.meta.env.MODE === "classic" || /^\/classic(?:\/|$)/.test(window.location.pathname);
 
-const retired = new Set(["flip", "cases", "case-battles", "rips", "flight", "poison", "farmyard", "beacon", "vault", "snakes"]);
-export const GAMES = gameCatalog.filter(game => !retired.has(game.id));
+const withCoverArt = new Set(["mines","dragon","dice","plinko","roulette","coinflip","slide","limbo","blackjack","crash","baccarat","hilo","keno","rps","packs","pump","diamonds","upgrader"]);
+export const GAMES = gameCatalog.filter(game => withCoverArt.has(game.id));
 
 export function gameById(id: string | undefined) {
   return GAMES.find(game => game.id === id);

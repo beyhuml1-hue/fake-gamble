@@ -400,3 +400,10 @@
 .play-surface[data-play="crash"] .board-canvas{width:100%;border:0;background:transparent}
 .play-surface[data-play="limbo"] .limbo-flight{max-width:740px;margin-inline:auto;padding:18px;border:1px solid #34445e;border-radius:12px;background:#121d32}
 .play-surface[data-play="limbo"] .limbo-sky{background:#15223a}
+
+.upgrade-wheel,.upgrade-wheel:active{cursor:default;touch-action:auto}
+.pump-stage .balloon-rig{height:290px;min-height:290px;margin:14px 0 10px}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="pump"]) .arcade-art,
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="diamonds"]) .arcade-art{background-size:auto 76%;background-position:center 42%;image-rendering:auto}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="pump"])::after{background:radial-gradient(circle at 45% 32%,#ffb7d96b,transparent 70%)}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="diamonds"])::after{background:radial-gradient(circle at 48% 32%,#8bf5f270,transparent 72%)}
