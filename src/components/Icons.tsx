@@ -13,6 +13,7 @@ export function Icon({ name }: { name: string }) {
   const paths: Record<string, ReactNode> = {
     close: <path d="m6 6 12 12M18 6 6 18"/>,
     chat: <path d="M4 4h16v12H9l-5 4V4Z"/>,
+    search: <><circle cx="10.5" cy="10.5" r="5.5" /><path d="m15 15 4 4" /></>,
     dice: (
       <>
         <rect x="4" y="4" width="16" height="16" rx="3" />

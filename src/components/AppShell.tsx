@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { GAMES, classic } from "../data/games";
 import { useAuth } from "./AuthProvider";
 import { formatAmount } from "../lib/money";
@@ -9,6 +9,7 @@ import { BetsTable } from "./BetsTable";
 import { Cashier } from "./Cashier";
 import { Icon } from "./Icons";
 import { Community } from "../pages/Community";
+import { arcadeCategories } from "../pages/ArcadeLobby";
 
 export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>> };
 
@@ -50,12 +51,13 @@ export function AppShell() {
     setSiteStyle(style);
     try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
   }
-  const { displayName, isGuest, isAdmin, canSignIn, logout, showSignIn } = useAuth();
+  const { displayName, isGuest, isAdmin, canSignIn, logout, showSignIn, showSignUp } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [lobbyNavCollapsed, setLobbyNavCollapsed] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -63,22 +65,69 @@ export function AppShell() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (!location.hash && contentRef.current) contentRef.current.scrollTop = 0;
+    if (location.hash === "#live-bets") {
+      document.getElementById("live-bets")?.scrollIntoView();
+    } else if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
   }, [location.pathname, location.hash]);
 
   useEffect(() => {
     setOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     if (cashierNonce > 0) setWalletOpen(true);
   }, [cashierNonce]);
 
   const showChat = chatOpen && location.pathname !== "/chat";
+  const lobbyHome = !classic && location.pathname === "/";
+  const lobbyNavClass = (hash: string) => location.hash === hash ? "nav-item active" : "nav-item";
+  const resetSearch = () => {
+    setQuery("");
+    setOpen(false);
+  };
 
   return (
-    <div className={"app arcade-shell crafted" + (classic ? "" : " blockbet-edition") + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
+    <div className={"app arcade-shell crafted" + (classic ? "" : " blockbet-edition") + (lobbyHome ? " lobby-home-shell" : "") + (lobbyHome && lobbyNavCollapsed ? " lobby-nav-collapsed" : "") + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
       <aside className={open ? "sidebar open" : "sidebar"}>
+        {lobbyHome ? <>
+          <div className="lobby-side-top">
+            <button type="button" className="lobby-side-menu lobby-desktop-menu" aria-label="Toggle navigation"
+              aria-expanded={!lobbyNavCollapsed} onClick={() => setLobbyNavCollapsed(value => !value)}>☰</button>
+            <button type="button" className="lobby-side-menu lobby-mobile-menu" aria-label="Close navigation"
+              onClick={() => setOpen(false)}>×</button>
+          </div>
+          <div className="lobby-side-search">
+            <Icon name="search" />
+            <input type="search" aria-label="Search games from sidebar" placeholder="Search games"
+              value={query} onChange={event => setQuery(event.target.value)} />
+          </div>
+          <nav className="lobby-side-links" aria-label="Arcade navigation">
+            <div>
+              <Link to="/" className={lobbyNavClass("")} aria-current={!location.hash ? "page" : undefined}
+                onClick={resetSearch}><Icon name="casino" />Home</Link>
+              <Link to="/#recent" className={lobbyNavClass("#recent")} aria-current={location.hash === "#recent" ? "page" : undefined}
+                onClick={resetSearch}><Icon name="stats" />Recently played</Link>
+            </div>
+            <div>
+              {arcadeCategories.map(item => <Link key={item.id} to={"/#" + item.id}
+                className={lobbyNavClass("#" + item.id)} aria-current={location.hash === "#" + item.id ? "page" : undefined}
+                onClick={resetSearch}><Icon name={item.icon} />{item.label}</Link>)}
+              <NavLink to="/game/case-battles" className="nav-item"><Icon name="packs" />Case Battles</NavLink>
+              <NavLink to="/game/rips" className="nav-item"><Icon name="packs" />Rips</NavLink>
+            </div>
+            <div>
+              <NavLink to="/race" className="nav-item"><Icon name="stats" />Leaderboard</NavLink>
+              <NavLink to="/stats" className="nav-item"><Icon name="stats" />Stats</NavLink>
+              <Link to="/#live-bets" className={lobbyNavClass("#live-bets")}><span className="live-nav-dot" />Live Bets</Link>
+            </div>
+            <div>
+              <NavLink to="/chat" className="nav-item"><Icon name="chat" />Community chat</NavLink>
+              <a href="/classic/" className="nav-item"><Icon name="casino" />Classic arcade</a>
+            </div>
+          </nav>
+        </> : <>
         <NavLink to="/" className="brand" end>
           <span className="brand-mark">B</span>
           <span>
@@ -121,6 +170,7 @@ export function AppShell() {
         </nav>
 
         <div className="site-style-control"><label htmlFor="site-style-select">Appearance</label><select id="site-style-select" value={siteStyle} onChange={event => updateSiteStyle(event.target.value === "studio" ? "studio" : "classic")}><option value="classic">Classic BlockBet</option><option value="studio">Dark studio</option></select></div><p className="side-note">18+</p>
+        </>}
       </aside>
       {open ? <button className="scrim" type="button" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
 
@@ -132,6 +182,9 @@ export function AppShell() {
             <span />
           </button>
           <NavLink to="/" className="mobile-brand" end>BlockBet</NavLink>
+          {lobbyHome && <NavLink to="/" className="lobby-header-games" onClick={resetSearch}>
+            <Icon name="casino" />Games
+          </NavLink>}
           <nav className="head-links">
             <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : "")}>
               Games
@@ -142,7 +195,7 @@ export function AppShell() {
             <NavLink to="/race">Race</NavLink>
             <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
-          <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
+          {(!lobbyHome || !isGuest || !canSignIn) && <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
             <span className="usd-mark">$</span>
             <span className="bal">
               <strong>{formatAmount(rolling.shown)}</strong>
@@ -151,7 +204,7 @@ export function AppShell() {
             <button type="button" className="wallet-btn" aria-label="Open demo wallet" onClick={openCashier}>
               Wallet
             </button>
-          </div>
+          </div>}
           <button
             type="button"
             className="sound-btn"
@@ -168,7 +221,12 @@ export function AppShell() {
               </svg>
             )}
           </button>
-          {isGuest && canSignIn && <button className="header-sign-in" type="button" onClick={showSignIn}>Sign in</button>}
+          {isGuest && canSignIn && <>
+            {lobbyHome && <button type="button" className="lobby-header-chat" aria-label="Toggle live chat"
+              aria-expanded={chatOpen} onClick={() => setChatOpen(value => !value)}><Icon name="chat" /></button>}
+            <button className="header-sign-in" type="button" onClick={showSignIn}>{lobbyHome ? "Log in" : "Sign in"}</button>
+            {lobbyHome && <button className="lobby-sign-up" type="button" onClick={showSignUp}>Register</button>}
+          </>}
           <div className="account">
             <button type="button" className="avatar account-trigger" aria-label="Account menu"
               aria-expanded={accountOpen} onClick={() => setAccountOpen((v) => !v)}>

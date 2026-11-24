@@ -16,6 +16,7 @@ type AuthValue = {
   canSignIn: boolean;
   logout: () => Promise<void>;
   showSignIn: () => void;
+  showSignUp: () => void;
 };
 const AuthContext = createContext<AuthValue | null>(null);
 
@@ -184,6 +185,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
     canSignIn: enabled,
     logout,
     showSignIn,
+    showSignUp: () => switchTo("signup"),
   };
   if (phase === "loading") {
     return <div className="auth-screen"><div className="auth-card">
