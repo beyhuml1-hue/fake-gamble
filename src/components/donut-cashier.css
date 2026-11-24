@@ -1,0 +1,87 @@
+.donut-cashier label {
+  display: grid;
+  gap: 6px;
+  color: #bed8e6;
+}
+
+.donut-cashier input {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #385369;
+  border-radius: 8px;
+  background: #0f1d2c;
+  padding: 9px 11px;
+  color: #ecf9ff;
+  font: inherit;
+}
+
+.donut-cashier button {
+  cursor: pointer;
+}
+
+.donut-cashier button:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.donut-cashier code {
+  color: #8df1c7;
+  overflow-wrap: anywhere;
+}
+.donut-cashier[open] {
+  width: min(460px, calc(100% - 26px));
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 0;
+  color: #e6f6ef;
+  border: 1px solid #34534c;
+  background: #12221f;
+}
+
+.donut-cashier::backdrop {
+  background: #071310be;
+}
+
+.donut-cashier form,
+.donut-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.donut-actions > div {
+  display: flex;
+  gap: 8px;
+}
+
+.donut-cashier .donut-kicker,
+.donut-cashier strong {
+  color: #b0f6d0;
+}
+
+.donut-instruction {
+  margin-block: 12px;
+  padding: 12px;
+  border-left: 2px solid #62c29a;
+  background: #0b1d17;
+}
+
+.donut-instruction button {
+  margin-inline-start: 8px;
+}
+
+.donut-coin-form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.donut-stake {
+  width: 100%;
+  border: 1px solid #34534c;
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: #12221f;
+  color: inherit;
+  font: inherit;
+}
+
