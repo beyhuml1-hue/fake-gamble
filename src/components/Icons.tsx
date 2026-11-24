@@ -12,6 +12,8 @@ const common = {
 export function Icon({ name }: { name: string }) {
   const paths: Record<string, ReactNode> = {
     close: <path d="m6 6 12 12M18 6 6 18"/>,
+    gamepad: <><path d="M8 7h8c3 0 4 2 5 7l.4 2a2 2 0 0 1-3.4 1.8L15 15H9l-3 2.8A2 2 0 0 1 2.6 16l.4-2c1-5 2-7 5-7Z"/><path d="M8 10v4m-2-2h4m5-.5h.1m3 2h.1"/></>,
+    reward: <path d="m3 7 4.5 4L12 5l4.5 6L21 7l-2 11H5L3 7Z"/>,
     chat: <path d="M4 4h16v12H9l-5 4V4Z"/>,
     search: <><circle cx="10.5" cy="10.5" r="5.5" /><path d="m15 15 4 4" /></>,
     dice: (

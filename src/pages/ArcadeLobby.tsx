@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { Link, useLocation, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
+import { LinkedPlayerImage } from "../components/LinkedPlayerImage";
 import { Icon } from "../components/Icons";
 import { GAMES, type GameId } from "../data/games";
 import { useWallet } from "../state/wallet";
@@ -22,29 +23,6 @@ const coverTones: Partial<Record<GameId, string>> = {
 };
 const historicNames = new Map([["derby", "pig-race"]]);
 type Game = (typeof GAMES)[number];
-
-function LinkedPlayerSkin({ player }: { player: string }) {
-  const [id, setId] = useState(player.startsWith(".") ? "" : player);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    if (!/^\.[A-Za-z0-9_]{1,16}$/.test(player)) return;
-    const controller = new AbortController();
-    const gamertag = player.slice(1).replaceAll("_", " ");
-    fetch(`https://api.geysermc.org/v2/xbox/xuid/${encodeURIComponent(gamertag)}`,
-      { signal: controller.signal, referrerPolicy: "no-referrer" })
-      .then(response => response.ok ? response.json() : null)
-      .then(profile => {
-        if (typeof profile?.xuid !== "string" || !/^\d{1,20}$/.test(profile.xuid)) return;
-        const hex = BigInt(profile.xuid).toString(16).padStart(16, "0");
-        if (hex.length === 16) setId(`00000000-0000-0000-${hex.slice(0, 4)}-${hex.slice(4)}`);
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [player]);
-  if (!id || failed) return null;
-  return <img className="lobby-player-skin" src={`https://mc-heads.net/body/${encodeURIComponent(id)}`}
-    alt={`${player}’s game skin`} referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
-}
 
 const newArt = new Set(["pump", "diamonds", "upgrader"]);
 const coverOrder = Object.keys(coverTones);
@@ -108,7 +86,7 @@ export function ArcadeLobby() {
   return <section className="lobby arcade-lobby blockbet-lobby">
     <div className="arcade-hero">
       <section className="arcade-hero-card arcade-account">
-        {player && <LinkedPlayerSkin key={player} player={player} />}
+        {player && <LinkedPlayerImage key={player} player={player} view="body" className="lobby-player-skin" />}
         <h1>BlockBet Arcade</h1>
         <p>Explore all games and Packs.</p>
         <Link className="lobby-cta" to="/#originals" onClick={() => setQuery("")}>Explore games</Link>

@@ -2,9 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetSt
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { GAMES, classic } from "../data/games";
 import { useAuth } from "./AuthProvider";
+import { formatAmount } from "../lib/money";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
-import { DonutCashier, dsmp, useDonutCashier } from "./DonutCashier";
+import { DonutCashier, dsmp, useDonutCashier, type CashierMode } from "./DonutCashier";
+import { LinkedPlayerImage } from "./LinkedPlayerImage";
+import { AccountDialog } from "./AccountDialog";
 import { Icon } from "./Icons";
 import { Community } from "../pages/Community";
 import { arcadeCategories } from "../pages/ArcadeLobby";
@@ -22,15 +25,21 @@ export function AppShell() {
     setSiteStyle(style);
     try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
   }
-  const { displayName, isGuest, canSignIn, logout, showSignIn, showSignUp } = useAuth();
+  const { displayName, isGuest, canSignIn, logout, showSignIn, showSignUp, linkPlayer } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
-  const { cashierNonce } = useWallet();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { balance, history, starterGrant, dismissStarterGrant, cashierNonce } = useWallet();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [lobbyNavCollapsed, setLobbyNavCollapsed] = useState(false);
   const donutCashier = useDonutCashier(!isGuest);
   const donut = donutCashier.data;
   const [donutOpen, setDonutOpen] = useState(false);
+  const [cashierMode, setCashierMode] = useState<CashierMode>("deposit");
+  function openCashier(mode: CashierMode = "deposit") {
+    setCashierMode(mode);
+    setDonutOpen(true);
+  }
   const promptedLink = useRef(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [muted, setMuted] = useState(() => sound.muted);
@@ -77,6 +86,7 @@ export function AppShell() {
 
   const showChat = chatOpen && location.pathname !== "/chat";
   const arcadeChrome = !classic;
+  const signedInArcade = arcadeChrome && !isGuest;
   const lobbyNavClass = (hash: string) => location.hash === hash ? "nav-item active" : "nav-item";
   const resetSearch = () => {
     setQuery("");
@@ -172,16 +182,33 @@ export function AppShell() {
       {open ? <button className="scrim" type="button" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
 
       <div className="main">
-        <header className="header">
+        <header className={signedInArcade ? "header signed-in-header" : "header"}>
           <button className="menu-btn" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
             <span />
             <span />
             <span />
           </button>
-          <NavLink to="/" className="mobile-brand" end>BlockBet</NavLink>
-          {arcadeChrome && <NavLink to="/" className="lobby-header-games" onClick={resetSearch}>
-            <Icon name="casino" />Games
-          </NavLink>}
+          <NavLink to="/" className="mobile-brand" end>
+            {signedInArcade && <span className="header-brand-mark" aria-hidden="true">B</span>}
+            BlockBet
+          </NavLink>
+          {arcadeChrome && <details className="arcade-catalog-menu" key={location.key}
+            onKeyDown={event => {
+              if (event.key === "Escape") {
+                event.currentTarget.open = false;
+                event.currentTarget.querySelector("summary")?.focus();
+              }
+            }}>
+            <summary className="lobby-header-games"><Icon name="gamepad" />Games <span aria-hidden="true">⌄</span></summary>
+            <nav aria-label="Arcade game catalog">
+              <Link to="/" onClick={resetSearch}>Browse lobby</Link>
+              {arcadeCategories.map(category => <section key={category.id}>
+                <h2>{category.label}</h2>
+                <div>{GAMES.filter(game => (game.id === "packs") === (category.id === "packs")).map(game =>
+                  <Link key={game.id} to={`/game/${game.id}`} onClick={resetSearch}>{game.name}</Link>)}</div>
+              </section>)}
+            </nav>
+          </details>}
           <nav className="head-links">
             <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : "")}>
               Games
@@ -192,7 +219,7 @@ export function AppShell() {
             <NavLink to="/race">Race</NavLink>
             <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
-          {(!arcadeChrome || !isGuest || !canSignIn) && <div className="wallet-pill">
+          {(!arcadeChrome || (isGuest && !canSignIn)) && <div className="wallet-pill">
             <span className="usd-mark">$</span>
             <span className="bal">
               <strong>{dsmp(donut?.wallet?.balance ?? 0)}</strong>
@@ -203,7 +230,24 @@ export function AppShell() {
               Wallet
             </button>
           </div>}
-          <button
+          {signedInArcade && <>
+            <div className="header-funds">
+              <div className="header-balance" aria-label="DonutSMP balance">
+                <span aria-hidden="true" className="header-coin">◈</span>
+                <div><strong>{(donut?.wallet?.balance ?? 0).toLocaleString("en-US")}</strong>
+                  <small>DonutSMP</small></div>
+              </div>
+              <button type="button" className="header-wallet-plus" aria-label="Open DSMP wallet" onClick={() => openCashier()}>+</button>
+            </div>
+            <div className="header-fund-actions">
+              <button type="button" onClick={() => openCashier()}><span aria-hidden="true">+</span> Deposit</button>
+              <button type="button" onClick={() => openCashier("withdraw")}>Withdraw</button>
+            </div>
+            <Link to="/rewards" className="header-shortcut header-rewards" aria-label="Rewards"><Icon name="reward" /></Link>
+            {location.pathname !== "/chat" && <button type="button" className="header-shortcut" aria-label="Toggle live chat"
+              aria-expanded={showChat} onClick={() => setChatOpen(value => !value)}><Icon name="chat" /></button>}
+          </>}
+          {!signedInArcade && <button
             type="button"
             className="sound-btn"
             aria-label={muted ? "Unmute" : "Mute"}
@@ -218,7 +262,7 @@ export function AppShell() {
                 <path d="M4 10v4h3l4 3V7L7 10H4zM16 9a4 4 0 0 1 0 6M18.5 7a7 7 0 0 1 0 10" />
               </svg>
             )}
-          </button>
+          </button>}
           {isGuest && canSignIn && <>
             {arcadeChrome && <button type="button" className="lobby-header-chat" aria-label="Toggle live chat"
               aria-expanded={chatOpen} onClick={() => setChatOpen(value => !value)}><Icon name="chat" /></button>}
@@ -228,12 +272,18 @@ export function AppShell() {
           <div className="account">
             <button type="button" className="avatar account-trigger" aria-label="Account menu"
               aria-expanded={accountOpen} onClick={() => setAccountOpen((v) => !v)}>
-              {displayName?.charAt(0) || "B"}
+              {donut?.wallet?.player ? <LinkedPlayerImage key={donut.wallet.player} player={donut.wallet.player}
+                view="avatar" className="header-player-avatar" fallback={donut.wallet.player.replace(/^\./, "").charAt(0).toUpperCase() || displayName?.charAt(0) || "B"} />
+                : displayName?.charAt(0) || "B"}
             </button>
             {accountOpen && (
               <div className="account-menu">
                 <strong>{displayName || "Guest profile"}</strong>
                 <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email"}</p>
+                <button type="button" onClick={() => { setAccountOpen(false); setProfileOpen(true); }}>Profile</button>
+                <Link to="/transactions" onClick={() => setAccountOpen(false)}>Transactions</Link>
+                <Link to="/rewards" onClick={() => setAccountOpen(false)}>Rewards</Link>
+                {signedInArcade && <button type="button" onClick={toggleSound}>{muted ? "Unmute sound" : "Mute sound"}</button>}
                 {isGuest
                   ? (canSignIn
                       ? <button type="button" onClick={showSignIn}>Log in or sign up</button>
@@ -246,7 +296,7 @@ export function AppShell() {
 
         <div className="content" ref={contentRef}>
           <Outlet context={{ query, setQuery, muted, toggleSound, donutCashier,
-            openDonutCashier: () => setDonutOpen(true) } satisfies ShellContext} />
+            openDonutCashier: () => openCashier() } satisfies ShellContext} />
           <footer className="site-foot">
             <p>{donut?.configured ? "DonutSMP uses in-game currency. Only DSMP can be withdrawn." : "Play money only - no real value."}</p>
           </footer>
@@ -263,7 +313,20 @@ export function AppShell() {
         </header>
         <Community compact/>
       </aside>}
-      <DonutCashier open={donutOpen} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
+      {profileOpen && <AccountDialog title="Player profile" onClose={() => setProfileOpen(false)}>
+        <div className="account-profile-avatar" aria-hidden="true">{(donut?.wallet?.player || displayName || "G").charAt(0).toUpperCase()}</div>
+        <h3>{donut?.wallet?.player || displayName || "Guest"}</h3>
+        <div className="account-metrics">
+          <div><small>Games recorded here</small><strong>{history.length}</strong></div>
+          <div><small>Play USD balance</small><strong>{formatAmount(balance)}</strong></div>
+        </div>
+      </AccountDialog>}
+      {starterGrant > 0 && !donutOpen && !profileOpen && <AccountDialog title="Welcome to BlockBet" onClose={dismissStarterGrant}>
+        <strong className="starter-amount">{formatAmount(starterGrant)} Play USD added</strong>
+        <p>Use your simulated balance to play BlockBet games.</p>
+        <button type="button" className="bet-btn" onClick={dismissStarterGrant}>Explore the arcade</button>
+      </AccountDialog>}
+      <DonutCashier initialPlayer={linkPlayer} open={donutOpen} mode={cashierMode} onModeChange={setCashierMode} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
         onSignIn={() => {
           try { sessionStorage.setItem("blockbet.return-to-wallet", "yes"); } catch { /* Storage may be blocked. */ }
           setDonutOpen(false);

@@ -30,17 +30,17 @@ export async function onRequestPost({request,env}){
   if(input?.action==="initialize"){
    // One starter grant per account; browser input never controls its size.
    // Gifts and Rain already received are preserved.
-   const balance=100_000;
+   const balance=100_000_000;
    if(!Number.isSafeInteger(balance)||balance<0||balance>LIMIT)
     return json({error:"Invalid Play USD balance."},400);
-   await env.DB.batch([
+   const grants=await env.DB.batch([
     env.DB.prepare("INSERT OR IGNORE INTO playusd_wallets(user_id,cents,initialized,updated_ms) VALUES(?1,?2,1,?3)")
       .bind(user.id,balance,now),
     env.DB.prepare("UPDATE playusd_wallets SET cents=MIN(?3,cents+?2),initialized=1,updated_ms=?4 WHERE user_id=?1 AND initialized=0")
       .bind(user.id,balance,LIMIT,now),
    ]);
    const wallet=await readBalance(env,user);
-   return json({ok:true,balance:wallet.cents,generation:wallet.generation,ready:true,fictional:true});
+   return json({ok:true,balance:wallet.cents,generation:wallet.generation,ready:true,fictional:true,starterGrant:grants.some(result=>result.meta?.changes>0)?balance:0});
   }
   if(input?.action==="game"){
    const delta=input.delta,id=input.id;

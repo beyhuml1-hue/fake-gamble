@@ -136,6 +136,11 @@ test("DSMP verifies exact sender and amount, reserves a withdrawal and settles a
     await json(post("deposit", { amount: 100_000 }));
     await json(bridge(receipt(".Alice", 100_000, "100K", false)));
     assert.equal((await view()).intent.status, "review");
+    const { transactions } = await json(website("alice", "donut-cashier?view=transactions"));
+    assert.equal(transactions.length, 4);
+    assert.ok(transactions.some(row => row.kind === "deposit" && row.amount === 100_000 && row.status === "credited"));
+    assert.ok(transactions.some(row => row.kind === "withdrawal" && row.status === "confirmed"));
+    assert.deepEqual((await json(website("bob", "donut-cashier?view=transactions"))).transactions, []);
     assert.equal((await view()).wallet.balance, round.balance - 200);
     env.DONUT_CASHIER_ENABLED = "false";
     assert.equal((await view()).enabled, false);
