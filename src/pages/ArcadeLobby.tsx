@@ -109,13 +109,13 @@ export function ArcadeLobby() {
     <div className="arcade-hero">
       <section className="arcade-hero-card arcade-account">
         {player && <LinkedPlayerSkin key={player} player={player} />}
-        <h1>BlockBet <span>Arcade</span></h1>
+        <h1>BlockBet Arcade</h1>
         <p>Explore all games and Packs.</p>
         <Link className="lobby-cta" to="/#originals" onClick={() => setQuery("")}>Explore games</Link>
       </section>
       <section className="arcade-hero-card lobby-wallet-card">
         <div className="arcade-art" data-game="account-coins" aria-hidden="true" />
-        <h2>DSMP <span>Wallet</span></h2>
+        <h2>DSMP Wallet</h2>
         <p>Check your balance and recent activity.</p>
         <button className="lobby-cta" type="button" onClick={openDonutCashier}>Open wallet</button>
       </section>

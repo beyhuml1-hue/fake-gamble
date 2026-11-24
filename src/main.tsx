@@ -9,6 +9,7 @@ import "./design-system.css";
 import "./visual-fixes.css";
 import "./game-polish.css";
 import "./blockbet.css";
+import "./blockbet-arcade-theme.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
