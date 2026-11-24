@@ -4,7 +4,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
 import { GAMES, classic } from "../data/games";
 import { HomeSpotlight } from "./HomeSpotlight";
-import { formatUSD } from "../lib/money";
+import { dsmp } from "../components/DonutCashier";
 import { useWallet } from "../state/wallet";
 
 const order = ["mines","blackjack","dice","dragon","mines-battles","coinflip","crash","uno","connect-four","poker","pool","chess","floor-is-lava","draw","rps","upgrader","hilo","limbo","plinko","double","roulette","pig-race","stocks","slide","keno","blitz","snakes","chicken","baccarat","diamonds","packs","wheel","pump","darts"];
@@ -16,8 +16,8 @@ export function Lobby() {
 }
 
 function ClassicLobby(){
-  const {query,setQuery}=useOutletContext<ShellContext>();
-  const { balance,history,openCashier }=useWallet();
+  const {query,setQuery,donutCashier,openDonutCashier}=useOutletContext<ShellContext>();
+  const { history }=useWallet();
   const [group,setGroup]=useState("All games");
   const q=query.trim().toLowerCase();
   const catalog = [...GAMES].sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
@@ -37,10 +37,10 @@ function ClassicLobby(){
         <div className="arcade-art" data-game="account-coins" aria-hidden="true"/>
         <p className="arcade-kicker">BlockBet</p><h1>Your table is ready</h1>
         <div className="arcade-wallet-stats">
-          <div><small>Play USD balance</small><strong>{formatUSD(balance)}</strong></div>
+          <div><small>DonutSMP balance</small><strong>{dsmp(donutCashier.data?.wallet?.balance ?? 0)}</strong></div>
           <div><small>Recent plays</small><strong>{history.length}</strong></div>
         </div>
-        <button type="button" className="bet-btn" onClick={openCashier}>Open wallet</button>
+        <button type="button" className="bet-btn" onClick={openDonutCashier}>Open wallet</button>
         <p className="arcade-wallet-note">Play money · No cash value</p>
       </section>
       <Link to="/race" className="arcade-hero-card arcade-race-link">

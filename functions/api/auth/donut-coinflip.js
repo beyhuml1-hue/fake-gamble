@@ -8,8 +8,8 @@ export async function onRequestPost({ request, env }) {
   if (!user) return json({ error: "Sign in to play." }, 401);
   const body = await readBody(request);
   if (!body || !UUID.test(body.id || "") || !["heads", "tails"].includes(body.pick)
-    || !Number.isSafeInteger(body.amount) || body.amount < 1 || body.amount > MAX_AMOUNT) {
-    return json({ error: "Choose a side and enter a stake from 1 to 100M DSMP." }, 400);
+    || !Number.isSafeInteger(body.amount) || body.amount < 1_000 || body.amount > MAX_AMOUNT) {
+    return json({ error: "Choose a side and enter a stake from 1,000 to 100M DSMP." }, 400);
   }
 
   const [wallet, prior] = await Promise.all([

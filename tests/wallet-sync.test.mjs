@@ -120,7 +120,10 @@ test("UI pulls server credits into normal wallet and Mines Battles is fully unli
  assert.match(wallet,new RegExp("/api/auth/playusd"));
  assert.match(wallet,/pendingOps/);
  assert.match(wallet,/prepareTransfer/);
- assert.match(shell,/notifications\.map/);
+ assert.doesNotMatch(shell,/notifications\.map/);
+ const header=shell.slice(shell.indexOf("<header className="),shell.indexOf("</header>"));
+ assert.match(header,/DonutSMP balance/);
+ assert.doesNotMatch(header,/Game balance|Play USD/);
  assert.match(chat,/chat-profile-stats/);
  assert.doesNotMatch(chat,/Available to send <strong>|Chat balance/);
  assert.match(chat,/No separate chat currency/);
