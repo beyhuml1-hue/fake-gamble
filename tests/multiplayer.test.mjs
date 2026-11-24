@@ -55,9 +55,9 @@ test("Two chess players share legal moves and checkmate settles the stakes once"
    const response=await call(player,"matches",{action:"move",id,move:{type:"chess",from,to}});assert.equal(response.status,200,JSON.stringify(response.data));
   }
   const end=(await call("host","matches?id="+id)).data.match;assert.equal(end.status,"finished");assert.equal(end.winner,"guest");assert.equal(end.state.moves.at(-1),"Qh4#");
-  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='guest'").get().cents,101000);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='guest'").get().cents,100_001_000);
   assert.equal((await call("guest","matches",{action:"leave",id})).status,409);
-  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='guest'").get().cents,101000);
+  assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='guest'").get().cents,100_001_000);
  }finally{db.close();}
 });
 
@@ -74,7 +74,7 @@ test("Uno rooms share only each player's hand; Rain donations debit once and pay
    return {status:res.status,data:await res.json()};
   }
   for(const id of ["host","guest"]){
-   assert.equal((await call(id,"playusd",{action:"initialize",balance:999999999})).data.balance,100000);
+   assert.equal((await call(id,"playusd",{action:"initialize",balance:999999999})).data.balance,100_000_000);
    db.prepare("UPDATE playusd_wallets SET cents=99000 WHERE user_id=?").run(id);
    assert.equal((await call(id,"playusd",{action:"initialize",balance:100000000})).data.balance,99000,"No refill");
   }

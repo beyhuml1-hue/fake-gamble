@@ -1,0 +1,129 @@
+.account-dialog,
+.donut-cashier[open] {
+  width: min(480px, calc(100% - 28px));
+  max-height: calc(100dvh - 28px);
+  color: #edf5ff;
+  background: #14253a;
+  border: 1px solid #385571;
+  border-radius: 18px;
+}
+
+.account-dialog {
+  position: fixed;
+  margin: auto;
+  padding: 28px;
+}
+
+.account-dialog::backdrop,
+.donut-cashier::backdrop {
+  background: #060d19cc;
+}
+
+.account-dialog h2 { margin: 0 30px 18px 0; }
+.account-dialog h3 { margin: 10px 0 18px; }
+.account-close {
+  position: absolute;
+  inset: 14px 14px auto auto;
+  color: inherit;
+  border: 1px solid #385571;
+  border-radius: 8px;
+  background: #1c334d;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+}
+
+.account-profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  color: #12263a;
+  background: #a5e8ff;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.starter-amount { display: block; font-size: clamp(22px, 5vw, 32px); color: #ffd684; }
+.auth-card .auth-starter { background: #20354e; border-radius: 8px; padding: 10px 12px; color: #d7efff; }
+
+.account-page { max-width: 1120px; margin: 0 auto; }
+.account-page h1 { margin: 0 0 22px; }
+.account-switch { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+.account-switch button {
+  color: #c9dbef;
+  background: #17283f;
+  border: 1px solid #344c69;
+  border-radius: 8px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+.account-switch button[aria-pressed=true] { color: #effaff; background: #294b68; }
+.donut-cashier .wallet-fold-head { background: #172b44; }
+.donut-cashier .wallet-fold-body { padding: 18px; }
+.donut-actions p { margin: 0; color: #bfd3e9; }
+.donut-actions .deposit-presets { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+.donut-actions .wallet-btn { min-height: 42px; }
+
+.account-table {
+  overflow-x: auto;
+  background: #121f31;
+  border: 1px solid #30465e;
+  border-radius: 12px;
+}
+.account-table th, .account-table td { padding: 12px 14px; text-align: left; white-space: nowrap; }
+.account-empty { display: grid; justify-items: center; gap: 12px; padding: 32px 16px; color: #b7cbe0; text-align: center; }
+.reward-banner {
+  border: 1px solid #30465e;
+  border-radius: 16px;
+  background: linear-gradient(90deg,#172c44 40%,#172c4470), url('/images/gem-green.webp') center right / cover;
+  padding: 28px;
+  margin-bottom: 16px;
+}
+.reward-banner strong { color: #ffd684; font-size: clamp(20px, 4vw, 30px); }
+.account-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,150px),1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.account-metrics > div {
+  display: grid;
+  gap: 6px;
+  background: #172b44;
+  border: 1px solid #30465e;
+  border-radius: 10px;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+.account-metrics small { color: #b7cbe0; }
+
+.arcade-catalog-menu { margin-right: auto; }
+.arcade-catalog-menu summary { list-style: none; }
+.arcade-catalog-menu summary::-webkit-details-marker { display: none; }
+.arcade-catalog-menu nav {
+  position: absolute;
+  z-index: 12;
+  inset: 100% auto auto 12px;
+  width: min(560px, calc(100% - 24px));
+  max-height: min(65dvh, 540px);
+  overflow: auto;
+  background: #14253a;
+  border: 1px solid #385571;
+  border-radius: 12px;
+  padding: 14px;
+}
+.arcade-catalog-menu nav section > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(115px,1fr));
+  gap: 6px;
+}
+.arcade-catalog-menu nav h2 { font-size: 16px; }
+.arcade-catalog-menu nav a {
+  display: block;
+  padding: 8px;
+  border-radius: 7px;
+  background: #1c344e;
+}
+.arcade-catalog-menu nav a:hover { background: #2b506e; }

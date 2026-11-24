@@ -44,9 +44,9 @@ test("The normal Play USD wallet covers game wins, Rain, transfers, and cross-ac
   assert.equal((await get("",wallet)).status,401);
   assert.equal((await post("alice",wallet,{action:"initialize",balance:5000},"https://bad.invalid")).status,403);
   assert.equal((await (await get("alice",wallet)).json()).ready,false);
-  assert.equal((await post("alice",wallet,{action:"initialize",balance:5000})).status,200);
-  assert.equal((await post("alice",wallet,{action:"initialize",balance:99999})).status,200);
-  assert.equal((await (await get("alice",wallet)).json()).balance,100000,"Starter is exactly $1,000 and repeat initialization cannot top up");
+  assert.equal((await (await post("alice",wallet,{action:"initialize",balance:5000})).json()).starterGrant,100_000_000);
+  assert.equal((await (await post("alice",wallet,{action:"initialize",balance:99999})).json()).starterGrant,0);
+  assert.equal((await (await get("alice",wallet)).json()).balance,100_000_000,"Starter is exactly $1,000,000 and repeat initialization cannot top up");
   db.exec("UPDATE playusd_wallets SET cents=5000 WHERE user_id='alice'"); // Existing account fixture.
   const bets=[
    {id:crypto.randomUUID(),delta:-1200},
@@ -80,7 +80,7 @@ test("The normal Play USD wallet covers game wins, Rain, transfers, and cross-ac
   assert.equal((await (await get("bob",wallet)).json()).ready,false);
   assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='bob'").get().cents,3000);
   assert.equal((await post("bob",wallet,{action:"initialize",balance:2000})).status,200);
-  assert.equal((await (await get("bob",wallet)).json()).balance,103000);
+  assert.equal((await (await get("bob",wallet)).json()).balance,100_003_000);
   assert.equal((await post("alice",chat,{action:"transfer",id:crypto.randomUUID(),recipient:aliceChat.profile.id,cents:100})).status,409);
   assert.equal((await post("alice",chat,{action:"transfer",id:crypto.randomUUID(),recipient:bobChat.profile.id,cents:6000})).status,409);
   const recv=(await (await get("bob",notices+"?notices=1")).json()).notifications;
@@ -98,7 +98,7 @@ test("The normal Play USD wallet covers game wins, Rain, transfers, and cross-ac
   assert.equal(db.prepare("SELECT cents FROM playusd_wallets WHERE user_id='charlie'").get().cents,10000);
   assert.equal(db.prepare("PRAGMA table_info(community_profiles)").all().some(row=>row.name==="cents"),false);
   assert.equal((await post("charlie",wallet,{action:"initialize",balance:2000})).status,200);
-  assert.equal((await (await get("charlie",wallet)).json()).balance,110000);
+  assert.equal((await (await get("charlie",wallet)).json()).balance,100_010_000);
   assert.equal((await (await get("charlie",chat)).json()).profile.cents,undefined);
 
   // No duplicate transfers despite retries and social events.

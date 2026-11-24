@@ -7,6 +7,7 @@ import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 import { BetsTable } from "./BetsTable";
 import { DonutCashier, dsmp, useDonutCashier } from "./DonutCashier";
+import { AccountDialog } from "./AccountDialog";
 import { Icon } from "./Icons";
 import { Community } from "../pages/Community";
 import { arcadeCategories } from "../pages/ArcadeLobby";
@@ -56,7 +57,8 @@ export function AppShell() {
   }
   const { displayName, isGuest, canSignIn, logout, showSignIn, showSignUp } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
-  const { balance, cashierNonce, notifications, dismissNotification } = useWallet();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { balance, history, starterGrant, dismissStarterGrant, cashierNonce, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -214,9 +216,23 @@ export function AppShell() {
             <span />
           </button>
           <NavLink to="/" className="mobile-brand" end>BlockBet</NavLink>
-          {arcadeChrome && <NavLink to="/" className="lobby-header-games" onClick={resetSearch}>
-            <Icon name="casino" />Games
-          </NavLink>}
+          {arcadeChrome && <details className="arcade-catalog-menu" key={location.key}
+            onKeyDown={event => {
+              if (event.key === "Escape") {
+                event.currentTarget.open = false;
+                event.currentTarget.querySelector("summary")?.focus();
+              }
+            }}>
+            <summary className="lobby-header-games"><Icon name="casino" />Games <span aria-hidden="true">⌄</span></summary>
+            <nav aria-label="Arcade game catalog">
+              <Link to="/" onClick={resetSearch}>Browse lobby</Link>
+              {arcadeCategories.map(category => <section key={category.id}>
+                <h2>{category.label}</h2>
+                <div>{GAMES.filter(game => (game.id === "packs") === (category.id === "packs")).map(game =>
+                  <Link key={game.id} to={`/game/${game.id}`} onClick={resetSearch}>{game.name}</Link>)}</div>
+              </section>)}
+            </nav>
+          </details>}
           <nav className="head-links">
             <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : "")}>
               Games
@@ -269,6 +285,9 @@ export function AppShell() {
               <div className="account-menu">
                 <strong>{displayName || "Guest profile"}</strong>
                 <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · synced Play USD wallet"}</p>
+                <button type="button" onClick={() => { setAccountOpen(false); setProfileOpen(true); }}>Profile</button>
+                <Link to="/transactions" onClick={() => setAccountOpen(false)}>Transactions</Link>
+                <Link to="/rewards" onClick={() => setAccountOpen(false)}>Rewards</Link>
                 {isGuest
                   ? (canSignIn
                       ? <button type="button" onClick={showSignIn}>Log in or sign up</button>
@@ -306,6 +325,19 @@ export function AppShell() {
           <button type="button" aria-label="Dismiss transfer notification" onClick={()=>dismissNotification(item.id)}>✕</button>
         </div>)}
       </section>}
+      {profileOpen && <AccountDialog title="Player profile" onClose={() => setProfileOpen(false)}>
+        <div className="account-profile-avatar" aria-hidden="true">{(donut?.wallet?.player || displayName || "G").charAt(0).toUpperCase()}</div>
+        <h3>{donut?.wallet?.player || displayName || "Guest"}</h3>
+        <div className="account-metrics">
+          <div><small>Games recorded here</small><strong>{history.length}</strong></div>
+          <div><small>Play USD balance</small><strong>{formatAmount(balance)}</strong></div>
+        </div>
+      </AccountDialog>}
+      {starterGrant > 0 && !donutOpen && !profileOpen && <AccountDialog title="Welcome to BlockBet" onClose={dismissStarterGrant}>
+        <strong className="starter-amount">{formatAmount(starterGrant)} Play USD added</strong>
+        <p>Use your simulated balance to play BlockBet games.</p>
+        <button type="button" className="bet-btn" onClick={dismissStarterGrant}>Explore the arcade</button>
+      </AccountDialog>}
       <DonutCashier open={donutOpen} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
         onSignIn={() => {
           try { sessionStorage.setItem("blockbet.return-to-wallet", "yes"); } catch { /* Storage may be blocked. */ }

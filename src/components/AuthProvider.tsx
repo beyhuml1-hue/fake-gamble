@@ -223,7 +223,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
           </>
         ) : (
           <>
-            <h1 id="auth-dialog-title">{phase === "signup" ? "Create an account" : "Sign in"}</h1>
+            <h1 id="auth-dialog-title">{phase === "signup" ? "Create your BlockBet account" : "Sign in to BlockBet"}</h1>
             <p>{phase === "signup" ? "We'll email you a six-digit code to confirm your address." : "Enter your email and password to access your account."}</p>
             <div className="auth-switch" role="group" aria-label="Account access">
               <button type="button" className={phase === "login" ? "selected" : ""} onClick={() => switchTo("login")} aria-pressed={phase === "login"}>Log in</button>
@@ -250,6 +250,7 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
             </form>
           </>
         )}
+        {phase === "signup" && <p className="auth-starter">New Play USD wallets start with 1,000,000 simulated Play USD.</p>}
         {notice && <p className="auth-notice" role="status">{notice}</p>}
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="auth-guest-link" type="button" onClick={() => setPhase("guest")}>

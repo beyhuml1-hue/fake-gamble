@@ -45,6 +45,8 @@ type WalletValue = {
   ledger: LedgerRow[];
   cashierNonce: number;
   walletReady:boolean;
+  starterGrant: number;
+  dismissStarterGrant: () => void;
   prepareTransfer: () => Promise<number|null>;
   notifications: WalletNotification[];
   dismissNotification: (id:string) => void;
@@ -159,6 +161,7 @@ export function WalletProvider({ email, children, adjustment }: {
   const [stored, setSaved] = useState<Saved>(() => applyAdjustment(load(email), adjustment));
   const saved = applyAdjustment(stored, adjustment);
   if (saved !== stored) setSaved(saved);
+  const [starterGrant, setStarterGrant] = useState(0);
   const [cashierNonce, setCashierNonce] = useState(0);
   const [notifications,setNotifications] = useState<WalletNotification[]>([]);
   const opsRef=useRef<PendingOp[]>(saved.pendingOps||[]);
@@ -221,7 +224,7 @@ export function WalletProvider({ email, children, adjustment }: {
     try{
       let response=await fetch("/api/auth/playusd",{cache:"no-store",credentials:"same-origin"});
       if(!response.ok)return null;
-      let data=await response.json() as {ready?:boolean;balance?:number;generation?:number};
+      let data=await response.json() as {ready?:boolean;balance?:number;generation?:number;starterGrant?:number};
       if(!data.ready){
         response=await fetch("/api/auth/playusd",{
           method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},
@@ -229,6 +232,7 @@ export function WalletProvider({ email, children, adjustment }: {
         });
         if(!response.ok)return null;
         data=await response.json();
+        if (data.starterGrant && Number.isSafeInteger(data.starterGrant)) setStarterGrant(data.starterGrant);
       }
       if(typeof data.balance!=="number"||!Number.isSafeInteger(data.balance)||data.balance<0||data.balance>MAX_BALANCE)return null;
       generationRef.current=data.generation??1;
@@ -303,6 +307,8 @@ export function WalletProvider({ email, children, adjustment }: {
     ledger: saved.ledger,
     cashierNonce,
     walletReady,
+    starterGrant,
+    dismissStarterGrant: () => setStarterGrant(0),
     prepareTransfer: async()=>{
       if(!walletReadyRef.current||email==="phone")return null;
       const synced=await refreshMainWallet();

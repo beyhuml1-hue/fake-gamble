@@ -27,6 +27,18 @@ export async function onRequestGet({ request, env }) {
   if (!configured(env) || !cashierConfigured(env)) return json({ configured: false, error: "DSMP cashier is offline." }, 503);
   const user = await currentUser(request, env);
   if (!user) return json({ error: "Sign in to use the DonutSMP cashier." }, 401);
+  if (new URL(request.url).searchParams.get("view") === "transactions") {
+    const { results } = await env.DB.prepare(`
+      SELECT id,kind,amount,created_at AS at,
+        CASE WHEN status='open' AND expires_at<=?2 THEN 'expired' ELSE status END AS status
+      FROM donut_cashier_intents WHERE user_id=?1
+      UNION ALL
+      SELECT id,'withdrawal' AS kind,amount,created_at AS at,status
+      FROM donut_cashier_withdrawals WHERE user_id=?1
+      ORDER BY at DESC LIMIT 100
+    `).bind(user.id, Date.now()).all();
+    return json({ transactions: results }, 200, { "Cache-Control": "no-store" });
+  }
   return json(await view(env, user), 200, { "Cache-Control": "no-store" });
 }
 

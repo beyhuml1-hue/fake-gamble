@@ -63,6 +63,7 @@ type CashierProps = {
 
 export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn }: CashierProps) {
   const { data, refresh, accept } = cashier;
+  const [mode, setMode] = useState<"deposit" | "withdraw">("deposit");
   const [amount, setAmount] = useState("");
   const [player, setPlayer] = useState("");
   const [note, setNote] = useState("");
@@ -120,7 +121,7 @@ export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn }: Cas
       <header className="wallet-fold-head">
         <div className="wallet-fold-id"><div>
           <p className="donut-kicker">{wallet ? wallet.player : "DonutSMP"}</p>
-          <strong id="donut-cashier-title">{wallet ? dsmp(wallet.balance) : "DSMP Wallet"}</strong>
+          <strong id="donut-cashier-title">DonutSMP Wallet</strong>
         </div></div>
         <button type="button" className="wallet-fold-x" aria-label="Close cashier" onClick={onClose}>×</button>
       </header>
@@ -136,18 +137,26 @@ export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn }: Cas
           <p>Use a leading dot for Bedrock, like <b>.Player</b>. For Java, enter <b>Player</b>.</p>
           <button className="wallet-btn" disabled={!online || busy}>Accept</button>
         </form>}
-        {<div className="donut-actions">
+        {wallet && <div className="donut-actions">
+          <div className="account-switch" role="group" aria-label="Wallet action">
+            <button type="button" aria-pressed={mode === "deposit"} onClick={() => setMode("deposit")}>Deposit</button>
+            <button type="button" aria-pressed={mode === "withdraw"} onClick={() => setMode("withdraw")}>Withdraw</button>
+          </div>
+          <p>In-game balance <strong>{dsmp(wallet.balance)}</strong></p>
           <label>Amount in DSMP
             <input value={amount} inputMode="numeric" maxLength={9} placeholder="Enter an amount"
               onChange={event => setAmount(event.target.value)} />
           </label>
-          <div>
-            <button className="wallet-btn" disabled={!wallet || !online || busy || !validDeposit || pending || intent?.status === "review"}
-              onClick={() => void submit("deposit")}>Deposit</button>
-            <button className="wallet-btn" disabled={!wallet || !online || busy || !validAmount || withdrawalPending || Number(amount) > (wallet?.balance ?? 0)}
-              onClick={() => void submit("withdraw")}>Withdraw</button>
-          </div>
-          {data?.minimumDeposit != null && <p>Minimum deposit: {whole.format(data.minimumDeposit)} coins.</p>}
+          {mode === "deposit" ? <>
+            <div className="deposit-presets" aria-label="Suggested deposit amounts">
+              {[100_000, 1_000_000, 10_000_000, 100_000_000].map(value =>
+                <button key={value} type="button" className="ghost-btn" onClick={() => setAmount(String(value))}>{whole.format(value)}</button>)}
+            </div>
+            {data?.minimumDeposit != null && <p>Minimum deposit: {whole.format(data.minimumDeposit)} coins.</p>}
+            <button type="button" className="wallet-btn" disabled={!online || busy || !validDeposit || pending || intent?.status === "review"}
+              onClick={() => void submit("deposit")}>Continue to in-game deposit</button>
+          </> : <button type="button" className="wallet-btn" disabled={!online || busy || !validAmount || withdrawalPending || Number(amount) > wallet.balance}
+            onClick={() => void submit("withdraw")}>Request withdrawal</button>}
         </div>}
         {pay && intent && <div className="donut-instruction">
           <p>Send this exact payment in-game from <strong>{intent.player}</strong>{intent.kind === "link" ? " to verify your name." : " to fund your balance."}</p>
