@@ -127,3 +127,30 @@
   background: #1c344e;
 }
 .arcade-catalog-menu nav a:hover { background: #2b506e; }
+.donut-actions .deposit-presets {
+  grid-template-columns: repeat(4, minmax(0,1fr));
+}
+
+.donut-cashier .donut-actions input,
+.donut-cashier .deposit-presets button {
+  background: #101e30;
+  border-color: #3d5974;
+}
+
+.donut-cashier .deposit-presets button {
+  padding-inline: 5px;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.donut-cashier .donut-actions > .wallet-btn {
+  background: #a5e8ff;
+  color: #102033;
+  border-radius: 8px;
+}
+
+@media (max-width: 400px) {
+  .donut-actions .deposit-presets {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
