@@ -1,6 +1,7 @@
 import { configured, currentUser, json, readBody, sameOrigin } from "../../_shared/auth.js";
 import { CASHIER, PLAYER, UUID, MAX_AMOUNT, cashierConfigured, cashierOnline, randomBelow } from "../../_shared/donut.js";
 
+const MIN_DEPOSIT = 100_000;
 const INTENT_MS = 15 * 60_000;
 
 async function view(env, user) {
@@ -14,7 +15,7 @@ async function view(env, user) {
       .bind(user.id).first(),
     cashierOnline(env, now),
   ]);
-  return { wallet, intent, withdrawal, cashier: CASHIER, configured: true, enabled, coinflip: enabled && env.DONUT_GAMES_ENABLED === "true" };
+  return { wallet, intent, withdrawal, cashier: CASHIER, minimumDeposit: MIN_DEPOSIT, configured: true, enabled, coinflip: enabled && env.DONUT_GAMES_ENABLED === "true" };
 }
 
 async function expire(env, now) {
@@ -56,8 +57,8 @@ export async function onRequestPost({ request, env }) {
         .bind(input.id, user.id, player, code, now, now + INTENT_MS, user.id, player).run();
       if (!write.meta.changes) return json({ error: "That Minecraft name or this account already has a link or request." }, 409);
     } else if (input.action === "deposit") {
-      if (!wallet || !Number.isSafeInteger(amount) || amount < 1 || amount > MAX_AMOUNT) {
-        return json({ error: "Link your account and enter an amount from 1 to 100M." }, 400);
+      if (!wallet || !Number.isSafeInteger(amount) || amount < MIN_DEPOSIT || amount > MAX_AMOUNT) {
+        return json({ error: "Link your account and enter a deposit from 100,000 to 100,000,000 coins." }, 400);
       }
       const write = await env.DB.prepare(`INSERT OR IGNORE INTO donut_cashier_intents
         (id,user_id,player,kind,amount,created_at,expires_at)
