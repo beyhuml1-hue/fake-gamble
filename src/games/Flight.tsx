@@ -113,7 +113,7 @@ export function Flight() {
       </div>}>
     </BetPanel>}>
     <div className="flight-game">
-      <div className="flight-sky">
+      <div className="flight-sky" style={{backgroundPositionX: (-240 * progress) + "px"}}>
         <div className="flight-readout">
           <dl><div><dt>Multiplier</dt><dd>{formatMult(flight.mult)}</dd></div>
           <div><dt>Return if landed</dt><dd>{formatUSD(payout(potential, flight.mult))}</dd></div></dl>
@@ -127,9 +127,9 @@ export function Flight() {
           <span className={"flight-runway" + (approach && aligned ? " aligned" : "")}
             style={{bottom: runway.min + "%", height: (runway.max - runway.min) + "%"}}>Finish</span>
           {flight.pickups.map(item => <span key={item.time} className={"flight-pickup " + item.kind}
-            style={{left: (8 + item.time / duration * 83) + "%", bottom: item.height + "%"}}>{item.kind === "gem" ? "◆" : item.kind === "coin" ? "●" : "✹"}</span>)}
+            style={{left: (8 + item.time / duration * 83) + "%", bottom: item.height + "%"}}/>)}
           <span className="flight-plane" style={{left: (8 + progress * 83) + "%", bottom: Math.max(5, flight.height) + "%",
-            rotate: Math.max(-25, Math.min(25, -flight.velocity / 2)) + "deg"}}><i/><b/><em/></span>
+            rotate: Math.max(-25, Math.min(25, -flight.velocity / 2)) + "deg"}}><img src={`/flight/plane-${1 + Math.floor(flight.time * 16) % 3}.png`} alt="" draggable={false}/></span>
         </div>
         <div className="flight-track">
           <progress aria-label="Flight route progress" value={progress} max={1}/>
