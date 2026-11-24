@@ -4,7 +4,6 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatUSD, payout } from "../lib/money";
 import { randInt } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
@@ -79,7 +78,7 @@ export function Roulette() {
     setBusy(true);
     sound.roll();
     setResult(null);
-    const n = luckOn() ? ORDER.find(number => wins(placed[0]!.bet, number))! : ORDER[randInt(ORDER.length)]!;
+    const n = ORDER[randInt(ORDER.length)]!;
     const pay = placed.reduce((total, chip) => wins(chip.bet, n) ? total + payout(chip.cents, multFor(chip.bet)) : total, 0);
     const index = ORDER.indexOf(n);
     const center = index * slice + slice / 2;

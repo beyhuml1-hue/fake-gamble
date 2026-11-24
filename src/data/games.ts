@@ -173,16 +173,10 @@ const gameCatalog = [
 
 export type GameId = (typeof gameCatalog)[number]["id"];
 
-const featured = ["mines", "dragon", "flight", "dice", "plinko", "roulette", "coinflip", "slide",
-  "limbo", "blackjack", "crash", "baccarat", "hilo", "keno", "snakes", "digger",
-  "poison", "rps", "packs", "rips", "cases", "case-battles", "farmyard", "beacon", "vault"];
-
 export const classic = import.meta.env.MODE === "classic" || /^\/classic(?:\/|$)/.test(window.location.pathname);
 
-export const GAMES = classic
-  ? gameCatalog.filter(game => !["flip", "cases", "case-battles", "flight", "rips", "digger",
-    "poison", "farmyard", "beacon", "vault"].includes(game.id))
-  : featured.map(id => gameCatalog.find(game => game.id === id)!);
+const retired = new Set(["flip", "cases", "case-battles", "rips", "flight", "digger", "poison", "farmyard", "beacon", "vault", "snakes"]);
+export const GAMES = gameCatalog.filter(game => !retired.has(game.id));
 
 export function gameById(id: string | undefined) {
   return GAMES.find(game => game.id === id);

@@ -5,7 +5,6 @@ import { EDGE } from "../lib/math";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { random } from "../lib/random";
 import { sound } from "../lib/sound";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const GROWTH = 1.24;
@@ -39,7 +38,7 @@ export function Pump() {
 
   const pump = () => {
     if (!active) return;
-    if (!luckOn() && random() > SURVIVE) {
+    if (random() > SURVIVE) {
       setPopped(true);
       setActive(false);
       sound.bomb();

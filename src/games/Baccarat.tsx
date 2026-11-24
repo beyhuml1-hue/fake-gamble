@@ -3,7 +3,6 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents } from "../lib/money";
 import { shuffle } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 type Card = { rank: string; suit: string };
@@ -65,25 +64,7 @@ export function Baccarat() {
     setBusy(true);
     let p: Card[];
     let b: Card[];
-    if (luckOn()) {
-      const nine: Card = { rank: "9", suit: "♠" };
-      const king: Card = { rank: "K", suit: "♥" };
-      const queen: Card = { rank: "Q", suit: "♦" };
-      const ten: Card = { rank: "10", suit: "♣" };
-      if (side === "tie") {
-        p = [nine, king];
-        b = [
-          { rank: "9", suit: "♣" },
-          queen,
-        ];
-      } else if (side === "player") {
-        p = [nine, king];
-        b = [ten, queen];
-      } else {
-        b = [nine, king];
-        p = [ten, queen];
-      }
-    } else {
+    {
       p = [draw(), draw()];
       b = [draw(), draw()];
     }

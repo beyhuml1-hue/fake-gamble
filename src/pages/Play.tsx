@@ -1,5 +1,7 @@
 import type { ComponentType } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useOutletContext, useParams } from "react-router-dom";
+import type { ShellContext } from "../components/AppShell";
+import { DonutCoinflip } from "../games/DonutCoinflip";
 import type { GameId } from "../data/games";
 import { gameById } from "../data/games";
 import { Baccarat } from "../games/Baccarat";
@@ -21,27 +23,15 @@ import { Plinko } from "../games/Plinko";
 import { Pump } from "../games/Pump";
 import { Roulette } from "../games/Roulette";
 import { Upgrader } from "../games/Upgrader";
-import { Blitz, Snakes } from "../games/CardAndDice";
+import { Blitz } from "../games/CardAndDice";
 import { ArcadeRound } from "../games/ArcadeRound";
 import { BoardArcade } from "../games/BoardArcade";
 import { Wheel } from "../games/Wheel";
 
-import { Flight } from "../games/Flight";
-import { Cases } from "../games/Cases";
-import { ExtraRound } from "../games/ExtraRound";
 
 const PAGES: Partial<Record<GameId, ComponentType>> = {
-  flight: Flight,
-  rips: () => <Cases title="Rips" />,
-  cases: () => <Cases title="Cases" />,
-  digger: () => <ExtraRound kind="digger" />,
-  poison: () => <ExtraRound kind="poison" />,
-  farmyard: () => <ExtraRound kind="farmyard" />,
-  beacon: () => <ExtraRound kind="beacon" />,
-  vault: () => <ExtraRound kind="vault" />,
   dice: Dice,
   blitz: Blitz,
-  snakes: Snakes,
   mines: Mines,
   "mines-battles": MinesBattles,
   plinko: Plinko,
@@ -65,9 +55,11 @@ const PAGES: Partial<Record<GameId, ComponentType>> = {
 
 export function Play() {
   const { id } = useParams();
+  const { donutCashier } = useOutletContext<ShellContext>();
   if (id === "flip") return <Navigate to="/game/coinflip" replace />;
   const game = gameById(id);
   if (!game) return <Navigate to="/" replace />;
+  if (game.id === "coinflip" && donutCashier.data?.configured) return <DonutCoinflip />;
   const Page = PAGES[game.id];
   if (Page) return <Page key={game.id} />;
   if (game.id === "chess" || game.id === "connect-four" || game.id === "uno" || game.id === "pool")

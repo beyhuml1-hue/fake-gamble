@@ -3,7 +3,6 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatMult, payout } from "../lib/money";
 import { limboResult } from "../lib/math";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 import "./motion-upgrades.css";
 
@@ -45,7 +44,7 @@ export function Limbo() {
     setBusy(true);
     setWin(null);
     const rolled = limboResult();
-    const result = luckOn() ? Math.max(rolled, safeTarget) : rolled;
+    const result = rolled;
     const didWin = result >= safeTarget;
     const pay = didWin ? payout(stake, safeTarget) : 0;
     window.setTimeout(() => {

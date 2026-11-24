@@ -103,3 +103,5 @@
 @media(max-width:650px){.limbo-bottom-controls{grid-template-columns:1fr}.hilo-enhanced .hilo-card{width:120px;height:170px}.slide-reel-window{height:315px}.slide-prize-card{height:225px}.racing-car{left:calc(var(--lane-position) * .79)}.racing-world .racing-lane{height:55px}}
 @media(prefers-reduced-motion:reduce){.limbo-flight.is-flying .limbo-rocket,.rocket-flame,.hilo-enhanced.is-dealing .hilo-card,.traffic-car,.chicken-actor,.motion-round *, .market-chart.chart-growing{animation:none!important}.slide-reel-track.running,.racing-car,.chicken-actor{transition-duration:.01s!important}}
 
+
+.slide-item-icon{width:68px;height:68px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 8px 6px #0007)}

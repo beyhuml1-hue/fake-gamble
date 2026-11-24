@@ -5,7 +5,6 @@ import { GameLayout } from "../components/GameLayout";
 import { betCents, payout } from "../lib/money";
 import { chanceMultiplier } from "../lib/math";
 import { random } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const DIE_FACE = [
@@ -59,7 +58,7 @@ export function Dice() {
     sound.roll();
     setWin(null);
     let result = random() * 100;
-    if (luckOn()) result = mode === "under" ? chance * 0.45 : 100 - chance * 0.45;
+    
     const didWin = mode === "under" ? result < chance : result > 100 - chance;
     const pay = didWin ? payout(stake, mult) : 0;
     window.setTimeout(() => {

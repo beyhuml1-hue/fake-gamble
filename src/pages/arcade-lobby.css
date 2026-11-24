@@ -381,3 +381,7 @@
 @media (max-width: 370px) {
   .lobby-header-chat { display: none; }
 }
+
+.app.crafted.lobby-home-shell.game-shell .game-card{background:#151f31;border:1px solid #30415e;border-radius:12px;overflow:hidden}
+.app.crafted.lobby-home-shell.game-shell .game-panel{background:#1b2840}
+.app.crafted.lobby-home-shell.game-shell .game-stage{background-color:#101a2b}

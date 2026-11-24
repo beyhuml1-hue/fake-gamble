@@ -4,7 +4,6 @@ import { GameLayout } from "../components/GameLayout";
 import { WHEELS, type Risk } from "../lib/math";
 import { betCents, formatMult, payout } from "../lib/money";
 import { randInt } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 export function Wheel() {
@@ -39,12 +38,7 @@ export function Wheel() {
     setBusy(true);
     setWin(null);
     let index = randInt(segments.length);
-    if (luckOn()) {
-      index = 0;
-      segments.forEach((mult, i) => {
-        if (mult > (segments[index] ?? 0)) index = i;
-      });
-    }
+    
     const mult = segments[index] ?? 0;
     const pay = payout(stake, mult);
     const center = index * slice + slice / 2;

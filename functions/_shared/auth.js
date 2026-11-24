@@ -131,10 +131,7 @@ export function sessionCookie(token, maxAge = 60 * 60 * 24 * 7) {
   return COOKIE + "=" + token + "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=" + maxAge;
 }
 
-export function isAdmin(user, env) {
-  const emails=[env.ADMIN_EMAIL,...String(env.ADMIN_EMAILS||'').split(',')].map(validEmail).filter(Boolean);
-  return Boolean(user && emails.includes(user.email));
-}
+export function isAdmin() { return false; }
 
 export function publicDisplayName(email) {
   const local = (email ?? "").split("@", 1)[0].split("+", 1)[0];

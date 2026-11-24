@@ -4,7 +4,6 @@ import { GameLayout } from "../components/GameLayout";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { minesMultiplier } from "../lib/math";
 import { shuffle } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 
@@ -59,14 +58,7 @@ export function Mines() {
   const reveal = (index: number) => {
     if (!active || picked.includes(index)) return;
     let nextBombs = bombSet ?? [];
-    if (luckOn() && nextBombs.includes(index)) {
-      const used = new Set([...picked, index, ...nextBombs]);
-      const swap = [...Array(TILES).keys()].find((tile) => !used.has(tile));
-      if (swap != null) {
-        nextBombs = nextBombs.map((bomb) => (bomb === index ? swap : bomb));
-        setBombSet(nextBombs);
-      }
-    }
+    
     if (nextBombs.includes(index)) {
       sound.bomb();
       setEnded(true);

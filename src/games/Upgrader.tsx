@@ -4,7 +4,6 @@ import { GameLayout } from "../components/GameLayout";
 import { EDGE } from "../lib/math";
 import { betCents, formatMult, payout } from "../lib/money";
 import { random } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const SPIN_MS = 2600;
@@ -31,7 +30,7 @@ export function Upgrader() {
     if (!debit(stake)) return;
     setError("");
     setWin(null);
-    const roll = luckOn() ? chance * 0.25 : random();
+    const roll = random();
     const didWin = roll < chance;
     const pay = didWin ? payout(stake, target) : 0;
     const land = 1440 + roll * 360;

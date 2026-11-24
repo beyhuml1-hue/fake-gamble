@@ -2,7 +2,6 @@ import { useState } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { EDGE } from "../lib/math";
-import { luckOn } from "../lib/luck";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { random } from "../lib/random";
 import { sound } from "../lib/sound";
@@ -61,7 +60,7 @@ export function Stripmine() {
     if (!active) return;
     const next = step + 1;
     setSwing((value) => value + 1);
-    if (!luckOn() && random() > survive) {
+    if (random() > survive) {
       setStep(next);
       setDead(true);
       sound.bomb();

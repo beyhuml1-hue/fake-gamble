@@ -5,7 +5,6 @@ import { towerMultiplier } from "../lib/math";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { shuffle } from "../lib/random";
 import { sound } from "../lib/sound";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 const LEVELS = {
@@ -69,13 +68,7 @@ export function Dragon() {
   const choose = (tile: number) => {
     if (!active || !dragons) return;
     let rowDragons = dragons[row]!;
-    if (luckOn() && rowDragons.includes(tile)) {
-      const swap = [...Array(tiles).keys()].find((index) => index !== tile && !rowDragons.includes(index));
-      if (swap != null) {
-        rowDragons = rowDragons.map((dragon) => (dragon === tile ? swap : dragon));
-        setDragons(dragons.map((entry, index) => (index === row ? rowDragons : entry)));
-      }
-    }
+    
     const bad = rowDragons.includes(tile);
     const nextPicks = [...picks, tile];
     setPicks(nextPicks);

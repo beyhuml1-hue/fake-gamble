@@ -47,7 +47,7 @@ test("Retired simulated card funding cannot add money",async()=>{
   }),env);
   const payload=(cents,id=crypto.randomUUID())=>({id,cents,number,expiry,cvc});
   assert.equal((await (await get("alice")).json()).remainingCents,null);
-  assert.equal((await (await get("owner")).json()).remainingCents,12500);
+  assert.equal((await (await get("owner")).json()).remainingCents,null);
   assert.equal((await post("alice",payload(100),"https://other.example")).status,403);
   assert.equal((await post("",payload(100))).status,401);
   assert.equal((await post("alice",payload(100))).status,410);
@@ -115,9 +115,9 @@ test("Homepage retains stats; Plinko has independent normal paths; free wallet n
  assert.match(source("../src/pages/Lobby.tsx"),/HomeSpotlight history/);
  assert.match(source("../src/games/Plinko.tsx"),/sway/);
  assert.match(source("../src/games/Plinko.tsx"),/random\(\) < \.5/);
- assert.match(source("../src/games/Plinko.tsx"),/hotBin/);
+ assert.doesNotMatch(source("../src/games/Plinko.tsx"),/hotBin|luckOn/);
  const cashier=source("../src/components/Cashier.tsx");
- assert.doesNotMatch(cashier,/className="plastic"|withdrawToCard|depositFromCard/);
+ assert.doesNotMatch(cashier,/className="plastic"|depositFromCard/);
  assert.doesNotMatch(cashier,/Card number|Expiry date|Security code|demo-card/);
  assert.doesNotMatch(cashier,/credit\(/);
  assert.match(cashier,/Top-ups are disabled/);

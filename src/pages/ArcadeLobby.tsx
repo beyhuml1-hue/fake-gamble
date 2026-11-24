@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { Link, useLocation, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
 import { Icon } from "../components/Icons";
@@ -9,8 +9,7 @@ import "./arcade-lobby.css";
 
 export const arcadeCategories = [
   { id: "originals", label: "Originals", icon: "dice" },
-  { id: "slots", label: "Slots", icon: "blackjack" },
-  { id: "cases", label: "Cases & Packs", icon: "packs" },
+  { id: "packs", label: "Packs", icon: "packs" },
 ] as const;
 
 const coverTones: Partial<Record<GameId, string>> = {
@@ -21,8 +20,6 @@ const coverTones: Partial<Record<GameId, string>> = {
   farmyard: "amber", beacon: "teal", vault: "violet",
   packs: "indigo", cases: "teal", "case-battles": "red", rips: "magenta",
 };
-const slots = new Set(["farmyard", "vault", "beacon"]);
-const cases = new Set(["packs", "cases", "case-battles", "rips"]);
 const historicNames = new Map([["derby", "pig-race"]]);
 type Game = (typeof GAMES)[number];
 
@@ -33,32 +30,24 @@ const catalog = [
 ];
 
 function gameCategory(id: string) {
-  if (slots.has(id)) return "slots";
-  if (cases.has(id)) return "cases";
-  return "originals";
+  return id === "packs" ? "packs" : "originals";
 }
 
-function GameRow({ title, icon, games, compact }: {
-  title: string; icon: string; games: Game[]; compact: boolean;
+function GameRow({ title, icon, games }: {
+  title: string; icon: string; games: Game[];
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = compact && !expanded ? games.slice(0, 5) : games;
 
   return <section className="lobby-game-row">
     <h2><Icon name={icon} />{title}</h2>
     <div className="arcade-grid">
-      {visible.map(game => <Link key={game.id} to={`/game/${game.id}`} className="arcade-tile"
+      {games.map(game => <Link key={game.id} to={`/game/${game.id}`} className="arcade-tile"
         data-cover-tone={coverTones[game.id]} title={game.blurb}
         style={coverTones[game.id] ? { "--cover-object": `url("/covers/arcade/${game.id}-object.webp")` } as CSSProperties : undefined}>
         <span className="arcade-art" data-game={game.id} aria-hidden="true" />
         <strong>{game.name}</strong>
       </Link>)}
     </div>
-    {compact && games.length > 5 && <div className="lobby-row-more">
-      <button type="button" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>
-        {expanded ? "Show less" : "Show more"}
-      </button>
-    </div>}
+
   </section>;
 }
 
@@ -103,7 +92,7 @@ export function ArcadeLobby() {
           </div>
         </div>
         <h1>BlockBet <span>Arcade</span></h1>
-        <p>Originals, slots and packs with Play USD.</p>
+        <p>Explore all games and Packs.</p>
         <Link className="lobby-cta" to="/#originals" onClick={() => setQuery("")}>Explore games</Link>
       </section>
       <section className="arcade-hero-card lobby-wallet-card">
@@ -129,11 +118,11 @@ export function ArcadeLobby() {
       </label>
     </div>
 
-    {recentOnly && games.length > 0 && <GameRow title="Recently played" icon="casino" games={games} compact={false} />}
+    {recentOnly && games.length > 0 && <GameRow title="Recently played" icon="casino" games={games} />}
     {!recentOnly && arcadeCategories.map(item => {
       const rowGames = games.filter(game => gameCategory(game.id) === item.id);
       return rowGames.length > 0 && <GameRow key={item.id} title={item.id === "originals" ? "BlockBet Originals" : item.label}
-        icon={item.icon} games={rowGames} compact={!active && !term} />;
+        icon={item.icon} games={rowGames} />;
     })}
     {!games.length && <p className="empty-row">{recentOnly && !term ? "No recently played games yet." : "No games found."}</p>}
     <HomeSpotlight history={history} />

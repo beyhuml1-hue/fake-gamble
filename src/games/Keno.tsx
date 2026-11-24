@@ -5,7 +5,6 @@ import { GameLayout } from "../components/GameLayout";
 import { KENO_PAY } from "../lib/math";
 import { betCents, formatMult, payout } from "../lib/money";
 import { shuffle } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 
 export function Keno() {
@@ -46,9 +45,7 @@ export function Keno() {
     setError("");
     setBusy(true);
     const pool = Array.from({ length: 40 }, (_, i) => i + 1);
-    const draw = luckOn()
-      ? shuffle([...picks, ...shuffle(pool.filter((n) => !picks.includes(n))).slice(0, Math.max(0, 10 - picks.length))]).slice(0, 10)
-      : shuffle(pool).slice(0, 10);
+    const draw = shuffle(pool).slice(0, 10);
     const hitCount = picks.filter((n) => draw.includes(n)).length;
     const mult = KENO_PAY[picks.length]?.[hitCount] ?? 0;
     const pay = payout(stake, mult);

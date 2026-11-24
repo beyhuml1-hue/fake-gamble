@@ -2,10 +2,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AgeGate } from "./components/AgeGate";
 import { AuthProvider } from "./components/AuthProvider";
 import { AppShell } from "./components/AppShell";
-import { LuckHotkey } from "./components/LuckHotkey";
 import { Lobby } from "./pages/Lobby";
 import { Play } from "./pages/Play";
-import { Admin } from "./pages/Admin";
 import { Community } from "./pages/Community";
 import { HighlightPage } from "./components/Highlights";
 import { Race } from "./pages/Race";
@@ -18,12 +16,10 @@ export default function App() {
       <AuthProvider>
         {(walletIdentity, adjustment) => (
           <WalletProvider key={walletIdentity} email={walletIdentity} adjustment={adjustment}>
-            <LuckHotkey />
             <BrowserRouter basename={/^\/classic(?:\/|$)/.test(window.location.pathname) ? "/classic" : "/"}>
               <Routes>
                 <Route element={<AppShell />}>
                   <Route index element={<Lobby />} />
-                  <Route path="admin" element={<Admin />} />
                   <Route path="chat" element={<Community />} />
                   <Route path="highlight" element={<HighlightPage />} />
                   <Route path="race" element={<Race />} />

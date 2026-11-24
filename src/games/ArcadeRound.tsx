@@ -4,7 +4,6 @@ import { GameLayout } from "../components/GameLayout";
 import { CASES, caseImage } from "../data/cases";
 import { betCents, formatUSD, payout } from "../lib/money";
 import { randInt, random, shuffle } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 import "./motion-upgrades.css";
 
@@ -134,7 +133,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
         if (turn >= 5) return;
         pause(520);
         setTurn(turn+1);
-        const next = draw.map(value => value > 0 && (luckOn() || random() < [0.72,0.63,0.52][difficulty]!) ? value * [1.3,1.45,1.75][difficulty]! : 0);
+        const next = draw.map(value => value > 0 && (random() < [0.72,0.63,0.52][difficulty]!) ? value * [1.3,1.45,1.75][difficulty]! : 0);
         setDraw(next);
         if (next.every(value=>value===0)) finish(stake,claimed,"Draw complete");
         return;
@@ -143,7 +142,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
         let index = 0;
         const final = cards.map((card, slot) => held.includes(slot) ? card : deck[index++]!);
         const rival = deck.slice(5,10);
-        const score = luckOn() ? 1 : Math.sign(handScore(final) - handScore(rival));
+        const score = Math.sign(handScore(final) - handScore(rival));
         setCards(final);
         const multiplier=score===1?1.96:score===0?1:0;
         pending.current={stake,claimed:multiplier};
@@ -188,7 +187,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       return;
     }
     if (isStocks) {
-      const candles=Array.from({length:36},()=>luckOn()?(selected===0?.5:-.5):(random()-.5)*2);
+      const candles=Array.from({length:36},()=>(random()-.5)*2);
       const change=candles.reduce((sum,value)=>sum+value,0);
       const positions=candles.map((_,i)=>50+candles.slice(0,i+1).reduce((sum,value)=>sum+value,0)*3.8);
       const multiplier=(change>=0?0:1)===selected?1.96:0;
@@ -200,7 +199,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     }
     if (isSlide) {
       const threshold=Math.min(1000,Math.max(1.01,target));
-      const landing=luckOn()?Math.min(1000,threshold+1):Math.max(1,Math.floor(98/random())/100);
+      const landing=Math.max(1,Math.floor(98/random())/100);
       const strip=Array.from({length:34},()=>Math.max(1,Math.floor(98/random())/100));
       strip[28]=landing;
       pending.current={stake:wager,claimed:landing>=threshold?threshold:0};
@@ -217,7 +216,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       return;
     }
     let raceRoll = randInt(100);
-    const outcome = luckOn() ? selected : game.id === "pig-race" ? derbyWeights.findIndex(weight=>(raceRoll-=weight)<0) :
+    const outcome = game.id === "pig-race" ? derbyWeights.findIndex(weight=>(raceRoll-=weight)<0) :
       isDouble ? doubleReel[randInt(doubleReel.length)]! : randInt(options.length);
     const multiplier = selected !== outcome ? 0 : isDerby ? derbyPayouts[selected]! : doublePayouts[selected]!;
     pending.current={stake:wager,claimed:multiplier};
@@ -241,7 +240,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
   function move(tile: number) {
     if (actionLocked.current || !stake || !board) return;
     const chance=board[turn]!;
-    const sink=shuffle(lavaTiles).filter(index=>!luckOn()||index!==tile).slice(0,49-Math.round(49*chance));
+    const sink=shuffle(lavaTiles).slice(0,49-Math.round(49*chance));
     const next=turn+1;
     const mult=total/chance;
     const lost=sink.includes(tile);
@@ -272,7 +271,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
     if (actionLocked.current || !stake) return;
     setLastThrow(hand);
     pause(450);
-    const rival = luckOn()?(hand+2)%3:randInt(3);
+    const rival = randInt(3);
     const result = "Rival threw " + options[rival];
     if (rival === hand) { setMessage(result + " · Tie. Throw again."); return; }
     if ((hand+2)%3 !== rival) { finish(stake,0,result); return; }
@@ -381,7 +380,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
           <div key={animationId} className={"slide-reel-track"+(slideRunning?" running":"")}>
             {(slideCards.length?slideCards:[1.24,1.63,5.44,1.44,1.78,1.09,2.5,1.3]).map((value,i)=>
               <div key={i} className="slide-prize-card" data-tier={value>=10?"gold":value>=2?"blue":"slate"} data-winner={!!slideCards.length&&i===28&&!animating}>
-                <strong>{value.toFixed(2)}×</strong><span className="slide-gem" aria-hidden="true">◆</span>
+                <strong>{value.toFixed(2)}×</strong><img className="slide-item-icon" src={`/covers/slide/${value>=10?"gold":value>=2?"diamond":"coal"}.png`} alt="" />
               </div>)}
           </div>
           <span className="slide-reel-pointer" aria-hidden="true"/>

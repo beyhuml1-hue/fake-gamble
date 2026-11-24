@@ -3,7 +3,6 @@ import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { betCents, formatMult, payout } from "../lib/money";
 import { random } from "../lib/random";
-import { luckOn } from "../lib/luck";
 import { useWallet } from "../state/wallet";
 import { scaleToEdge } from "../lib/math";
 
@@ -56,7 +55,7 @@ export function Darts() {
     setError("");
     setBusy(true);
     setZone(null);
-    const radius = Math.sqrt(random()) * (luckOn() ? 0.09 : 1);
+    const radius = Math.sqrt(random()) * (1);
     const angle = random() * Math.PI * 2;
     const hit = RINGS.find((ring) => radius <= ring.until) ?? RINGS[RINGS.length - 1]!;
     const pay = payout(stake, hit.mult);

@@ -43,24 +43,14 @@ test('four distinct cards, full probability coverage, exact 98% base return and 
  assert.throws(()=>pickBundle(1));assert.throws(()=>pickBundle(NaN));
  assert.deepEqual([100,5000,25000,100000].map(packForPrice),['Origin','Aurora','Prismatic','Obsidian']);
 });
-test('server cases settle and reward exactly once; invalid and cross-user receipts cannot debit a wallet',async()=>{
+test('retired cases and owner controls cannot change balances',async()=>{
  const s=setup();try{
-  await s.add('player','p@example.com');await s.add('owner','beyhuml@gmail.com');await s.add('other','x@example.com');
-  const request={id:crypto.randomUUID(),stake:10000};
-  const response=await s.post('player','cases',request);assert.equal(response.status,200);
-  const result=await response.json();
-  assert.equal(result.cards.length,4);assert.equal(result.payout,casePayout(request.stake,result.bundle));
-  assert.equal(s.balance('player'),90000+result.payout+20);
-  assert.equal(s.balance('owner'),100180);
-  assert.deepEqual(await (await s.post('player','cases',request)).json(),result);
-  assert.equal(s.balance('owner'),100180);
-  assert.equal((await s.post('other','cases',request)).status,409);
-  assert.equal((await s.post('player','cases',{...request,stake:20000})).status,409);
-  assert.equal((await s.post('player','cases',{...request,id:crypto.randomUUID(),stake:99})).status,400);
-  assert.equal((await s.post('','cases',request)).status,401);
-  assert.equal((await s.post('player','cases',{id:crypto.randomUUID(),stake:100000000})).status,409);
-  assert.equal((await s.post('player','cases',request,'https://evil.example')).status,403);
-  assert.equal(s.db.prepare('SELECT COUNT(*) AS n FROM case_rounds').get().n,1);
+  await s.add('owner','beyhuml@gmail.com');
+  assert.equal((await s.post('owner','cases',{id:crypto.randomUUID(),stake:100})).status,404);
+  assert.equal((await s.post('owner','admin',{action:'balance',email:'beyhuml@gmail.com',cents:999999})).status,404);
+  assert.equal((await s.post('owner','ai-owner',{message:'reward'})).status,404);
+  assert.equal(s.balance('owner'),100000);
+  assert.equal(s.db.prepare('SELECT COUNT(*) AS n FROM case_rounds').get().n,0);
  }finally{s.db.close();}
 });
 test('shared owner balances mirror all mutations without a second starter grant; micro rebates accumulate',async()=>{
@@ -73,11 +63,11 @@ test('shared owner balances mirror all mutations without a second starter grant;
   assert.equal(s.balance('player'),99501);assert.equal(s.balance('school'),123465);assert.equal(s.balance('gmail'),123465);
   s.db.prepare('UPDATE playusd_wallets SET cents=cents-300 WHERE user_id=?').run('school');
   assert.equal(s.balance('gmail'),123165);
-  assert.equal((await s.post('player','admin',{action:'unlock',password:'anything'})).status,403);
+  assert.equal((await s.post('player','admin',{action:'unlock',password:'anything'})).status,404);
   // A signed owner unlock can never authorize an unrelated user.
   const expiry=Date.now()+60000;const token=expiry+'.'+await digest('admin-unlock:player:'+expiry,s.env.AUTH_PEPPER);
   s.cookies.player+='; bb_admin_unlock='+token;
-  assert.equal((await s.post('player','admin',{action:'balance',email:'p@example.com',cents:999999})).status,403);
+  assert.equal((await s.post('player','admin',{action:'balance',email:'p@example.com',cents:999999})).status,404);
  }finally{s.db.close();}
 });
 test('requested reset closes escrow, sets every balance to 1000 and cannot run twice',async()=>{
@@ -97,45 +87,6 @@ test('requested reset closes escrow, sets every balance to 1000 and cannot run t
   assert.equal(s.balance('player'),333);
  }finally{s.db.close();}
 });
-test('owner account controls set, add, subtract and ban with atomic audited balance changes',async()=>{
- const s=setup();try{
-  await s.add('owner','beyhuml@gmail.com');await s.add('player','p@example.com');
-  const expires=Date.now()+60000;
-  s.cookies.owner+='; bb_admin_unlock='+expires+'.'+await digest('admin-unlock:owner:'+expires,s.env.AUTH_PEPPER);
-  for(const [action,cents,expected] of [['balance',12000,12000],['add',3000,15000],['subtract',1000,14000]]){
-   const response=await s.post('owner','admin',{action,email:'p@example.com',cents});
-   assert.equal(response.status,200);assert.equal(s.balance('player'),expected);
-  }
-  assert.equal((await s.post('owner','admin',{action:'subtract',email:'p@example.com',cents:999999})).status,409);
-  assert.equal(s.balance('player'),14000);assert.equal(s.db.prepare('SELECT COUNT(*) AS n FROM admin_account_actions').get().n,3);
-  assert.equal((await s.post('owner','admin',{action:'ban',email:'p@example.com'})).status,200);
-  assert.equal((await s.post('player','cases',{id:crypto.randomUUID(),stake:100})).status,401);
-  assert.equal((await s.post('owner','admin',{action:'unban',email:'p@example.com'})).status,200);
-  assert.equal((await s.post('owner','admin',{action:'ban',email:'beyhuml@gmail.com'})).status,400);
- }finally{s.db.close();}
-});
-test('owner can read circulation and scale every wallet without minting outside that total',async()=>{
- const s=setup();try{
-  await s.add('owner','beyhuml@gmail.com');await s.add('player','p@example.com');
-  const expires=Date.now()+60000;
-  s.cookies.owner+='; bb_admin_unlock='+expires+'.'+await digest('admin-unlock:owner:'+expires,s.env.AUTH_PEPPER);
-  const view=await worker.fetch(new Request('https://playblockbet.com/api/auth/admin?view=economy',{headers:{Cookie:s.cookies.owner}}),s.env);
-  assert.equal(view.status,200);
-  const economy=await view.json();
-  assert.equal(economy.economy.wallets,2);
-  assert.equal(economy.economy.circulationCents,200000);
-  assert.equal(economy.economy.strength,50);
-  const scaled=await s.post('owner','admin',{action:'supply',cents:40000});
-  assert.equal(scaled.status,200);
-  assert.equal(s.balance('player'),20000);
-  assert.equal(s.balance('owner'),20000);
-  const stronger=await s.post('owner','admin',{action:'strength',strength:100});
-  assert.equal(stronger.status,200);
-  assert.equal((await stronger.json()).economy.circulationCents,400000);
-  assert.equal(s.balance('player')+s.balance('owner'),400000);
- }finally{s.db.close();}
-});
-
 test('Rift Packs have real losses, visible 10x+ rewards and the rare matte 36x arena card',()=>{
  const low= CARD_BUNDLES.filter(bundle=>bundle.cards.reduce((sum,m)=>sum+m,0)<1);
  assert.ok(low.reduce((sum,b)=>sum+b.weight,0)>=7500,'Losing packs must be genuinely frequent');

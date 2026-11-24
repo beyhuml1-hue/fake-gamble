@@ -7,11 +7,15 @@ import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 import { BetsTable } from "./BetsTable";
 import { Cashier } from "./Cashier";
+import { DonutCashier, dsmp, useDonutCashier } from "./DonutCashier";
 import { Icon } from "./Icons";
 import { Community } from "../pages/Community";
 import { arcadeCategories } from "../pages/ArcadeLobby";
 
-export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>>; muted: boolean; toggleSound: () => void };
+export type ShellContext = {
+  query: string; setQuery: Dispatch<SetStateAction<string>>; muted: boolean; toggleSound: () => void;
+  donutCashier: ReturnType<typeof useDonutCashier>; openDonutCashier: () => void;
+};
 
 function useRollingBalance(cents: number) {
   const [shown, setShown] = useState(cents);
@@ -51,7 +55,7 @@ export function AppShell() {
     setSiteStyle(style);
     try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
   }
-  const { displayName, isGuest, isAdmin, canSignIn, logout, showSignIn, showSignUp } = useAuth();
+  const { displayName, isGuest, canSignIn, logout, showSignIn, showSignUp } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
@@ -59,6 +63,10 @@ export function AppShell() {
   const [open, setOpen] = useState(false);
   const [lobbyNavCollapsed, setLobbyNavCollapsed] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
+  const donutCashier = useDonutCashier(!isGuest);
+  const donut = donutCashier.data;
+  const [donutOpen, setDonutOpen] = useState(false);
+  const promptedLink = useRef(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [muted, setMuted] = useState(() => sound.muted);
   const toggleSound = () => setMuted(sound.toggle());
@@ -83,8 +91,21 @@ export function AppShell() {
     if (cashierNonce > 0) setWalletOpen(true);
   }, [cashierNonce]);
 
+  useEffect(() => {
+    if (donut?.configured && !donut.wallet && !promptedLink.current) {
+      promptedLink.current = true;
+      setDonutOpen(true);
+    }
+    if (isGuest) {
+      promptedLink.current = false;
+      setDonutOpen(false);
+    }
+  }, [donut?.configured, donut?.wallet, isGuest]);
+
+  const practiceGame = location.pathname.startsWith("/game/") && location.pathname !== "/game/coinflip";
+  const useDsmp = Boolean(donut?.configured && !practiceGame);
   const showChat = chatOpen && location.pathname !== "/chat";
-  const arcadeChrome = !classic && ["/", "/game/flight"].includes(location.pathname);
+  const arcadeChrome = !classic;
   const lobbyNavClass = (hash: string) => location.hash === hash ? "nav-item active" : "nav-item";
   const resetSearch = () => {
     setQuery("");
@@ -121,8 +142,6 @@ export function AppShell() {
               {arcadeCategories.map(item => <Link key={item.id} to={"/#" + item.id}
                 className={lobbyNavClass("#" + item.id)} aria-current={location.hash === "#" + item.id ? "page" : undefined}
                 onClick={resetSearch}><Icon name={item.icon} />{item.label}</Link>)}
-              <NavLink to="/game/case-battles" className="nav-item"><Icon name="packs" />Case Battles</NavLink>
-              <NavLink to="/game/rips" className="nav-item"><Icon name="packs" />Rips</NavLink>
             </div>
             <div>
               <NavLink to="/race" className="nav-item"><Icon name="stats" />Leaderboard</NavLink>
@@ -205,10 +224,11 @@ export function AppShell() {
           {(!arcadeChrome || !isGuest || !canSignIn) && <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
             <span className="usd-mark">$</span>
             <span className="bal">
-              <strong>{formatAmount(rolling.shown)}</strong>
-              <small>Simulated Play USD</small>
+              <strong>{useDsmp ? dsmp(donut?.wallet?.balance ?? 0) : formatAmount(rolling.shown)}</strong>
+              <small>{useDsmp ? "DonutSMP balance" : "Practice credits"}</small>
             </span>
-            <button type="button" className="wallet-btn" aria-label="Open demo wallet" onClick={openCashier}>
+            <button type="button" className="wallet-btn" aria-label={useDsmp ? "Open DSMP wallet" : "Open practice wallet"}
+              onClick={useDsmp ? () => setDonutOpen(true) : openCashier}>
               Wallet
             </button>
           </div>}
@@ -243,7 +263,6 @@ export function AppShell() {
               <div className="account-menu">
                 <strong>{displayName || "Guest profile"}</strong>
                 <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · synced Play USD wallet"}</p>
-                {isAdmin && <NavLink to="/admin" onClick={() => setAccountOpen(false)}>Manage accounts</NavLink>}
                 {isGuest
                   ? (canSignIn
                       ? <button type="button" onClick={showSignIn}>Log in or sign up</button>
@@ -255,10 +274,11 @@ export function AppShell() {
         </header>
 
         <div className="content" ref={contentRef}>
-          <Outlet context={{ query, setQuery, muted, toggleSound } satisfies ShellContext} />
+          <Outlet context={{ query, setQuery, muted, toggleSound, donutCashier,
+            openDonutCashier: () => setDonutOpen(true) } satisfies ShellContext} />
           {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
-            <p>Play money only - no real value.</p>
+            <p>{donut?.configured ? "DonutSMP uses in-game currency. Practice credits cannot be withdrawn." : "Play money only - no real value."}</p>
           </footer>
         </div>
       </div>
@@ -281,6 +301,7 @@ export function AppShell() {
         </div>)}
       </section>}
       <Cashier open={walletOpen} onClose={() => setWalletOpen(false)} />
+      <DonutCashier open={donutOpen} onClose={() => setDonutOpen(false)} cashier={donutCashier} />
     </div>
   );
 }
