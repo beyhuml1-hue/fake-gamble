@@ -57,6 +57,7 @@ export type CashierMode = "deposit" | "withdraw";
 
 type CashierProps = {
   mode: CashierMode;
+  initialPlayer: string;
   onModeChange: (mode: CashierMode) => void;
   open: boolean;
   onClose: () => void;
@@ -65,10 +66,10 @@ type CashierProps = {
   cashier: ReturnType<typeof useDonutCashier>;
 };
 
-export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn, mode, onModeChange }: CashierProps) {
+export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn, mode, onModeChange, initialPlayer }: CashierProps) {
   const { data, refresh, accept } = cashier;
   const [amount, setAmount] = useState("");
-  const [player, setPlayer] = useState("");
+  const [player, setPlayer] = useState(initialPlayer);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -132,7 +133,7 @@ export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn, mode,
         {!signedIn && <button type="button" className="wallet-btn" onClick={onSignIn}>Sign in to BlockBet</button>}
         {!online && <p role="status">Cashier offline. Deposits and withdrawals are paused.</p>}
         {signedIn && !wallet && !pending && <form onSubmit={event => void submit("link", event)}>
-          <h2>Sign in with Minecraft</h2>
+          <h2>Link your in-game account</h2>
           <label>In-game name
             <input value={player} maxLength={17} autoComplete="off" pattern="[.]?[A-Za-z0-9_]{1,16}"
               placeholder="Your IGN" onChange={event => setPlayer(event.target.value)} required />

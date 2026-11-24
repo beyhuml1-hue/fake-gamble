@@ -56,7 +56,7 @@ export function AppShell() {
     setSiteStyle(style);
     try { localStorage.setItem("blockbet.site-style", style); } catch { /* unavailable */ }
   }
-  const { displayName, isGuest, canSignIn, logout, showSignIn, showSignUp } = useAuth();
+  const { displayName, isGuest, canSignIn, logout, showSignIn, showSignUp, linkPlayer } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { balance, history, starterGrant, dismissStarterGrant, cashierNonce, notifications, dismissNotification } = useWallet();
@@ -363,7 +363,7 @@ export function AppShell() {
         <p>Use your simulated balance to play BlockBet games.</p>
         <button type="button" className="bet-btn" onClick={dismissStarterGrant}>Explore the arcade</button>
       </AccountDialog>}
-      <DonutCashier open={donutOpen} mode={cashierMode} onModeChange={setCashierMode} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
+      <DonutCashier initialPlayer={linkPlayer} open={donutOpen} mode={cashierMode} onModeChange={setCashierMode} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
         onSignIn={() => {
           try { sessionStorage.setItem("blockbet.return-to-wallet", "yes"); } catch { /* Storage may be blocked. */ }
           setDonutOpen(false);

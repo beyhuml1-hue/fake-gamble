@@ -17,6 +17,7 @@ type AuthValue = {
   logout: () => Promise<void>;
   showSignIn: () => void;
   showSignUp: () => void;
+  linkPlayer: string;
 };
 const AuthContext = createContext<AuthValue | null>(null);
 
@@ -44,6 +45,10 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [method, setMethod] = useState<"game" | "email">("email");
+  const [gameName, setGameName] = useState("");
+  const [bedrock, setBedrock] = useState(false);
+  const [linkPlayer, setLinkPlayer] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -171,10 +176,32 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
       }
     }
     setAccount(null);
-    setEmail(""); switchTo("login");
+    setEmail("");
+    setLinkPlayer("");
+    setMethod("email");
+    switchTo("login");
   };
 
-  const showSignIn = () => switchTo("login");
+  function openAccount(next: "login" | "signup") {
+    setMethod("game");
+    setLinkPlayer("");
+    setGameName("");
+    setBedrock(false);
+    switchTo(next);
+  }
+
+  function closeAccount() {
+    setLinkPlayer("");
+    setPhase("guest");
+  }
+
+  function continueWithPlayer(event: FormEvent) {
+    event.preventDefault();
+    const name = gameName.trim();
+    if (!/^[A-Za-z0-9_]{1,16}$/.test(name)) return;
+    setLinkPlayer(bedrock ? `.${name}` : name);
+    setMethod("email");
+  }
   const signedIn = phase === "authenticated";
   const editing = phase === "login" || phase === "signup" || phase === "verify";
   const context: AuthValue = {
@@ -184,8 +211,9 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
     isGuest: !signedIn,
     canSignIn: enabled,
     logout,
-    showSignIn,
-    showSignUp: () => switchTo("signup"),
+    showSignIn: () => openAccount("login"),
+    showSignUp: () => openAccount("signup"),
+    linkPlayer: signedIn ? linkPlayer : "",
   };
   if (phase === "loading") {
     return <div className="auth-screen"><div className="auth-card">
@@ -196,12 +224,12 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
   return (
     <AuthContext.Provider value={context}>
     <div className="auth-app" inert={editing}>{children(signedIn ? account?.email ?? email : "phone", signedIn ? account?.balanceAdjustment : null)}</div>
-    {editing && <div className="auth-screen auth-overlay" onKeyDown={event=>{if(event.key==="Escape"&&!busy)setPhase("guest");}}>
+    {editing && <div className="auth-screen auth-overlay" onKeyDown={event=>{if(event.key==="Escape"&&!busy)closeAccount();}}>
       <section className="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-dialog-title">
         <div className="auth-heading">
           <span className="auth-logo">B</span>
           <div><strong>BlockBet</strong><small>Player account</small></div>
-          <button type="button" className="auth-close" disabled={busy} aria-label="Close sign-in" onClick={()=>setPhase("guest")}>&times;</button>
+          <button type="button" className="auth-close" disabled={busy} aria-label="Close sign-in" onClick={closeAccount}>&times;</button>
         </div>
         {phase === "verify" ? (
           <>
@@ -223,12 +251,29 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
           </>
         ) : (
           <>
-            <h1 id="auth-dialog-title">{phase === "signup" ? "Create your BlockBet account" : "Sign in to BlockBet"}</h1>
-            <p>{phase === "signup" ? "We'll email you a six-digit code to confirm your address." : "Enter your email and password to access your account."}</p>
-            <div className="auth-switch" role="group" aria-label="Account access">
-              <button type="button" className={phase === "login" ? "selected" : ""} onClick={() => switchTo("login")} aria-pressed={phase === "login"}>Log in</button>
-              <button type="button" className={phase === "signup" ? "selected" : ""} onClick={() => switchTo("signup")} aria-pressed={phase === "signup"}>Sign up</button>
+            <h1 id="auth-dialog-title">Your BlockBet account</h1>
+            <div className="auth-method" role="group" aria-label="Account method">
+              <button type="button" aria-pressed={method === "game"} disabled={busy} onClick={() => setMethod("game")}>Minecraft</button>
+              <button type="button" aria-pressed={method === "email"} disabled={busy} onClick={() => setMethod("email")}>Email</button>
             </div>
+            {method === "game" ? <form className="auth-form auth-game-form" onSubmit={continueWithPlayer}>
+              <label htmlFor="account-player">Minecraft username</label>
+              <input id="account-player" name="player" placeholder="Enter your in-game name"
+                autoComplete="off" autoCapitalize="none" spellCheck={false} autoFocus
+                pattern="[A-Za-z0-9_]{1,16}" maxLength={16} required value={gameName}
+                onChange={event => setGameName(event.target.value)} />
+              <label className="auth-bedrock"><input type="checkbox" checked={bedrock}
+                onChange={event => setBedrock(event.target.checked)} /> I play Bedrock Edition</label>
+              <p>Continue with your BlockBet email account to link this player.</p>
+              <button className="bet-btn auth-submit" type="submit">Continue</button>
+            </form> : <>
+              {linkPlayer && <p className="auth-link-player">Player to link after sign-in <strong>{linkPlayer}</strong></p>}
+              <div className="auth-switch" role="group" aria-label="Email account access">
+                <button type="button" className={phase === "login" ? "selected" : ""} disabled={busy}
+                  onClick={() => switchTo("login")} aria-pressed={phase === "login"}>Log in</button>
+                <button type="button" className={phase === "signup" ? "selected" : ""} disabled={busy}
+                  onClick={() => switchTo("signup")} aria-pressed={phase === "signup"}>Create account</button>
+              </div>
             <form className="auth-form" onSubmit={phase === "signup" ? submitSignup : submitLogin}>
               <label htmlFor="account-email">Email address</label>
               <input id="account-email" type="email" name="email" placeholder="you@example.com"
@@ -248,12 +293,13 @@ export function AuthProvider({ children }: { children: (key: string, adjustment?
                 {busy ? "Please wait…" : phase === "signup" ? "Create account" : "Log in"}
               </button>
             </form>
+            </>}
           </>
         )}
-        {phase === "signup" && <p className="auth-starter">New Play USD wallets start with 1,000,000 simulated Play USD.</p>}
+        {phase === "signup" && method === "email" && <p className="auth-starter">New Play USD wallets start with 1,000,000 simulated Play USD.</p>}
         {notice && <p className="auth-notice" role="status">{notice}</p>}
         {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="auth-guest-link" type="button" onClick={() => setPhase("guest")}>
+        <button className="auth-guest-link" type="button" disabled={busy} onClick={closeAccount}>
           Continue as guest <span aria-hidden="true">→</span>
         </button>
         <p className="auth-fineprint">18+ · Play USD is simulated.</p>
