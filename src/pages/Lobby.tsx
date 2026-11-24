@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useLocation, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
-import { ArcadeHeroArt, DiscordHeroArt, GiftHeroArt, TileArt } from "../components/DepoArt";
+import { ArcadeHeroArt, DiscordHeroArt, GiftHeroArt } from "../components/DepoArt";
+import { gameArtUrl } from "../lib/gameArt";
 import { CASE_TILES, ORIGINAL_TILES, TILE_BORDER, type LobbyTile } from "../data/lobbyTiles";
 import { GAMES } from "../data/games";
 import { formatCoins } from "../lib/money";
@@ -53,9 +54,10 @@ function TabIcon({ name }: { name: string }) {
 
 function Tile({ tile }: { tile: LobbyTile }) {
   const style = { "--tile": TILE_BORDER[tile.tone] ?? "#3b82f6" } as CSSProperties;
+  const src = gameArtUrl(tile.art);
   const body = (
     <>
-      <TileArt id={tile.art} />
+      {src ? <img className="depo-tile-art" src={src} alt="" draggable={false} /> : <span className="arcade-art depo-tile-art" data-game={tile.gameId ?? tile.art} aria-hidden="true" />}
       <strong>{tile.name}</strong>
     </>
   );
@@ -95,7 +97,7 @@ export function Lobby() {
       if (!game || seen.has(game.id)) continue;
       seen.add(game.id);
       const known = [...ORIGINAL_TILES, ...CASE_TILES].find((item) => item.gameId === game.id);
-      tiles.push(known ?? { id: game.id, name: game.name, art: "dice", tone: "blue", gameId: game.id });
+      tiles.push(known ?? { id: game.id, name: game.name, art: game.id, tone: "blue", gameId: game.id });
       if (tiles.length === 8) break;
     }
     return tiles;

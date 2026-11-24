@@ -29,7 +29,7 @@ export const ORIGINAL_TILES: LobbyTile[] = [
 export const CASE_TILES: LobbyTile[] = [
   { id: "cases", name: "Cases", art: "cases", tone: "blue", gameId: "cases" },
   { id: "case-battles", name: "Case Battles", art: "case-battles", tone: "amber", gameId: "case-battles" },
-  { id: "packs", name: "Rips", art: "packs", tone: "violet", gameId: "packs" },
+  { id: "packs", name: "Rips", art: "rips", tone: "violet", gameId: "packs" },
 ];
 
 export const TILE_BORDER: Record<string, string> = {

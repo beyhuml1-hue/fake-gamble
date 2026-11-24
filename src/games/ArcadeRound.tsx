@@ -299,7 +299,7 @@ export function ArcadeRound({game}: {game: {id: string; name: string; blurb: str
       </div>}
       {isSlide && <div className="slide-stage"><span className="slide-indicator" aria-hidden="true"/><strong>{result===null?"—":result.toFixed(2)+"×"}</strong>
         <div className="slide-strip" aria-label="Multiplier scale">{[1,1.25,1.5,1.75,2,2.5,3,4,5,7.5,10].map(value=>
-          <span key={value} data-hit={result!==null&&result>=value}>{value}×</span>)}</div>
+          <span key={value} data-hit={result!==null&&result>=value}>{value}×<img className="slide-item-icon" src={`/covers/slide/${value>=10?"gold":value>=2?"diamond":"coal"}.png`} alt="" /></span>)}</div>
       </div>}
       <p role="status" className="arcade-round-status">{message}</p>
     </div>

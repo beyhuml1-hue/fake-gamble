@@ -431,11 +431,16 @@
   border-radius: 16px;
   overflow: hidden;
   border: 3px solid var(--tile, #3b82f6);
-  background: #0b1c36;
   min-width: 0;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(120% 90% at 50% 18%, color-mix(in srgb, var(--tile) 42%, #16325c), #0c1a33 70%);
 }
-.depo-tile-art { width: 100%; height: 100%; display: block; }
+.depo-tile-art { width: 100%; height: 100%; display: block; object-fit: contain; padding: 7% 8% 24%; background: transparent; }
+.play-game-art { width: 42px; height: 42px; object-fit: contain; flex: none; }
+.slide-item-icon { width: 16px; height: 16px; image-rendering: pixelated; display: block; margin: 2px auto 0; }
+.upg-hub { display: grid; place-items: center; }
+.upg-hub img { width: 28px; height: 28px; object-fit: contain; image-rendering: pixelated; }
 .depo-tile strong {
   position: absolute;
   left: 0;

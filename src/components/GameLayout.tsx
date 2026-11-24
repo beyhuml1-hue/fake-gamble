@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { gameById } from "../data/games";
+import { gameArtUrl } from "../lib/gameArt";
 import { formatCoins, formatMult } from "../lib/money";
 import { useWallet } from "../state/wallet";
 
@@ -15,6 +16,7 @@ export function GameLayout({ title, note, panel, children }: {
 }) {
   const {id = ""} = useParams();
   const game = gameById(id);
+  const art = gameArtUrl(id);
   const room = rooms.has(id);
   const {history} = useWallet();
   const recent = history.filter(row => row.game === title || row.game === historicalNames[id]).slice(0, 6);
@@ -29,6 +31,7 @@ export function GameLayout({ title, note, panel, children }: {
     <section className={"game-page play-surface" + (room ? " play-room" : "")} data-play={id}>
       <header className="play-top">
         <div className="play-title">
+          {art && <img className="play-game-art" src={art} alt="" draggable={false} />}
           <h1>{title}</h1>
           {room && <small>{id === "pool" ? "Solo practice" : "VS Computer"}</small>}
         </div>

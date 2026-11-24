@@ -105,7 +105,7 @@ export function Upgrader() {
         <div className="upg-wheel" aria-hidden="true">
           <div className="upg-ring" style={{ background: `conic-gradient(from -90deg, #22c55e 0 ${arc}deg, #2c3034 ${arc}deg 360deg)` }} />
           <div className={spinning ? "upg-indicator spinning" : "upg-indicator"} style={{ transform: `rotate(${angle}deg)` }} />
-          <div className="upg-hub" />
+          <div className="upg-hub"><img src="/covers/slide/gold.png" alt="" /></div>
           <div className="upg-pointer" />
         </div>
         <p className={win == null ? "upg-result" : win ? "upg-result win" : "upg-result lose"} role="status">
