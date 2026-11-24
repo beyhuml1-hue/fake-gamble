@@ -102,22 +102,24 @@ test("DSMP verifies exact sender and amount, reserves a withdrawal and settles a
 
     const flushCooldown = () => db.exec("UPDATE donut_cashier_intents SET resolved_at=0 WHERE status='credited'");
     flushCooldown();
-    await json(post("deposit", { amount: 1500 }));
-    const deposit = receipt(".Alice", 1500, "1,500");
+    assert.equal((await view()).minimumDeposit, 100_000);
+    assert.equal((await post("deposit", { amount: 99_999 })).status, 400);
+    await json(post("deposit", { amount: 100_000 }));
+    const deposit = receipt(".Alice", 100_000, "100,000");
     await json(bridge(deposit));
     await json(bridge(deposit));
-    assert.equal((await view()).wallet.balance, code + 1500);
+    assert.equal((await view()).wallet.balance, code + 100_000);
 
     const flip = { amount: 100, pick: "heads", id: crypto.randomUUID(), payout: 999999999 };
     assert.equal((await website("alice", "donut-coinflip", flip)).status, 409);
     db.exec("UPDATE donut_game_reserve SET balance=500 WHERE id=1");
     const round = await json(website("alice", "donut-coinflip", flip));
     assert.equal(round.payout, round.outcome === "heads" ? 200 : 0);
-    assert.equal(round.balance, code + 1500 - 100 + round.payout);
+    assert.equal(round.balance, code + 100_000 - 100 + round.payout);
     assert.deepEqual(await json(website("alice", "donut-coinflip", flip)), round);
     assert.equal((await website("alice", "donut-coinflip", { ...flip, amount: 200 })).status, 409);
     assert.equal(db.prepare("SELECT SUM(balance) AS b FROM donut_wallets").get().b
-      + db.prepare("SELECT balance FROM donut_game_reserve WHERE id=1").get().balance, code + 2000);
+      + db.prepare("SELECT balance FROM donut_game_reserve WHERE id=1").get().balance, code + 100_500);
 
     await json(post("withdraw", { amount: 200 }));
     assert.equal((await view()).wallet.balance, round.balance - 200);
@@ -130,8 +132,8 @@ test("DSMP verifies exact sender and amount, reserves a withdrawal and settles a
     assert.equal((await view()).withdrawal.status, "confirmed");
 
     flushCooldown();
-    await json(post("deposit", { amount: 1000 }));
-    await json(bridge(receipt(".Alice", 1000, "1K", false)));
+    await json(post("deposit", { amount: 100_000 }));
+    await json(bridge(receipt(".Alice", 100_000, "100K", false)));
     assert.equal((await view()).intent.status, "review");
     assert.equal((await view()).wallet.balance, round.balance - 200);
     env.DONUT_CASHIER_ENABLED = "false";

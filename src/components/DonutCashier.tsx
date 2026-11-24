@@ -7,6 +7,7 @@ export type DonutState = {
   intent: { id: string; kind: "link" | "deposit"; player: string; amount: number; status: string } | null;
   withdrawal: { id: string; amount: number; status: string } | null;
   cashier: string;
+  minimumDeposit: number;
   configured: boolean;
   enabled: boolean;
   coinflip: boolean;
@@ -106,6 +107,7 @@ export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn }: Cas
   const pay = pending && data?.enabled ? `/pay ${data.cashier} ${intent.amount}` : "";
   const withdrawalPending = ["queued", "claimed", "review"].includes(withdrawal?.status || "");
   const validAmount = /^\d+$/.test(amount) && Number(amount) >= 1 && Number(amount) <= 100_000_000;
+  const validDeposit = validAmount && data?.minimumDeposit != null && Number(amount) >= data.minimumDeposit;
   const withdrawStatus: Record<string, string> = {
     queued: "Queued for the cashier.", claimed: "Picked up by the cashier. Awaiting payment confirmation.",
     confirmed: "Paid to your linked account.", cancelled: "Cancelled before sending. Balance restored.",
@@ -140,11 +142,12 @@ export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn }: Cas
               onChange={event => setAmount(event.target.value)} />
           </label>
           <div>
-            <button className="wallet-btn" disabled={!wallet || !online || busy || !validAmount || pending || intent?.status === "review"}
+            <button className="wallet-btn" disabled={!wallet || !online || busy || !validDeposit || pending || intent?.status === "review"}
               onClick={() => void submit("deposit")}>Deposit</button>
             <button className="wallet-btn" disabled={!wallet || !online || busy || !validAmount || withdrawalPending || Number(amount) > (wallet?.balance ?? 0)}
               onClick={() => void submit("withdraw")}>Withdraw</button>
           </div>
+          {data?.minimumDeposit != null && <p>Minimum deposit: {whole.format(data.minimumDeposit)} coins.</p>}
         </div>}
         {pay && intent && <div className="donut-instruction">
           <p>Send this exact payment in-game from <strong>{intent.player}</strong>{intent.kind === "link" ? " to verify your name." : " to fund your balance."}</p>
