@@ -23,13 +23,21 @@ jobs:
         run: |
           set -euo pipefail
           # Bracketed letters prevent the audit from matching its own script.
-          pattern='d[i]scord|m[i]necraft|cr[e]eper|pick[a]xe|diamond[-_ ]?ore'
+          pattern='d[i]scord|cr[e]eper|pick[a]xe|diamond[-_ ]?ore'
           if git grep -nIiE "$pattern" -- .; then
             echo "Forbidden wording remains in repository text." >&2
             exit 1
           fi
-          if git ls-files | grep -iE "$pattern"; then
+          if git ls-files | grep -iE "$pattern|m[i]necraft"; then
             echo "Forbidden names remain in repository paths." >&2
+            exit 1
+          fi
+          # The DSMP account-linking and cashier instructions need the game name.
+          if git grep -nIiE 'm[i]necraft' -- . \
+            ':(exclude)src/components/DonutCashier.tsx' ':(exclude)src/games/DonutCoinflip.tsx' \
+            ':(exclude)functions/api/auth/donut-cashier.js' ':(exclude)functions/api/auth/donut-coinflip.js' \
+            ':(exclude)DONUT-CASHIER.md'; then
+            echo "Game name appears outside the DSMP integration." >&2
             exit 1
           fi
           echo "Audit clean: no forbidden text or filenames."

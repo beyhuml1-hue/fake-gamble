@@ -1,5 +1,7 @@
 import type { ComponentType } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useOutletContext, useParams } from "react-router-dom";
+import type { ShellContext } from "../components/AppShell";
+import { DonutCoinflip } from "../games/DonutCoinflip";
 import type { GameId } from "../data/games";
 import { gameById } from "../data/games";
 import { Baccarat } from "../games/Baccarat";
@@ -65,9 +67,11 @@ const PAGES: Partial<Record<GameId, ComponentType>> = {
 
 export function Play() {
   const { id } = useParams();
+  const { donutCashier } = useOutletContext<ShellContext>();
   if (id === "flip") return <Navigate to="/game/coinflip" replace />;
   const game = gameById(id);
   if (!game) return <Navigate to="/" replace />;
+  if (game.id === "coinflip" && donutCashier.data?.configured) return <DonutCoinflip />;
   const Page = PAGES[game.id];
   if (Page) return <Page key={game.id} />;
   if (game.id === "chess" || game.id === "connect-four" || game.id === "uno" || game.id === "pool")

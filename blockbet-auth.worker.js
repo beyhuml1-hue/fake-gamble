@@ -23,8 +23,15 @@ import { onRequestGet as playUsdBalance, onRequestPost as postPlayUsd } from "./
 import { onRequestGet as weeklyLeaderboard } from "./functions/api/auth/leaderboard.js";
 import { onRequestGet as listMatches, onRequestPost as matchAction } from "./functions/api/auth/matches.js";
 import { onRequestGet as demoCardStatus, onRequestPost as chargeDemoCard } from "./functions/api/auth/demo-card.js";
+import { onRequestGet as donutWallet, onRequestPost as donutCashier } from "./functions/api/auth/donut-cashier.js";
+import { onRequestPost as donutBridge } from "./functions/api/auth/donut-cashier-bridge.js";
+import { onRequestPost as donutCoinflip } from "./functions/api/auth/donut-coinflip.js";
 
 const routes = {
+  "GET /api/auth/donut-cashier": donutWallet,
+  "POST /api/auth/donut-cashier": donutCashier,
+  "POST /api/auth/donut-cashier-bridge": donutBridge,
+  "POST /api/auth/donut-coinflip": donutCoinflip,
   "POST /api/auth/cases": openCardCase,
   "GET /api/auth/matches": listMatches,
   "POST /api/auth/matches": matchAction,
