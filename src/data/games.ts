@@ -173,7 +173,7 @@ const gameCatalog = [
 
 export type GameId = (typeof gameCatalog)[number]["id"];
 
-const featured = ["mines", "dragon", "flight", "dice", "plinko", "roulette", "coinflip",
+const featured = ["mines", "dragon", "flight", "dice", "plinko", "roulette", "coinflip", "slide",
   "limbo", "blackjack", "crash", "baccarat", "hilo", "keno", "snakes", "digger",
   "poison", "rps", "packs", "rips", "cases", "case-battles", "farmyard", "beacon", "vault"];
 

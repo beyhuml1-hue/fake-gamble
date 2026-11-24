@@ -105,29 +105,50 @@ export function Flight() {
     frame.current = requestAnimationFrame(animate);
   }
 
+  const progress = flight.time / duration;
+  const approach = running && flight.time >= 9;
+  const aligned = flight.height >= runway.min && flight.height <= runway.max && Math.abs(flight.velocity) <= runwaySpeed;
+  const potential = running ? stake : betCents(amount, balance) ?? 0;
+
   return <GameLayout title="Flight" note="Hold thrust to climb. Release to descend into the runway band at the finish."
     panel={<BetPanel amount={amount} onAmount={setAmount} profitCents={0} label={running ? "In flight" : "Take off"}
-      onAction={launch} disabled={running} locked={running} showProfit={false}>
-      <label className="field">Flight speed<select value={speed} disabled={running} onChange={e => setSpeed(Number(e.target.value))}>
-        <option value={1}>1× speed</option><option value={2}>2× speed</option>
-      </select></label>
+      onAction={launch} disabled={running} locked={running} showProfit={false}
+      afterAction={<div className="flight-speed" role="group" aria-label="Flight speed">
+        {[1, 2].map(rate => <button key={rate} type="button" aria-pressed={speed === rate} disabled={running}
+          onClick={() => setSpeed(rate)}>{rate}× speed</button>)}
+      </div>}>
     </BetPanel>}>
     <div className="flight-game">
-      <div className="flight-readout"><strong>{formatMult(flight.mult)}</strong><span>Return if landed {formatUSD(payout(stake, flight.mult))}</span></div>
-      <div className="flight-sky" aria-hidden="true">
-        <span className="flight-runway" style={{bottom: runway.min + "%", height: (runway.max - runway.min) + "%"}}>Finish</span>
-        {flight.pickups.filter(item => !item.collected).map(item => <span key={item.time} className={"flight-pickup " + item.kind}
-          style={{left: (8 + item.time / duration * 83) + "%", bottom: item.height + "%"}}>{item.kind === "gem" ? "◆" : item.kind === "coin" ? "●" : "✹"}</span>)}
-        <span className="flight-plane" style={{left: (8 + flight.time / duration * 83) + "%", bottom: Math.max(5, flight.height) + "%",
-          rotate: (-flight.velocity / 2) + "deg"}}>✈</span>
+      <div className="flight-sky">
+        <div className="flight-readout">
+          <dl><div><dt>Multiplier</dt><dd>{formatMult(flight.mult)}</dd></div>
+          <div><dt>Return if landed</dt><dd>{formatUSD(payout(potential, running ? flight.mult : 1))}</dd></div></dl>
+          <span role="status" className="flight-status">{status}</span>
+        </div>
+        <div className="flight-scenery" aria-hidden="true">
+          <i className="flight-cloud cloud-near"/><i className="flight-cloud cloud-far"/>
+          <i className="flight-hills"/><i className="flight-water"/>
+          <i className="flight-launchpad" style={{left: (1 - 38 * progress) + "%"}}/>
+          <span className={"flight-runway" + (approach && aligned ? " aligned" : "")}
+            style={{bottom: runway.min + "%", height: (runway.max - runway.min) + "%"}}>Finish</span>
+          {flight.pickups.filter(item => !item.collected).map(item => <span key={item.time} className={"flight-pickup " + item.kind}
+            style={{left: (8 + item.time / duration * 83) + "%", bottom: item.height + "%"}}>{item.kind === "gem" ? "◆" : item.kind === "coin" ? "●" : "✹"}</span>)}
+          <span className="flight-plane" style={{left: (8 + progress * 83) + "%", bottom: Math.max(5, flight.height) + "%",
+            rotate: (-flight.velocity / 2) + "deg"}}><i/><b/><em/></span>
+        </div>
+        <div className="flight-track">
+          <progress aria-label="Flight route progress" value={progress} max={1}/>
+          <span>{Math.max(0, duration - flight.time).toFixed(1)}s</span>
+        </div>
       </div>
-      <div className="flight-readout"><span role="status">{status}</span><span>{Math.max(0, duration - flight.time).toFixed(1)}s to finish</span></div>
-      <button type="button" className="bet-btn flight-thrust" disabled={!running} onPointerDown={event => {
-        event.currentTarget.setPointerCapture(event.pointerId);
-        throttle.current = true;
-      }} onLostPointerCapture={() => { throttle.current = false; }}
-        onPointerUp={() => { throttle.current = false; }} onPointerCancel={() => { throttle.current = false; }}>Hold to climb</button>
-      <p>Space or ↑ to climb. Gems and coins lift the plane. Bombs knock it down. Slow down inside the finish band.</p>
+      <div className="flight-controls">
+        <button type="button" className="bet-btn flight-thrust" disabled={!running} onPointerDown={event => {
+          event.currentTarget.setPointerCapture(event.pointerId);
+          throttle.current = true;
+        }} onLostPointerCapture={() => { throttle.current = false; }}
+          onPointerUp={() => { throttle.current = false; }} onPointerCancel={() => { throttle.current = false; }}>Hold to climb</button>
+        <p>Space or ↑ to climb. Collect gems and coins, avoid bombs, and slow down inside the finish band.</p>
+      </div>
     </div>
   </GameLayout>;
 }
