@@ -19,7 +19,7 @@ export default function App() {
         {(walletIdentity, adjustment) => (
           <WalletProvider key={walletIdentity} email={walletIdentity} adjustment={adjustment}>
             <LuckHotkey />
-            <BrowserRouter>
+            <BrowserRouter basename={/^\/classic(?:\/|$)/.test(window.location.pathname) ? "/classic" : "/"}>
               <Routes>
                 <Route element={<AppShell />}>
                   <Route index element={<Lobby />} />

@@ -26,7 +26,19 @@ import { ArcadeRound } from "../games/ArcadeRound";
 import { BoardArcade } from "../games/BoardArcade";
 import { Wheel } from "../games/Wheel";
 
+import { Flight } from "../games/Flight";
+import { Cases } from "../games/Cases";
+import { ExtraRound } from "../games/ExtraRound";
+
 const PAGES: Partial<Record<GameId, ComponentType>> = {
+  flight: Flight,
+  rips: () => <Cases title="Rips" />,
+  cases: () => <Cases title="Cases" />,
+  digger: () => <ExtraRound kind="digger" />,
+  poison: () => <ExtraRound kind="poison" />,
+  farmyard: () => <ExtraRound kind="farmyard" />,
+  beacon: () => <ExtraRound kind="beacon" />,
+  vault: () => <ExtraRound kind="vault" />,
   dice: Dice,
   blitz: Blitz,
   snakes: Snakes,

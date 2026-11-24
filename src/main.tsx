@@ -8,6 +8,7 @@ import "./game-screens.css";
 import "./design-system.css";
 import "./visual-fixes.css";
 import "./game-polish.css";
+import "./blockbet.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

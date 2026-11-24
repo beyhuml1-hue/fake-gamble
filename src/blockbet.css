@@ -1,0 +1,78 @@
+.blockbet-lobby .arcade-account {
+  background: radial-gradient(ellipse at 88% 34%, #45654c, transparent 67%), #152d27;
+  isolation: isolate;
+}
+.blockbet-lobby .arcade-account > .arcade-art { display: none; }
+.blockbet-lobby .arcade-account h1 { position: relative; font-size: clamp(1.7rem, 5vw, 3.4rem); }
+.blockbet-lobby .arcade-tile { row-gap: .3rem; }
+.blockbet-lobby .arcade-tile small { padding: 0 .65rem .65rem; color: #c0d3cb; font-size: .82rem; }
+.edition-link { color: #9ce7b9; font-size: .875rem; text-decoration: underline; }
+.blockbet-lobby .arcade-art[data-game="flight"] { background: radial-gradient(circle at 75% 20%, #a6e7d4, #136878 75%); }
+.blockbet-lobby .arcade-art:is([data-game="rips"], [data-game="cases"], [data-game="case-battles"]) { background: linear-gradient(140deg,#362057,#a66eac); }
+.blockbet-lobby .arcade-art:is([data-game="digger"], [data-game="poison"], [data-game="farmyard"], [data-game="beacon"], [data-game="vault"]) { background: linear-gradient(140deg,#204235,#6b8f58); }
+.blockbet-lobby .arcade-art:is([data-game="flight"], [data-game="rips"], [data-game="cases"], [data-game="case-battles"], [data-game="digger"], [data-game="poison"], [data-game="farmyard"], [data-game="beacon"], [data-game="vault"])::after {
+  display: grid; place-items: center; inset: 0; position: absolute; content: "◆"; font-size: clamp(2.4rem, 5vw, 4rem); color: #ebffdd;
+}
+.blockbet-lobby .arcade-art[data-game="flight"]::after { content: "✈"; }
+.blockbet-lobby .arcade-art:is([data-game="rips"], [data-game="cases"], [data-game="case-battles"])::after { content: "🃏"; }
+.blockbet-lobby .arcade-art[data-game="digger"]::after { content: "⛏"; }
+.blockbet-lobby .arcade-art[data-game="poison"]::after { content: "⚗"; }
+.blockbet-lobby .arcade-art[data-game="farmyard"]::after { content: "🌾"; }
+.blockbet-lobby .arcade-art[data-game="vault"]::after { content: "🐉"; }
+
+.voxel-scene { position: absolute; z-index: -1; right: 12%; bottom: 13%; width: 92px; height: 140px; perspective: 400px; pointer-events: none; }
+.voxel-person { height: 100%; transform-style: preserve-3d; animation: voxel-idle 5s ease-in-out infinite; }
+.voxel-part { position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h); transform-style: preserve-3d; }
+.voxel-part span { position: absolute; display: block; inset: 0; background: var(--color); }
+.voxel-part .front { transform: translateZ(var(--z)); }
+.voxel-part .back { transform: rotateY(180deg) translateZ(var(--z)); filter: brightness(.8); }
+.voxel-part :is(.left,.right) { width: calc(2 * var(--z)); left: calc(50% - var(--z)); filter: brightness(.72); }
+.voxel-part .left { transform: rotateY(-90deg) translateZ(calc(var(--w) / 2)); }
+.voxel-part .right { transform: rotateY(90deg) translateZ(calc(var(--w) / 2)); }
+.voxel-part :is(.top,.bottom) { height: calc(2 * var(--z)); top: calc(50% - var(--z)); }
+.voxel-part .top { transform: rotateX(90deg) translateZ(calc(var(--h) / 2)); filter: brightness(1.22); }
+.voxel-part .bottom { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2)); filter: brightness(.6); }
+.voxel-part.head { --x: 23px; --y: 0px; --w: 46px; --h: 46px; --z: 23px; --color: #b87956; }
+.voxel-part.head .front { background: linear-gradient(#382336 23%, transparent 23%), linear-gradient(90deg, #fff 50%,#25344d 50%) 8px 23px / 10px 5px no-repeat, linear-gradient(90deg, #25344d 50%,#fff 50%) 28px 23px / 10px 5px no-repeat, #db9e6c; }
+.voxel-part.head :is(.top,.back) { --color: #382336; }
+.voxel-part.body { --x: 24px; --y: 46px; --w: 44px; --h: 48px; --z: 12px; --color: #35a18b; }
+.voxel-part:is(.arm-left,.arm-right) { --y: 47px; --w: 19px; --h: 47px; --z: 10px; --color: #b87956; }
+.voxel-part:is(.arm-left,.arm-right) .front { background: linear-gradient(#35a18b 38%,#db9e6c 38%); }
+.voxel-part.arm-left { --x: 5px; transform: rotateZ(9deg); }
+.voxel-part.arm-right { --x: 68px; transform: rotateZ(-9deg); }
+.voxel-part:is(.leg-left,.leg-right) { --y: 94px; --w: 21px; --h: 43px; --z: 11px; --color: #435387; }
+.voxel-part:is(.leg-left,.leg-right) .front { background: linear-gradient(#435387 80%,#272d3a 80%); }
+.voxel-part.leg-left { --x: 24px; }
+.voxel-part.leg-right { --x: 47px; }
+@keyframes voxel-idle { 0%,100% {transform: rotateX(-10deg) rotateY(-24deg)} 50% {transform: rotateX(-13deg) rotateY(18deg) translateY(-7px)} }
+
+.flight-game, .extra-round { margin: auto; width: min(100%, 720px); padding: clamp(.65rem, 2vw, 1.5rem); }
+.flight-readout { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-block: .6rem; }
+.flight-readout strong { color: #adf6d6; font-size: 2rem; }
+.flight-sky { height: clamp(180px, 34vw, 320px); position: relative; overflow: hidden; border-radius: .75rem; background: repeating-linear-gradient(0deg,transparent 0 39px,#ffffff18 39px 40px), linear-gradient(#0e345a,#377f87 82%,#206649 82%); }
+.flight-runway { position: absolute; right: 0; width: 16%; display: grid; place-items: center; color: #fff; border-block: 2px dashed #dcffbe; background: #1a302d; font-size: .8rem; }
+.flight-plane,.flight-pickup { position: absolute; translate: -50% 50%; line-height: 1; }
+.flight-plane { color: #f6fff7; font-size: clamp(1.85rem,4vw,3.1rem); filter: drop-shadow(0 .2rem .3rem #152134); }
+.flight-pickup { font-size: 1.45rem; }
+.flight-pickup.gem { color: #abffdd; }
+.flight-pickup.coin { color: #ffe080; }
+.flight-pickup.bomb { color: #ffac86; }
+.flight-thrust { touch-action: none; user-select: none; }
+.flight-game p, .extra-round p { color: #bdcfc6; }
+.extra-round { text-align: center; }
+.extra-board { display: grid; gap: .6rem; grid-template-columns: repeat(3, 1fr); width: min(100%, 340px); margin: 1rem auto; }
+.extra-board .tile-btn, .extra-board b { display: grid; place-items: center; min-height: 3rem; background: #274639; border-radius: .45rem; font-size: 1.25rem; }
+.reel-spinning b, .dig-board .tile-btn { animation: reveal-block 500ms cubic-bezier(.16,.8,.3,1) both; }
+@keyframes reveal-block { from { opacity: .45; transform: translateY(-8px) scale(.92); } }
+@media (max-width: 580px) { .voxel-scene { opacity: .65; right: 4%; } }
+@media (prefers-reduced-motion: reduce) { .voxel-person,.reel-spinning b,.dig-board .tile-btn { animation: none; } }
+
+.blockbet-edition.arcade-shell .sidebar { background-color: #142520; }
+.blockbet-edition.arcade-shell .sidebar .nav-item.active { background-color: #28493e; color: #b9f8d4; }
+.blockbet-edition .arcade-toolbar { flex-wrap: wrap; }
+.blockbet-edition .play-surface:is([data-play="mines"],[data-play="dragon"]) .tile-btn {
+  transition: background-color 180ms ease, transform 180ms cubic-bezier(.2,.75,.4,1), box-shadow 180ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .blockbet-edition .play-surface:is([data-play="mines"],[data-play="dragon"]) .tile-btn { transition: none; }
+}
