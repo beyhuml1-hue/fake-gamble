@@ -6,7 +6,8 @@ import { formatAmount } from "../lib/money";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 import { BetsTable } from "./BetsTable";
-import { DonutCashier, dsmp, useDonutCashier } from "./DonutCashier";
+import { DonutCashier, dsmp, useDonutCashier, type CashierMode } from "./DonutCashier";
+import { LinkedPlayerImage } from "./LinkedPlayerImage";
 import { AccountDialog } from "./AccountDialog";
 import { Icon } from "./Icons";
 import { Community } from "../pages/Community";
@@ -66,6 +67,11 @@ export function AppShell() {
   const donutCashier = useDonutCashier(!isGuest);
   const donut = donutCashier.data;
   const [donutOpen, setDonutOpen] = useState(false);
+  const [cashierMode, setCashierMode] = useState<CashierMode>("deposit");
+  function openCashier(mode: CashierMode = "deposit") {
+    setCashierMode(mode);
+    setDonutOpen(true);
+  }
   const promptedLink = useRef(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [muted, setMuted] = useState(() => sound.muted);
@@ -209,7 +215,7 @@ export function AppShell() {
       {open ? <button className="scrim" type="button" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
 
       <div className="main">
-        <header className="header">
+        <header className={arcadeChrome && !isGuest ? "header signed-in-header" : "header"}>
           <button className="menu-btn" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
             <span />
             <span />
@@ -243,7 +249,7 @@ export function AppShell() {
             <NavLink to="/race">Race</NavLink>
             <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
-          {(!arcadeChrome || !isGuest || !canSignIn) && <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
+          {(!arcadeChrome || (isGuest && !canSignIn)) && <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
             <span className="usd-mark">$</span>
             <span className="bal">
               <strong>{useDsmp ? dsmp(donut?.wallet?.balance ?? 0) : formatAmount(rolling.shown)}</strong>
@@ -254,6 +260,23 @@ export function AppShell() {
               Wallet
             </button>
           </div>}
+          {arcadeChrome && !isGuest && <>
+            <div className="header-funds">
+              <div className="header-balance" aria-label={useDsmp ? "DonutSMP balance" : "Play USD balance"}>
+                <span aria-hidden="true" className="header-coin">{useDsmp ? "◆" : "$"}</span>
+                <div><strong>{useDsmp ? dsmp(donut?.wallet?.balance ?? 0) : formatAmount(rolling.shown)}</strong>
+                  <small>{useDsmp ? "DonutSMP" : "Play USD"}</small></div>
+              </div>
+              <button type="button" className="header-wallet-plus" aria-label="Open DSMP wallet" onClick={() => openCashier()}>+</button>
+            </div>
+            <div className="header-fund-actions">
+              <button type="button" onClick={() => openCashier()}>Deposit</button>
+              <button type="button" onClick={() => openCashier("withdraw")}>Withdraw</button>
+            </div>
+            <Link to="/rewards" className="header-shortcut" aria-label="Rewards"><Icon name="reward" /></Link>
+            {location.pathname !== "/chat" && <button type="button" className="header-shortcut" aria-label="Toggle live chat"
+              aria-expanded={showChat} onClick={() => setChatOpen(value => !value)}><Icon name="chat" /></button>}
+          </>}
           <button
             type="button"
             className="sound-btn"
@@ -279,7 +302,9 @@ export function AppShell() {
           <div className="account">
             <button type="button" className="avatar account-trigger" aria-label="Account menu"
               aria-expanded={accountOpen} onClick={() => setAccountOpen((v) => !v)}>
-              {displayName?.charAt(0) || "B"}
+              {donut?.wallet?.player ? <LinkedPlayerImage key={donut.wallet.player} player={donut.wallet.player}
+                view="avatar" className="header-player-avatar" fallback={donut.wallet.player.replace(/^\./, "").charAt(0).toUpperCase() || displayName?.charAt(0) || "B"} />
+                : displayName?.charAt(0) || "B"}
             </button>
             {accountOpen && (
               <div className="account-menu">
@@ -300,7 +325,7 @@ export function AppShell() {
 
         <div className="content" ref={contentRef}>
           <Outlet context={{ query, setQuery, muted, toggleSound, donutCashier,
-            openDonutCashier: () => setDonutOpen(true) } satisfies ShellContext} />
+            openDonutCashier: () => openCashier() } satisfies ShellContext} />
           {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
             <p>{donut?.configured ? "DonutSMP uses in-game currency. Only DSMP can be withdrawn." : "Play money only - no real value."}</p>
@@ -338,7 +363,7 @@ export function AppShell() {
         <p>Use your simulated balance to play BlockBet games.</p>
         <button type="button" className="bet-btn" onClick={dismissStarterGrant}>Explore the arcade</button>
       </AccountDialog>}
-      <DonutCashier open={donutOpen} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
+      <DonutCashier open={donutOpen} mode={cashierMode} onModeChange={setCashierMode} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
         onSignIn={() => {
           try { sessionStorage.setItem("blockbet.return-to-wallet", "yes"); } catch { /* Storage may be blocked. */ }
           setDonutOpen(false);

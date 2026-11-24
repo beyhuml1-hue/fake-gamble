@@ -53,7 +53,11 @@ export function useDonutCashier(signedIn: boolean) {
   } };
 }
 
+export type CashierMode = "deposit" | "withdraw";
+
 type CashierProps = {
+  mode: CashierMode;
+  onModeChange: (mode: CashierMode) => void;
   open: boolean;
   onClose: () => void;
   signedIn: boolean;
@@ -61,9 +65,8 @@ type CashierProps = {
   cashier: ReturnType<typeof useDonutCashier>;
 };
 
-export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn }: CashierProps) {
+export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn, mode, onModeChange }: CashierProps) {
   const { data, refresh, accept } = cashier;
-  const [mode, setMode] = useState<"deposit" | "withdraw">("deposit");
   const [amount, setAmount] = useState("");
   const [player, setPlayer] = useState("");
   const [note, setNote] = useState("");
@@ -139,8 +142,8 @@ export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn }: Cas
         </form>}
         {wallet && <div className="donut-actions">
           <div className="account-switch" role="group" aria-label="Wallet action">
-            <button type="button" aria-pressed={mode === "deposit"} onClick={() => setMode("deposit")}>Deposit</button>
-            <button type="button" aria-pressed={mode === "withdraw"} onClick={() => setMode("withdraw")}>Withdraw</button>
+            <button type="button" aria-pressed={mode === "deposit"} onClick={() => onModeChange("deposit")}>Deposit</button>
+            <button type="button" aria-pressed={mode === "withdraw"} onClick={() => onModeChange("withdraw")}>Withdraw</button>
           </div>
           <p>In-game balance <strong>{dsmp(wallet.balance)}</strong></p>
           <label>Amount in DSMP
