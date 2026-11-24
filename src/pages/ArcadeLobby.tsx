@@ -39,7 +39,8 @@ function GameRow({ title, icon, games, compact }: {
   return <section className="lobby-game-row">
     <h2><Icon name={icon} />{title}</h2>
     <div className="arcade-grid">
-      {visible.map(game => <Link key={game.id} to={`/game/${game.id}`} className="arcade-tile" title={game.blurb}>
+      {visible.map(game => <Link key={game.id} to={`/game/${game.id}`} className="arcade-tile"
+        data-featured={featured.includes(game.id) ? game.id : undefined} title={game.blurb}>
         <span className="arcade-art" data-game={game.id} aria-hidden="true" />
         <strong>{game.name}</strong>
       </Link>)}

@@ -270,6 +270,52 @@
   filter: saturate(1.15);
   mask-image: none;
 }
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-featured] {
+  background:
+    linear-gradient(150deg, transparent 32%, var(--cover-highlight) 33% 38%, transparent 39%),
+    repeating-conic-gradient(from 18deg at 50% 39%, var(--cover-light) 0deg 14deg, transparent 14deg 41deg),
+    linear-gradient(165deg, var(--cover-base) 12%, var(--cover-dark) 88%);
+}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-featured] .arcade-art {
+  inset: 4% 4% 15%;
+  background: center / contain no-repeat var(--cover-object);
+  filter: drop-shadow(0 5px 5px #07101c80);
+}
+.lobby-home-shell [data-featured="dice"] {
+  --cover-object: url("/covers/arcade/dice-object.webp");
+  --cover-base: #075eff;
+  --cover-dark: #081450;
+  --cover-light: #17a9ff58;
+  --cover-highlight: #61e6ff61;
+}
+.lobby-home-shell [data-featured="mines"] {
+  --cover-object: url("/covers/arcade/mines-object.webp");
+  --cover-base: #119456;
+  --cover-dark: #053427;
+  --cover-light: #23e8995c;
+  --cover-highlight: #8effa045;
+}
+.lobby-home-shell [data-featured="plinko"] {
+  --cover-object: url("/covers/arcade/plinko-object.webp");
+  --cover-base: #9f12b9;
+  --cover-dark: #260744;
+  --cover-light: #ef46f75c;
+  --cover-highlight: #f57cf569;
+}
+.lobby-home-shell [data-featured="roulette"] {
+  --cover-object: url("/covers/arcade/roulette-object.webp");
+  --cover-base: #c76913;
+  --cover-dark: #431a0b;
+  --cover-light: #ffab375d;
+  --cover-highlight: #ffdf7a53;
+}
+.lobby-home-shell [data-featured="coinflip"] {
+  --cover-object: url("/covers/arcade/coinflip-object.webp");
+  --cover-base: #215aff;
+  --cover-dark: #102450;
+  --cover-light: #478fff67;
+  --cover-highlight: #8dc0ff54;
+}
 .app.crafted.lobby-home-shell .lobby-game-row .arcade-art:is([data-game="farmyard"], [data-game="beacon"], [data-game="vault"]) {
   background: center / cover no-repeat var(--slot-cover);
   filter: none;
