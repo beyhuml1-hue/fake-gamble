@@ -110,16 +110,17 @@ test("DSMP verifies exact sender and amount, reserves a withdrawal and settles a
     await json(bridge(deposit));
     assert.equal((await view()).wallet.balance, code + 100_000);
 
-    const flip = { amount: 100, pick: "heads", id: crypto.randomUUID(), payout: 999999999 };
+    const flip = { amount: 1_000, pick: "heads", id: crypto.randomUUID(), payout: 999999999 };
     assert.equal((await website("alice", "donut-coinflip", flip)).status, 409);
-    db.exec("UPDATE donut_game_reserve SET balance=500 WHERE id=1");
+    assert.equal((await website("alice", "donut-coinflip", { ...flip, amount: 999 })).status, 400);
+    db.exec("UPDATE donut_game_reserve SET balance=5_000 WHERE id=1");
     const round = await json(website("alice", "donut-coinflip", flip));
-    assert.equal(round.payout, round.outcome === "heads" ? 200 : 0);
-    assert.equal(round.balance, code + 100_000 - 100 + round.payout);
+    assert.equal(round.payout, round.outcome === "heads" ? 2_000 : 0);
+    assert.equal(round.balance, code + 100_000 - 1_000 + round.payout);
     assert.deepEqual(await json(website("alice", "donut-coinflip", flip)), round);
-    assert.equal((await website("alice", "donut-coinflip", { ...flip, amount: 200 })).status, 409);
+    assert.equal((await website("alice", "donut-coinflip", { ...flip, amount: 2_000 })).status, 409);
     assert.equal(db.prepare("SELECT SUM(balance) AS b FROM donut_wallets").get().b
-      + db.prepare("SELECT balance FROM donut_game_reserve WHERE id=1").get().balance, code + 100_500);
+      + db.prepare("SELECT balance FROM donut_game_reserve WHERE id=1").get().balance, code + 105_000);
 
     await json(post("withdraw", { amount: 200 }));
     assert.equal((await view()).wallet.balance, round.balance - 200);

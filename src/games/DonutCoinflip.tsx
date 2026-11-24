@@ -37,8 +37,8 @@ export function DonutCoinflip() {
     if (inFlight.current || !wallet) return;
     const stake = Number(amount);
     if (!pending.current && (!data?.coinflip || !/^\d+$/.test(amount)
-      || stake < 1 || stake > Math.min(wallet.balance, 100_000_000))) {
-      setError("Enter a whole-DSMP stake within your balance and the 100M limit.");
+      || stake < 1_000 || stake > Math.min(wallet.balance, 100_000_000))) {
+      setError("Enter a stake from 1,000 to 100M DSMP within your balance.");
       return;
     }
     const attempt = pending.current ?? { id: crypto.randomUUID(), amount: stake, pick };
@@ -83,7 +83,7 @@ export function DonutCoinflip() {
     }
   }
 
-  return <GameLayout title="Coinflip" note="DSMP · Correct call pays 2×" panel={
+  return <GameLayout title="Coinflip" note="DSMP · 1,000 minimum · Correct call pays 2×" panel={
     <form className="donut-coin-form" onSubmit={event => void play(event)}>
       <p>{wallet ? dsmp(wallet.balance) : "Link your Minecraft account to play."}</p>
       <label className="field">Stake in DSMP

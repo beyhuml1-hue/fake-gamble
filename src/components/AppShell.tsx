@@ -2,10 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetSt
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { GAMES, classic } from "../data/games";
 import { useAuth } from "./AuthProvider";
-import { formatAmount } from "../lib/money";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
-import { BetsTable } from "./BetsTable";
 import { DonutCashier, dsmp, useDonutCashier } from "./DonutCashier";
 import { Icon } from "./Icons";
 import { Community } from "../pages/Community";
@@ -15,36 +13,6 @@ export type ShellContext = {
   query: string; setQuery: Dispatch<SetStateAction<string>>; muted: boolean; toggleSound: () => void;
   donutCashier: ReturnType<typeof useDonutCashier>; openDonutCashier: () => void;
 };
-
-function useRollingBalance(cents: number) {
-  const [shown, setShown] = useState(cents);
-  const current = useRef(cents);
-  const [dir, setDir] = useState<"" | "up" | "down">("");
-
-  useEffect(() => {
-    const start = current.current;
-    if (start === cents) return;
-    setDir(cents > start ? "up" : "down");
-    const began = performance.now();
-    let frame = 0;
-    const step = (now: number) => {
-      const t = Math.min(1, (now - began) / 520);
-      const eased = 1 - (1 - t) ** 3;
-      const next = Math.round(start + (cents - start) * eased);
-      current.current = next;
-      setShown(next);
-      if (t < 1) frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    const clear = window.setTimeout(() => setDir(""), 680);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(clear);
-    };
-  }, [cents]);
-
-  return { shown, dir };
-}
 
 export function AppShell() {
   const [siteStyle, setSiteStyle] = useState<"classic" | "studio">(() => {
@@ -56,8 +24,7 @@ export function AppShell() {
   }
   const { displayName, isGuest, canSignIn, logout, showSignIn, showSignUp } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
-  const { balance, cashierNonce, notifications, dismissNotification } = useWallet();
-  const rolling = useRollingBalance(balance);
+  const { cashierNonce } = useWallet();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [lobbyNavCollapsed, setLobbyNavCollapsed] = useState(false);
@@ -108,8 +75,6 @@ export function AppShell() {
     }
   }, [donut?.configured, donut?.wallet, isGuest]);
 
-  const practiceGame = location.pathname.startsWith("/game/") && location.pathname !== "/game/coinflip";
-  const useDsmp = !practiceGame;
   const showChat = chatOpen && location.pathname !== "/chat";
   const arcadeChrome = !classic;
   const lobbyNavClass = (hash: string) => location.hash === hash ? "nav-item active" : "nav-item";
@@ -164,7 +129,7 @@ export function AppShell() {
           <span className="brand-mark">B</span>
           <span>
             <strong>BlockBet</strong>
-            <small>Play USD</small>
+            <small>DonutSMP</small>
           </span>
         </NavLink>
 
@@ -227,11 +192,11 @@ export function AppShell() {
             <NavLink to="/race">Race</NavLink>
             <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
-          {(!arcadeChrome || !isGuest || !canSignIn) && <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
+          {(!arcadeChrome || !isGuest || !canSignIn) && <div className="wallet-pill">
             <span className="usd-mark">$</span>
             <span className="bal">
-              <strong>{useDsmp ? dsmp(donut?.wallet?.balance ?? 0) : formatAmount(rolling.shown)}</strong>
-              <small>{useDsmp ? "DonutSMP balance" : "Game balance"}</small>
+              <strong>{dsmp(donut?.wallet?.balance ?? 0)}</strong>
+              <small>DonutSMP balance</small>
             </span>
             <button type="button" className="wallet-btn" aria-label="Open DSMP wallet"
               onClick={() => setDonutOpen(true)}>
@@ -268,7 +233,7 @@ export function AppShell() {
             {accountOpen && (
               <div className="account-menu">
                 <strong>{displayName || "Guest profile"}</strong>
-                <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email · synced Play USD wallet"}</p>
+                <p className="account-menu-note">{isGuest ? "Saved only in this browser" : "Verified email"}</p>
                 {isGuest
                   ? (canSignIn
                       ? <button type="button" onClick={showSignIn}>Log in or sign up</button>
@@ -282,7 +247,6 @@ export function AppShell() {
         <div className="content" ref={contentRef}>
           <Outlet context={{ query, setQuery, muted, toggleSound, donutCashier,
             openDonutCashier: () => setDonutOpen(true) } satisfies ShellContext} />
-          {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
             <p>{donut?.configured ? "DonutSMP uses in-game currency. Only DSMP can be withdrawn." : "Play money only - no real value."}</p>
           </footer>
@@ -299,13 +263,6 @@ export function AppShell() {
         </header>
         <Community compact/>
       </aside>}
-      {notifications.length>0&&<section className={"transfer-notifications"+(chatOpen?" drawer-open":"")} role="region" aria-label="Transfer notifications">
-        {notifications.map(item=><div key={item.id} className="transfer-notification" role="status">
-          <span className="transfer-notification-icon">✦</span>
-          <div><b>Play USD received</b><p>{item.sender} sent you <strong>{formatAmount(item.cents)} Play USD</strong>.</p></div>
-          <button type="button" aria-label="Dismiss transfer notification" onClick={()=>dismissNotification(item.id)}>✕</button>
-        </div>)}
-      </section>}
       <DonutCashier open={donutOpen} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
         onSignIn={() => {
           try { sessionStorage.setItem("blockbet.return-to-wallet", "yes"); } catch { /* Storage may be blocked. */ }

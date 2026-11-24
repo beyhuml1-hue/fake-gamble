@@ -61,7 +61,7 @@ test("Real supplied images are shipped as WebP; successful Mines and Dragon tile
  const play=text("../src/pages/Play.tsx");
  const lobby=text("../src/pages/Lobby.tsx");
  assert.match(games,/id: "packs"/);
- assert.match(play,/packs: Packs/);
+ assert.match(play,/paused until it supports the DonutSMP balance/);
  assert.match(lobby,/"packs"/);
  assert.match(text("../src/arcade.css"),/data-game="packs".*blockbet-atlas/);
  assert.match(text("../functions/api/auth/live-bets.js"),/"Packs"/);
