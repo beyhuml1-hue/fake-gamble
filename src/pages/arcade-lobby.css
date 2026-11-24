@@ -407,3 +407,8 @@
 .app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="diamonds"]) .arcade-art{background-size:auto 76%;background-position:center 42%;image-rendering:auto}
 .app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="pump"])::after{background:radial-gradient(circle at 45% 32%,#ffb7d96b,transparent 70%)}
 .app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="diamonds"])::after{background:radial-gradient(circle at 48% 32%,#8bf5f270,transparent 72%)}
+
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="pump"]){background:linear-gradient(152deg,#632144,#36162f 63%,#180e22)}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has([data-game="diamonds"]){background:linear-gradient(152deg,#123e63,#142744 64%,#0d172b)}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has(:is([data-game="pump"],[data-game="diamonds"]))::before{display:none}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile:has(:is([data-game="pump"],[data-game="diamonds"])) .arcade-art{background-size:auto 85%;background-position:center 44%}

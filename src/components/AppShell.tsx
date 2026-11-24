@@ -231,7 +231,7 @@ export function AppShell() {
             <span className="usd-mark">$</span>
             <span className="bal">
               <strong>{useDsmp ? dsmp(donut?.wallet?.balance ?? 0) : formatAmount(rolling.shown)}</strong>
-              <small>{useDsmp ? "DonutSMP balance" : "Practice credits"}</small>
+              <small>{useDsmp ? "DonutSMP balance" : "Game balance"}</small>
             </span>
             <button type="button" className="wallet-btn" aria-label="Open DSMP wallet"
               onClick={() => setDonutOpen(true)}>
@@ -284,7 +284,7 @@ export function AppShell() {
             openDonutCashier: () => setDonutOpen(true) } satisfies ShellContext} />
           {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
-            <p>{donut?.configured ? "DonutSMP uses in-game currency. Practice credits cannot be withdrawn." : "Play money only - no real value."}</p>
+            <p>{donut?.configured ? "DonutSMP uses in-game currency. Only DSMP can be withdrawn." : "Play money only - no real value."}</p>
           </footer>
         </div>
       </div>
