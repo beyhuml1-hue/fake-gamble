@@ -6,6 +6,7 @@ import "./styles.css";
 import "./arcade.css";
 import "./game-screens.css";
 import "./donutflip.css";
+import "./depo.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,124 +1,194 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useOutletContext } from "react-router-dom";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Link, useLocation, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
-import { Icon } from "../components/Icons";
+import { ArcadeHeroArt, DiscordHeroArt, GiftHeroArt, TileArt } from "../components/DepoArt";
+import { CASE_TILES, ORIGINAL_TILES, TILE_BORDER, type LobbyTile } from "../data/lobbyTiles";
 import { GAMES } from "../data/games";
 import { formatCoins } from "../lib/money";
 import { REFERRAL_COINS_CENTS, markReferral, referralReady } from "../lib/rewards";
 import { useWallet } from "../state/wallet";
-import { useAuth } from "../components/AuthProvider";
 import { HomeSpotlight } from "./HomeSpotlight";
 
-const order = ["mines","cases","case-battles","flip","blackjack","dice","dragon","mines-battles","coinflip","crash","uno","connect-four","poker","pool","chess","floor-is-lava","draw","rps","upgrader","hilo","limbo","plinko","double","roulette","pig-race","stocks","slide","keno","blitz","snakes","chicken","baccarat","diamonds","packs","wheel","pump","darts"];
-const table = new Set(["blackjack","baccarat","roulette","hilo","poker","chess","uno","pool","connect-four"]);
+const DISCORD = "https://discord.gg/Xh8mkKxPcm";
 
-function playingBase(id: string) {
-  return [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 160 + 6;
+function IconSearch() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <circle cx="11" cy="11" r="6" />
+      <path d="M16 16l4 4" />
+    </svg>
+  );
+}
+
+function TabIcon({ name }: { name: string }) {
+  if (name === "lobby") {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-5v-5H10v5H5a1 1 0 0 1-1-1z" />
+      </svg>
+    );
+  }
+  if (name === "originals") {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M12 3l2.2 6.4H21l-5.4 4 2 6.6L12 16.8 6.4 20l2-6.6L3 9.4h6.8z" />
+      </svg>
+    );
+  }
+  if (name === "cases") {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <rect x="4" y="8" width="16" height="10" rx="2" />
+        <path d="M8 8V6h8v2M12 8v10" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="5" y="4" width="14" height="16" rx="2" />
+      <path d="M9 8h6M9 12h6M9 16h4" />
+    </svg>
+  );
+}
+
+function Tile({ tile }: { tile: LobbyTile }) {
+  const style = { "--tile": TILE_BORDER[tile.tone] ?? "#3b82f6" } as CSSProperties;
+  const body = (
+    <>
+      <TileArt id={tile.art} />
+      <strong>{tile.name}</strong>
+    </>
+  );
+  if (!tile.gameId) {
+    return (
+      <div className="depo-tile is-soon" style={style} aria-label={`${tile.name} is not in this arcade yet`}>
+        {body}
+      </div>
+    );
+  }
+  return (
+    <Link className="depo-tile" style={style} to={"/game/" + tile.gameId}>
+      {body}
+    </Link>
+  );
 }
 
 export function Lobby() {
   const { query, setQuery } = useOutletContext<ShellContext>();
   const { history, grant } = useWallet();
-  const { isGuest, canSignIn, showSignIn, showSignUp } = useAuth();
+  const { hash } = useLocation();
   const [referralOn, setReferralOn] = useState(referralReady);
   const [note, setNote] = useState("");
-  const [tick, setTick] = useState(0);
   const q = query.trim().toLowerCase();
-  const games = useMemo(() => [...GAMES].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)).filter((game) =>
-    !q || (game.name + " " + game.blurb).toLowerCase().includes(q)
-  ), [q]);
+  const tab = hash === "#cases" || hash === "#slots" || hash === "#originals" || hash === "#recent" ? hash.slice(1) : "lobby";
 
   useEffect(() => {
-    const timer = window.setInterval(() => setTick((n) => n + 1), 7000);
-    return () => window.clearInterval(timer);
-  }, []);
+    if (!hash) return;
+    document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" });
+  }, [hash]);
+
+  const recent = useMemo(() => {
+    const seen = new Set<string>();
+    const tiles: LobbyTile[] = [];
+    for (const row of history) {
+      const game = GAMES.find((item) => item.name.toLowerCase() === row.game.toLowerCase());
+      if (!game || seen.has(game.id)) continue;
+      seen.add(game.id);
+      const known = [...ORIGINAL_TILES, ...CASE_TILES].find((item) => item.gameId === game.id);
+      tiles.push(known ?? { id: game.id, name: game.name, art: "dice", tone: "blue", gameId: game.id });
+      if (tiles.length === 8) break;
+    }
+    return tiles;
+  }, [history]);
+
+  const caseTiles = CASE_TILES.filter((tile) => tile.gameId === "cases" || tile.gameId === "case-battles" || tile.gameId === "packs");
+  const tiles = tab === "cases" ? caseTiles : tab === "recent" ? recent : tab === "slots" ? [] : ORIGINAL_TILES;
+  const visible = tiles.filter((tile) => !q || tile.name.toLowerCase().includes(q));
+  const heading = tab === "cases" ? "Cases" : tab === "slots" ? "Slots" : tab === "recent" ? "Recently played" : "DonutFlip Originals";
 
   function claimReferral() {
-    if (!referralReady()) { setNote("Referral reward already claimed on this browser."); return; }
+    if (!referralReady()) {
+      setNote("Referral reward already claimed on this browser.");
+      return;
+    }
     const got = grant(REFERRAL_COINS_CENTS);
-    if (!got) { setNote("Balance is at the play-money cap."); return; }
+    if (!got) {
+      setNote("Balance is at the play-money cap.");
+      return;
+    }
     markReferral();
     setReferralOn(false);
-    setNote("Claimed " + formatCoins(got) + " referral coins.");
+    setNote("Claimed " + formatCoins(got) + " referral coins. Play money only.");
   }
 
-  const ticker = Array.from({ length: 8 }, (_, i) => (
-    <button type="button" key={i} onClick={claimReferral}>Claim Referral · {formatCoins(REFERRAL_COINS_CENTS)} coins</button>
-  ));
-
   return (
-    <section className="lobby df-lobby">
-      <article className="df-hero">
-        <p className="df-kicker">Arcade</p>
-        <h1>Play the floor</h1>
-        <p>Originals, tables, and races settled in play coins. Big numbers, zero cash value.</p>
-        <div className="df-hero-actions">
-          {isGuest ? (
-            <>
-              <button className="df-btn df-btn-green" type="button" onClick={() => canSignIn ? showSignUp() : setNote("This browser is already on a local play-money profile.")}>Register</button>
-              <button className="df-btn df-btn-ghost" type="button" onClick={() => canSignIn ? showSignIn() : setNote("This browser is already on a local play-money profile.")}>Sign In</button>
-            </>
-          ) : (
-            <Link className="df-btn df-btn-green" to="/game/dice">Play Now</Link>
-          )}
-        </div>
-      </article>
-
-      <div className="df-ticker" aria-label="Claim referral">
-        <div>{ticker}{ticker}</div>
+    <section className="lobby depo-lobby">
+      <div className="depo-heroes">
+        <article className="depo-hero depo-hero-arcade">
+          <div className="depo-hero-copy">
+            <h2><span>DonutFlip</span><span>Arcade</span></h2>
+            <p>Slots, originals and more for DonutFlip players.</p>
+            <Link className="depo-cta depo-cta-green" to="/#originals">Explore games</Link>
+          </div>
+          <ArcadeHeroArt />
+        </article>
+        <article className="depo-hero depo-hero-refer" id="refer">
+          <div className="depo-hero-copy">
+            <h2><span>Refer</span><span>&amp; Earn</span></h2>
+            <p>Invite friends and claim {formatCoins(REFERRAL_COINS_CENTS)} play coins.</p>
+            <button className="depo-cta depo-cta-pink" type="button" onClick={claimReferral} disabled={!referralOn}>
+              {referralOn ? "Invite & earn" : "Claimed"}
+            </button>
+          </div>
+          <GiftHeroArt />
+        </article>
+        <article className="depo-hero depo-hero-discord">
+          <div className="depo-hero-copy">
+            <h2><span>Join</span><span>Discord</span></h2>
+            <p>Join the DonutFlip community. Chat, get updates, and stay connected.</p>
+            <a className="depo-cta depo-cta-lilac" href={DISCORD} target="_blank" rel="noopener noreferrer">Join Discord</a>
+          </div>
+          <DiscordHeroArt />
+        </article>
       </div>
-      {note && <p className="df-note" role="status">{note}</p>}
+      {note && <p className="depo-note" role="status">{note}</p>}
 
-      <div className="df-promos">
-        <Link to="/race" className="df-promo">
-          <small>Daily leaderboard</small>
-          <strong>Race</strong>
-          <span>Climb today&apos;s board</span>
-        </Link>
-        <button type="button" className="df-promo" onClick={claimReferral} disabled={!referralOn}>
-          <small>Referrals</small>
-          <strong>{referralOn ? "Claim code" : "Claimed"}</strong>
-          <span>{formatCoins(REFERRAL_COINS_CENTS)} play coins</span>
-        </button>
-        <Link to="/race" className="df-promo df-promo-vip" id="rewards">
-          <small>Rewards</small>
-          <strong>VIP</strong>
-          <span>Daily drops and the race pool</span>
-        </Link>
-      </div>
-
-      <div className="df-games-head" id="games">
-        <h2>Games</h2>
-        <label className="search lobby-search">
-          <input type="search" aria-label="Search games" placeholder="Search games" value={query} onChange={(event) => setQuery(event.target.value)} />
+      <div className="depo-toolbar">
+        <nav className="depo-tabs" aria-label="Lobby sections">
+          {[
+            ["lobby", "Lobby", "/"],
+            ["originals", "Originals", "/#originals"],
+            ["cases", "Cases", "/#cases"],
+            ["slots", "Slots", "/#slots"],
+          ].map(([id, label, href]) => (
+            <Link key={id} to={href} className={tab === id ? "on" : ""} aria-current={tab === id ? "page" : undefined}>
+              <TabIcon name={id} />
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <label className="depo-search">
+          <IconSearch />
+          <input id="depo-search" type="search" aria-label="Search games" placeholder="Search games" value={query} onChange={(event) => setQuery(event.target.value)} />
+          <kbd>Ctrl K</kbd>
         </label>
       </div>
-      {games.length ? (
-        <div className="df-grid">
-          {games.map((game) => {
-            const playing = playingBase(game.id) + (tick % 5);
-            return (
-              <Link key={game.id} to={"/game/" + game.id} className="df-tile">
-                <span className="df-tile-icon"><Icon name={game.id} /></span>
-                <strong>{game.name}</strong>
-                <small>{table.has(game.id) ? "ORIGINALS" : "ORIGINALS"}</small>
-                <em><i />{playing} playing</em>
-              </Link>
-            );
-          })}
-        </div>
-      ) : <p className="empty-row">No games found.</p>}
 
-      <div className="df-banners">
-        <button type="button" className="df-banner df-banner-gold" onClick={claimReferral}>
-          <small>REWARDS</small>
-          <strong>Claim Now</strong>
-        </button>
-        <Link to="/game/dice" className="df-banner df-banner-green">
-          <small>FREE TO PLAY</small>
-          <strong>Play Now</strong>
-        </Link>
-      </div>
+      <section id={tab === "lobby" ? "originals" : tab} aria-labelledby="depo-grid-title">
+        <h2 className="depo-originals-head" id="depo-grid-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 7.2H22l-6 4.4 2.3 7.2L12 16.8 5.7 20.8 8 13.6 2 9.2h7.6z" /></svg>
+          {heading}
+        </h2>
+        {tab === "slots" ? (
+          <p className="depo-empty">No slot games in this play-money arcade yet.</p>
+        ) : visible.length ? (
+          <div className="depo-grid">
+            {visible.map((tile) => <Tile key={tile.id} tile={tile} />)}
+          </div>
+        ) : (
+          <p className="depo-empty">{tab === "recent" ? "Play a game and it will show up here." : "No games found."}</p>
+        )}
+      </section>
       <HomeSpotlight history={history} />
     </section>
   );

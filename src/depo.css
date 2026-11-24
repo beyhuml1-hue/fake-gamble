@@ -1,0 +1,584 @@
+.app.depo-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: #070e1f;
+  color: #fff;
+  font-family: Inter, system-ui, sans-serif;
+}
+.depo-shell button,
+.depo-shell input,
+.depo-shell textarea {
+  font-family: Inter, system-ui, sans-serif;
+}
+.depo-shell .main { margin: 0; min-width: 0; background: #070e1f; }
+.depo-shell .content {
+  background:
+    radial-gradient(900px 280px at 70% -10%, rgba(66, 133, 255, 0.16), transparent 60%),
+    #070e1f;
+  padding: 16px 18px 28px;
+  overflow-x: hidden;
+}
+
+.depo-nav {
+  height: 64px;
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  background: #0b1730;
+  border-bottom: 1px solid #203d66;
+  z-index: 20;
+}
+.depo-nav-left,
+.depo-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.depo-nav-right { justify-content: flex-end; }
+
+.depo-burger,
+.depo-icon-btn,
+.depo-deposit,
+.depo-withdraw,
+.depo-games,
+.depo-plus,
+.depo-side button,
+.depo-cta {
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+}
+.depo-burger {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+}
+.depo-burger span { display: block; height: 2px; border-radius: 2px; background: #e8eefc; }
+
+.depo-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px 0 4px;
+  border-radius: 999px;
+  background: #10213d;
+  border: 1px solid #203d66;
+}
+.depo-logo-mark { width: 28px; height: 28px; flex: none; }
+.depo-logo strong {
+  font-family: "Lilita One", Anton, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.depo-pop { position: relative; }
+.depo-games {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: #10213d;
+  border: 1px solid #203d66;
+  font-weight: 700;
+  font-size: 14px;
+}
+.depo-games svg { width: 14px; height: 14px; }
+.depo-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  min-width: 220px;
+  max-height: min(420px, 70vh);
+  overflow: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: #10213d;
+  border: 1px solid #203d66;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+.depo-menu a,
+.depo-menu button {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-weight: 600;
+}
+.depo-menu a:hover,
+.depo-menu button:hover { background: #173056; }
+.depo-menu p { margin: 8px 10px; color: #93a4c3; font-size: 12px; }
+.depo-menu-right { left: auto; right: 0; }
+
+.depo-balance-wrap { position: relative; }
+.depo-balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 5px 0 10px;
+  border-radius: 999px;
+  background: #10213d;
+  border: 1px solid #203d66;
+}
+.depo-balance strong { font-variant-numeric: tabular-nums; font-size: 14px; }
+.depo-balance.up strong { color: #4ade80; }
+.depo-balance.down strong { color: #fb7185; }
+.depo-plus {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #4285ff;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.depo-deposit,
+.depo-withdraw {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.depo-deposit { background: #3ddc6a; color: #05210f; }
+.depo-withdraw { background: #2c3a52; color: #e6edf8; }
+.depo-deposit-plus { margin-right: 4px; font-size: 16px; line-height: 1; }
+.depo-mini { display: none; width: 16px; height: 16px; }
+.depo-side-foot .depo-menu { top: auto; bottom: calc(100% + 6px); left: 0; right: auto; }
+.depo-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: transparent;
+  color: #d6e2f5;
+  display: grid;
+  place-items: center;
+}
+.depo-icon-btn svg { width: 18px; height: 18px; }
+.depo-icon-btn.on,
+.depo-icon-btn[aria-expanded="true"] { background: #173056; color: #fff; }
+.depo-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #4285ff;
+  background: #1d4ed8;
+  color: #fff;
+  font-weight: 800;
+}
+
+.depo-body { flex: 1; min-height: 0; min-width: 0; display: flex; }
+.depo-side {
+  width: 136px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background: #0b1730;
+  border-right: 1px solid #203d66;
+  min-height: 0;
+}
+.depo-side-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 8px 8px;
+  padding: 0 8px;
+  height: 32px;
+  border-radius: 8px;
+  background: #10213d;
+  border: 1px solid #203d66;
+  color: #93a4c3;
+}
+.depo-side-search svg { width: 14px; height: 14px; flex: none; }
+.depo-side-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  outline: none;
+}
+.depo-side nav {
+  flex: 1;
+  overflow: auto;
+  padding: 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.depo-side-link,
+.depo-side-foot button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 4px;
+  border-radius: 8px;
+  color: #b7c5dc;
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+.depo-side-link svg,
+.depo-side-foot button svg { width: 15px; height: 15px; flex: none; }
+.depo-side-link:hover,
+.depo-side-foot button:hover { background: #13284a; color: #fff; }
+.depo-side-link.on { color: #fff; background: #13284a; }
+.depo-side-link.on svg { color: #4285ff; }
+.depo-rule { height: 1px; margin: 8px 4px; background: #203d66; border: 0; }
+.depo-server {
+  margin: 8px 6px 4px;
+  color: #6e82a3;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.depo-side-foot {
+  border-top: 1px solid #203d66;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.depo-profile { justify-content: space-between; }
+.depo-profile span { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.depo-profile i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f59e0b;
+  color: #1f1303;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 11px;
+}
+.depo-scrim { display: none; }
+
+.depo-lobby { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.depo-heroes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.depo-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 168px;
+  padding: 16px 16px 14px;
+  border-radius: 16px;
+  background: #10213d;
+  border: 1px solid #203d66;
+}
+.depo-hero-arcade {
+  background:
+    radial-gradient(120px 90px at 82% 40%, rgba(147, 197, 253, 0.35), transparent 70%),
+    linear-gradient(180deg, #16315f, #10213d 58%);
+}
+.depo-hero-refer {
+  background:
+    radial-gradient(140px 100px at 84% 42%, rgba(244, 114, 182, 0.2), transparent 70%),
+    #12183a;
+}
+.depo-hero-discord {
+  background:
+    radial-gradient(140px 110px at 84% 40%, rgba(192, 132, 252, 0.28), transparent 70%),
+    #141433;
+}
+.depo-hero-copy { position: relative; z-index: 1; max-width: 62%; }
+.depo-hero h2 {
+  margin: 0 0 8px;
+  font-family: Anton, "Lilita One", sans-serif;
+  font-weight: 400;
+  font-size: clamp(26px, 2vw, 34px);
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+}
+.depo-hero h2 span { display: block; }
+.depo-hero-refer h2 { color: #f9a8d4; }
+.depo-hero-discord h2 { color: #ddd6fe; }
+.depo-hero p { margin: 0 0 12px; color: #c5d2e8; font-size: 12.5px; line-height: 1.35; }
+.depo-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.depo-cta-green { background: #3ddc6a; color: #05210f; }
+.depo-cta-pink { background: #f0abfc; color: #3b0764; }
+.depo-cta-lilac { background: #ddd6fe; color: #3b0764; }
+.depo-hero-art {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 46%;
+  height: 92%;
+  pointer-events: none;
+}
+.depo-note { margin: 0; color: #93c5fd; font-size: 13px; }
+
+.depo-toolbar { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.depo-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #10213d;
+  border: 1px solid #203d66;
+  flex: none;
+}
+.depo-tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+  color: #9aafcc;
+  font-weight: 700;
+  font-size: 13px;
+}
+.depo-tabs a svg { width: 15px; height: 15px; }
+.depo-tabs a.on { color: #fff; background: #173056; }
+.depo-tabs a.on svg { color: #4285ff; }
+.depo-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 10px 0 12px;
+  border-radius: 12px;
+  background: #10213d;
+  border: 1px solid #203d66;
+  color: #93a4c3;
+}
+.depo-search svg { width: 16px; height: 16px; flex: none; }
+.depo-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  outline: none;
+  font-size: 14px;
+}
+.depo-search kbd {
+  flex: none;
+  border: 1px solid #203d66;
+  background: #0b1730;
+  color: #c5d4ea;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-family: Inter, sans-serif;
+}
+
+.depo-originals-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+.depo-originals-head svg { width: 16px; height: 16px; color: #4285ff; }
+.depo-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 12px;
+}
+.depo-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1.08;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 3px solid var(--tile, #3b82f6);
+  background: #0b1c36;
+  min-width: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.depo-tile-art { width: 100%; height: 100%; display: block; }
+.depo-tile strong {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 28px 6px 8px;
+  background: linear-gradient(transparent, rgba(4, 10, 24, 0.88));
+  text-align: center;
+  font-size: clamp(11px, 0.9vw, 14px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.depo-tile.is-soon { cursor: default; }
+.depo-tile.is-soon strong { letter-spacing: 0.03em; }
+.depo-empty { margin: 8px 0; color: #93a4c3; }
+
+.depo-support-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 24;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 0;
+  background: #4285ff;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 24px rgba(20, 60, 140, 0.45);
+  cursor: pointer;
+}
+.depo-support-fab svg { width: 22px; height: 22px; }
+.depo-support-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 74px;
+  z-index: 24;
+  width: min(320px, calc(100vw - 32px));
+  padding: 14px;
+  border-radius: 14px;
+  background: #10213d;
+  border: 1px solid #203d66;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+.depo-support-panel h2 { margin: 0 0 6px; font-size: 16px; }
+.depo-support-panel p { margin: 0 0 8px; color: #c5d2e8; font-size: 13px; }
+.depo-support-panel button {
+  border: 0;
+  background: #173056;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.depo-chat-drawer {
+  position: fixed;
+  top: 64px;
+  right: 0;
+  bottom: 0;
+  z-index: 23;
+  width: min(320px, 100vw);
+  background: #0d1b33;
+  border-left: 1px solid #203d66;
+  display: flex;
+  min-width: 0;
+}
+.depo-chat-drawer .df-live { background: #0d1b33; color: #fff; }
+
+.depo-shell .df-footer {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #203d66;
+  color: #8ea0bd;
+}
+.depo-shell .df-disclaimer { margin: 0; font-size: 12px; line-height: 1.45; }
+
+.depo-shell .home-spotlight { max-width: none; }
+.depo-shell .bets { max-width: 100%; }
+
+@media (max-width: 1280px) {
+  .depo-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 980px) {
+  .depo-heroes { grid-template-columns: 1fr; }
+  .depo-hero { min-height: 150px; }
+  .depo-toolbar { flex-direction: column; align-items: stretch; }
+  .depo-tabs { width: 100%; overflow: hidden; }
+  .depo-tabs a { flex: 1; justify-content: center; padding: 0 6px; font-size: 12px; min-width: 0; }
+  .depo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 899px) {
+  .depo-side {
+    position: fixed;
+    z-index: 40;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(240px, 86vw);
+    transform: translateX(-105%);
+    transition: transform 0.18s ease;
+    box-shadow: 12px 0 30px rgba(0, 0, 0, 0.35);
+  }
+  .depo-side.open { transform: translateX(0); }
+  .depo-scrim {
+    display: block;
+    position: fixed;
+    z-index: 35;
+    inset: 0;
+    background: rgba(2, 6, 16, 0.55);
+    border: 0;
+  }
+}
+@media (max-width: 720px) {
+  .depo-nav {
+    height: auto;
+    min-height: 56px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left right"
+      "balance balance";
+    padding: 8px 8px 10px;
+    gap: 8px;
+  }
+  .depo-nav-left { grid-area: left; }
+  .depo-nav-right { grid-area: right; }
+  .depo-balance-wrap { grid-area: balance; justify-self: center; }
+  .depo-logo strong,
+  .depo-games-label,
+  .depo-games svg:not(.depo-mini),
+  .depo-deposit-label,
+  .depo-withdraw-label { display: none; }
+  .depo-deposit-plus { margin-right: 0; }
+  .depo-logo { padding-right: 4px; }
+  .depo-deposit,
+  .depo-withdraw { width: 34px; padding: 0; display: grid; place-items: center; }
+  .depo-mini { display: block; }
+  .depo-chat-drawer { top: 0; }
+  .depo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .depo-hero-copy { max-width: 68%; }
+  .depo-hero h2 { font-size: 28px; }
+  .depo-search kbd { display: none; }
+}
