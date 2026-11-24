@@ -1,7 +1,6 @@
 const gameCatalog = [
   { id: "flight", name: "Flight", blurb: "Collect gems and touch down on the runway.", note: "Play USD", gradient: "linear-gradient(150deg,#114e68,#40a290)" },
   { id: "rips", name: "Rips", blurb: "Rip open four cards and reveal their prizes.", note: "Play USD", gradient: "linear-gradient(150deg,#502a71,#9b5579)" },
-  { id: "digger", name: "Digger", blurb: "Dig for gems and cash out before your pickaxe breaks.", note: "Play USD", gradient: "linear-gradient(150deg,#203e36,#6a713a)" },
   { id: "poison", name: "Poison", blurb: "Hide a trap and take turns picking with a computer rival.", note: "Play USD", gradient: "linear-gradient(150deg,#48264e,#79743b)" },
   { id: "farmyard", name: "Farmyard Frenzy", blurb: "Spin farm symbols and match a row.", note: "Play USD", gradient: "linear-gradient(150deg,#524923,#8a743c)" },
   { id: "beacon", name: "Beacon Breakout", blurb: "Spin for a row of matching minerals.", note: "Play USD", gradient: "linear-gradient(150deg,#204662,#4a7194)" },
@@ -175,7 +174,7 @@ export type GameId = (typeof gameCatalog)[number]["id"];
 
 export const classic = import.meta.env.MODE === "classic" || /^\/classic(?:\/|$)/.test(window.location.pathname);
 
-const retired = new Set(["flip", "cases", "case-battles", "rips", "flight", "digger", "poison", "farmyard", "beacon", "vault", "snakes"]);
+const retired = new Set(["flip", "cases", "case-battles", "rips", "flight", "poison", "farmyard", "beacon", "vault", "snakes"]);
 export const GAMES = gameCatalog.filter(game => !retired.has(game.id));
 
 export function gameById(id: string | undefined) {

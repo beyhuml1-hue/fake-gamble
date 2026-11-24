@@ -16,7 +16,7 @@ const coverTones: Partial<Record<GameId, string>> = {
   dice: "blue", mines: "green", plinko: "magenta", roulette: "amber", coinflip: "blue",
   limbo: "amber", blackjack: "red", dragon: "indigo", slide: "indigo", crash: "red",
   flight: "blue", baccarat: "green", hilo: "teal", keno: "violet", snakes: "violet",
-  digger: "teal", poison: "magenta", rps: "amber",
+  rps: "amber",
   farmyard: "amber", beacon: "teal", vault: "violet",
   packs: "indigo", cases: "teal", "case-battles": "red", rips: "magenta",
 };
