@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useLocation, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
 import { Icon } from "../components/Icons";
-import { GAMES } from "../data/games";
+import { GAMES, type GameId } from "../data/games";
 import { useWallet } from "../state/wallet";
 import { HomeSpotlight } from "./HomeSpotlight";
 import "./arcade-lobby.css";
@@ -13,15 +13,23 @@ export const arcadeCategories = [
   { id: "cases", label: "Cases & Packs", icon: "packs" },
 ] as const;
 
-const featured = ["dice", "mines", "plinko", "roulette", "coinflip"];
+const coverTones: Partial<Record<GameId, string>> = {
+  dice: "blue", mines: "green", plinko: "magenta", roulette: "amber", coinflip: "blue",
+  limbo: "amber", blackjack: "red", dragon: "indigo", slide: "indigo", crash: "red",
+  flight: "blue", baccarat: "green", hilo: "teal", keno: "violet", snakes: "violet",
+  digger: "teal", poison: "magenta", rps: "amber",
+  farmyard: "amber", beacon: "teal", vault: "violet",
+  packs: "indigo", cases: "teal", "case-battles": "red", rips: "magenta",
+};
 const slots = new Set(["farmyard", "vault", "beacon"]);
 const cases = new Set(["packs", "cases", "case-battles", "rips"]);
 const historicNames = new Map([["derby", "pig-race"]]);
 type Game = (typeof GAMES)[number];
 
+const coverOrder = Object.keys(coverTones);
 const catalog = [
-  ...featured.flatMap(id => GAMES.filter(game => game.id === id)),
-  ...GAMES.filter(game => !featured.includes(game.id)),
+  ...coverOrder.flatMap(id => GAMES.filter(game => game.id === id)),
+  ...GAMES.filter(game => !coverTones[game.id]),
 ];
 
 function gameCategory(id: string) {
@@ -40,7 +48,8 @@ function GameRow({ title, icon, games, compact }: {
     <h2><Icon name={icon} />{title}</h2>
     <div className="arcade-grid">
       {visible.map(game => <Link key={game.id} to={`/game/${game.id}`} className="arcade-tile"
-        data-featured={featured.includes(game.id) ? game.id : undefined} title={game.blurb}>
+        data-cover-tone={coverTones[game.id]} title={game.blurb}
+        style={coverTones[game.id] ? { "--cover-object": `url("/covers/arcade/${game.id}-object.webp")` } as CSSProperties : undefined}>
         <span className="arcade-art" data-game={game.id} aria-hidden="true" />
         <strong>{game.name}</strong>
       </Link>)}

@@ -270,60 +270,60 @@
   filter: saturate(1.15);
   mask-image: none;
 }
-.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-featured] {
+/* The card owns the background. Only the transparent foreground is transformed. */
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone] {
   background:
-    linear-gradient(150deg, transparent 32%, var(--cover-highlight) 33% 38%, transparent 39%),
-    repeating-conic-gradient(from 18deg at 50% 39%, var(--cover-light) 0deg 14deg, transparent 14deg 41deg),
-    linear-gradient(165deg, var(--cover-base) 12%, var(--cover-dark) 88%);
+    linear-gradient(0deg, var(--cover-dark), transparent 48%),
+    radial-gradient(ellipse at 50% 31%, var(--cover-glow), transparent 67%),
+    var(--cover-base);
+  border-color: color-mix(in srgb, var(--cover-glow), var(--cover-dark) 48%);
 }
-.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-featured] .arcade-art {
-  inset: 4% 4% 15%;
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone]::before,
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone]::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone]::before {
+  background: conic-gradient(from var(--cover-angle, 8deg) at 51% 39%,
+    #ffffff48 0deg 13deg, transparent 13deg 34deg,
+    #07092148 34deg 57deg, transparent 57deg 83deg,
+    #ffffff32 83deg 102deg, transparent 102deg 139deg,
+    #080a2f70 139deg 155deg, transparent 155deg 203deg,
+    #ffffff27 203deg 219deg, transparent 219deg 245deg,
+    #080a2f60 245deg 263deg, transparent 263deg 300deg,
+    #ffffff45 300deg 316deg, transparent 316deg 360deg);
+  mask-image: linear-gradient(#000 46%, transparent 94%);
+}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone]::after {
+  background: linear-gradient(143deg, #ffffff54, transparent 42%, #0a091e5c 78%);
+  clip-path: polygon(0 5%, 30% 23%, 17% 0, 35% 0, 47% 31%, 80% 0, 97% 0,
+    74% 30%, 100% 13%, 100% 24%, 64% 53%, 100% 66%, 100% 93%, 67% 73%,
+    43% 100%, 57% 65%, 20% 88%, 35% 64%, 0 79%, 0 62%, 27% 48%, 0 32%);
+  opacity: .65;
+}
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone] .arcade-art {
+  z-index: 1;
+  inset: 6% 7% 17%;
   background: center / contain no-repeat var(--cover-object);
   filter: drop-shadow(0 5px 5px #07101c80);
 }
-.lobby-home-shell [data-featured="dice"] {
-  --cover-object: url("/covers/arcade/dice-object.webp");
-  --cover-base: #075eff;
-  --cover-dark: #081450;
-  --cover-light: #17a9ff58;
-  --cover-highlight: #61e6ff61;
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone] .arcade-art::after { display: none; }
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone] strong { z-index: 2; }
+.app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone]:hover { transform: none; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone] .arcade-art { transition: transform 200ms ease-out; }
+  .app.crafted.lobby-home-shell .lobby-game-row .arcade-tile[data-cover-tone]:hover .arcade-art { transform: scale(1.09); }
 }
-.lobby-home-shell [data-featured="mines"] {
-  --cover-object: url("/covers/arcade/mines-object.webp");
-  --cover-base: #119456;
-  --cover-dark: #053427;
-  --cover-light: #23e8995c;
-  --cover-highlight: #8effa045;
-}
-.lobby-home-shell [data-featured="plinko"] {
-  --cover-object: url("/covers/arcade/plinko-object.webp");
-  --cover-base: #9f12b9;
-  --cover-dark: #260744;
-  --cover-light: #ef46f75c;
-  --cover-highlight: #f57cf569;
-}
-.lobby-home-shell [data-featured="roulette"] {
-  --cover-object: url("/covers/arcade/roulette-object.webp");
-  --cover-base: #c76913;
-  --cover-dark: #431a0b;
-  --cover-light: #ffab375d;
-  --cover-highlight: #ffdf7a53;
-}
-.lobby-home-shell [data-featured="coinflip"] {
-  --cover-object: url("/covers/arcade/coinflip-object.webp");
-  --cover-base: #215aff;
-  --cover-dark: #102450;
-  --cover-light: #478fff67;
-  --cover-highlight: #8dc0ff54;
-}
-.app.crafted.lobby-home-shell .lobby-game-row .arcade-art:is([data-game="farmyard"], [data-game="beacon"], [data-game="vault"]) {
-  background: center / cover no-repeat var(--slot-cover);
-  filter: none;
-}
-.lobby-home-shell .arcade-art[data-game="farmyard"] { --slot-cover: url("/covers/arcade/farmyard-lobby.jpg"); }
-.lobby-home-shell .arcade-art[data-game="beacon"] { --slot-cover: url("/covers/arcade/beacon-lobby.jpg"); }
-.lobby-home-shell .arcade-art[data-game="vault"] { --slot-cover: url("/covers/arcade/vault-lobby.jpg"); }
-.lobby-home-shell .lobby-game-row .arcade-art:is([data-game="farmyard"], [data-game="beacon"], [data-game="vault"])::after { display: none; }
+.lobby-home-shell [data-cover-tone="blue"] { --cover-base: #0644d9; --cover-dark: #07144c; --cover-glow: #16a8ff; }
+.lobby-home-shell [data-cover-tone="green"] { --cover-base: #08784b; --cover-dark: #043125; --cover-glow: #35e681; --cover-angle: 28deg; }
+.lobby-home-shell [data-cover-tone="magenta"] { --cover-base: #971282; --cover-dark: #37063e; --cover-glow: #f863be; --cover-angle: 60deg; }
+.lobby-home-shell [data-cover-tone="amber"] { --cover-base: #b75111; --cover-dark: #4b1a0a; --cover-glow: #ffb327; --cover-angle: -12deg; }
+.lobby-home-shell [data-cover-tone="indigo"] { --cover-base: #3525ad; --cover-dark: #160e48; --cover-glow: #6769ff; --cover-angle: 110deg; }
+.lobby-home-shell [data-cover-tone="red"] { --cover-base: #bc1f35; --cover-dark: #44061a; --cover-glow: #ff6b56; --cover-angle: -48deg; }
+.lobby-home-shell [data-cover-tone="teal"] { --cover-base: #087f9b; --cover-dark: #053344; --cover-glow: #30e4ed; --cover-angle: -76deg; }
+.lobby-home-shell [data-cover-tone="violet"] { --cover-base: #7126c5; --cover-dark: #260b4d; --cover-glow: #ad72ff; --cover-angle: 155deg; }
 .app.crafted.lobby-home-shell .lobby-game-row .arcade-tile strong {
   position: absolute;
   inset: auto 0 0;
