@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { GAMES, classic } from "../data/games";
 import { useAuth } from "./AuthProvider";
 import { formatAmount } from "../lib/money";
@@ -11,7 +11,7 @@ import { Icon } from "./Icons";
 import { Community } from "../pages/Community";
 import { arcadeCategories } from "../pages/ArcadeLobby";
 
-export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>> };
+export type ShellContext = { query: string; setQuery: Dispatch<SetStateAction<string>>; muted: boolean; toggleSound: () => void };
 
 function useRollingBalance(cents: number) {
   const [shown, setShown] = useState(cents);
@@ -60,13 +60,16 @@ export function AppShell() {
   const [lobbyNavCollapsed, setLobbyNavCollapsed] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(() => sound.muted);
+  const toggleSound = () => setMuted(sound.toggle());
   const location = useLocation();
+  const navigate = useNavigate();
   const contentRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (location.hash === "#live-bets") {
-      document.getElementById("live-bets")?.scrollIntoView();
+    const anchor = document.getElementById(location.hash.slice(1));
+    if (anchor) {
+      anchor.scrollIntoView();
     } else if (contentRef.current) {
       contentRef.current.scrollTop = 0;
     }
@@ -81,7 +84,7 @@ export function AppShell() {
   }, [cashierNonce]);
 
   const showChat = chatOpen && location.pathname !== "/chat";
-  const lobbyHome = !classic && location.pathname === "/";
+  const arcadeChrome = !classic && ["/", "/game/flight"].includes(location.pathname);
   const lobbyNavClass = (hash: string) => location.hash === hash ? "nav-item active" : "nav-item";
   const resetSearch = () => {
     setQuery("");
@@ -89,23 +92,27 @@ export function AppShell() {
   };
 
   return (
-    <div className={"app arcade-shell crafted" + (classic ? "" : " blockbet-edition") + (lobbyHome ? " lobby-home-shell" : "") + (lobbyHome && lobbyNavCollapsed ? " lobby-nav-collapsed" : "") + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
+    <div className={"app arcade-shell crafted" + (classic ? "" : " blockbet-edition") + (arcadeChrome ? " lobby-home-shell" : "") + (arcadeChrome && lobbyNavCollapsed ? " lobby-nav-collapsed" : "") + (showChat ? " with-live-chat" : "") + (location.pathname.startsWith("/game/") ? " game-shell" : "") + (siteStyle === "studio" ? " studio-style" : "")}>
       <aside className={open ? "sidebar open" : "sidebar"}>
-        {lobbyHome ? <>
+        {arcadeChrome ? <>
           <div className="lobby-side-top">
             <button type="button" className="lobby-side-menu lobby-desktop-menu" aria-label="Toggle navigation"
               aria-expanded={!lobbyNavCollapsed} onClick={() => setLobbyNavCollapsed(value => !value)}>☰</button>
             <button type="button" className="lobby-side-menu lobby-mobile-menu" aria-label="Close navigation"
               onClick={() => setOpen(false)}>×</button>
           </div>
-          <div className="lobby-side-search">
+          <form className="lobby-side-search" onSubmit={event => {
+            event.preventDefault();
+            setOpen(false);
+            navigate("/");
+          }}>
             <Icon name="search" />
             <input type="search" aria-label="Search games from sidebar" placeholder="Search games"
               value={query} onChange={event => setQuery(event.target.value)} />
-          </div>
+          </form>
           <nav className="lobby-side-links" aria-label="Arcade navigation">
             <div>
-              <Link to="/" className={lobbyNavClass("")} aria-current={!location.hash ? "page" : undefined}
+              <Link to="/" className={location.pathname === "/" ? lobbyNavClass("") : "nav-item"} aria-current={location.pathname === "/" && !location.hash ? "page" : undefined}
                 onClick={resetSearch}><Icon name="casino" />Home</Link>
               <Link to="/#recent" className={lobbyNavClass("#recent")} aria-current={location.hash === "#recent" ? "page" : undefined}
                 onClick={resetSearch}><Icon name="stats" />Recently played</Link>
@@ -182,7 +189,7 @@ export function AppShell() {
             <span />
           </button>
           <NavLink to="/" className="mobile-brand" end>BlockBet</NavLink>
-          {lobbyHome && <NavLink to="/" className="lobby-header-games" onClick={resetSearch}>
+          {arcadeChrome && <NavLink to="/" className="lobby-header-games" onClick={resetSearch}>
             <Icon name="casino" />Games
           </NavLink>}
           <nav className="head-links">
@@ -195,7 +202,7 @@ export function AppShell() {
             <NavLink to="/race">Race</NavLink>
             <a href="/#live-bets">Live Bets <span className="head-live-dot" aria-hidden="true" /></a>
           </nav>
-          {(!lobbyHome || !isGuest || !canSignIn) && <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
+          {(!arcadeChrome || !isGuest || !canSignIn) && <div className={rolling.dir ? `wallet-pill ${rolling.dir}` : "wallet-pill"}>
             <span className="usd-mark">$</span>
             <span className="bal">
               <strong>{formatAmount(rolling.shown)}</strong>
@@ -209,7 +216,7 @@ export function AppShell() {
             type="button"
             className="sound-btn"
             aria-label={muted ? "Unmute" : "Mute"}
-            onClick={() => setMuted(sound.toggle())}
+            onClick={toggleSound}
           >
             {muted ? (
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -222,10 +229,10 @@ export function AppShell() {
             )}
           </button>
           {isGuest && canSignIn && <>
-            {lobbyHome && <button type="button" className="lobby-header-chat" aria-label="Toggle live chat"
+            {arcadeChrome && <button type="button" className="lobby-header-chat" aria-label="Toggle live chat"
               aria-expanded={chatOpen} onClick={() => setChatOpen(value => !value)}><Icon name="chat" /></button>}
-            <button className="header-sign-in" type="button" onClick={showSignIn}>{lobbyHome ? "Log in" : "Sign in"}</button>
-            {lobbyHome && <button className="lobby-sign-up" type="button" onClick={showSignUp}>Register</button>}
+            <button className="header-sign-in" type="button" onClick={showSignIn}>{arcadeChrome ? "Log in" : "Sign in"}</button>
+            {arcadeChrome && <button className="lobby-sign-up" type="button" onClick={showSignUp}>Register</button>}
           </>}
           <div className="account">
             <button type="button" className="avatar account-trigger" aria-label="Account menu"
@@ -248,7 +255,7 @@ export function AppShell() {
         </header>
 
         <div className="content" ref={contentRef}>
-          <Outlet context={{ query, setQuery } satisfies ShellContext} />
+          <Outlet context={{ query, setQuery, muted, toggleSound } satisfies ShellContext} />
           {location.pathname !== "/chat" && <BetsTable />}
           <footer className="site-foot">
             <p>Play money only - no real value.</p>

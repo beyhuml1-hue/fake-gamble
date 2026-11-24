@@ -1,0 +1,233 @@
+.app.crafted.lobby-home-shell .play-surface[data-play="flight"] {
+  --flight-line: #24466d;
+  --flight-panel: #101f38;
+  --flight-control: #0b172d;
+  --flight-muted: #a9bedc;
+  color: #edf3ff;
+  padding-top: 0;
+}
+.app.crafted .play-surface[data-play="flight"] .arcade-game-heading {
+  min-height: 40px;
+  margin: 0 0 14px;
+  gap: 12px;
+}
+.app.crafted .play-surface[data-play="flight"] .arcade-game-heading a {
+  padding: 5px 0;
+  border: 0;
+  color: var(--flight-muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+.app.crafted .play-surface[data-play="flight"] .arcade-game-heading h1 {
+  font-size: 23px;
+  font-weight: 750;
+  padding-left: 12px;
+  border-left: 1px solid var(--flight-line);
+}
+.flight-favorite {
+  margin-left: auto;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid var(--flight-line);
+  border-radius: 7px;
+  background: #193657;
+  color: #eef5ff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.app.crafted.lobby-home-shell .play-surface[data-play="flight"] .game-card {
+  grid-template-columns: clamp(225px, 37%, 275px) minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--flight-line);
+  border-radius: 12px;
+  background: var(--flight-panel);
+  box-shadow: none;
+}
+.app.crafted.lobby-home-shell .play-surface[data-play="flight"] .game-panel {
+  padding: 18px;
+  border: 0;
+  border-right: 1px solid var(--flight-line);
+  border-radius: 0;
+  background: var(--flight-panel);
+}
+.app.crafted.lobby-home-shell .play-surface[data-play="flight"] .game-stage {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #2e77d9;
+  animation: none;
+}
+.app.crafted .play-surface[data-play="flight"] .panel-form {
+  gap: 12px;
+}
+.app.crafted .play-surface[data-play="flight"] .panel-form .tabs,
+.app.crafted .play-surface[data-play="flight"] .flight-speed {
+  display: grid;
+  border: 1px solid var(--flight-line);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 4px;
+  background: var(--flight-control);
+}
+.app.crafted .play-surface[data-play="flight"] .panel-form .tabs { grid-template-columns: 1fr; }
+.app.crafted .play-surface[data-play="flight"] .panel-form .tab.active,
+.app.crafted .play-surface[data-play="flight"] .flight-speed button[aria-pressed="true"] {
+  background: #1c3b64;
+  border-radius: 5px;
+  box-shadow: inset 0 -2px #4c95f7;
+  color: #f2f7ff;
+}
+.app.crafted .play-surface[data-play="flight"] .panel-form .field { margin: 10px 0 0; }
+.app.crafted .play-surface[data-play="flight"] .panel-form .field-label { color: var(--flight-muted); font-weight: 650; font-size: 13px; }
+.app.crafted .play-surface[data-play="flight"] .panel-form .hint { color: var(--flight-muted); margin-top: 0; font-size: 11px; }
+.app.crafted .play-surface[data-play="flight"] .panel-form .amount {
+  background: var(--flight-control);
+  border: 1px solid var(--flight-line);
+  min-height: 43px;
+}
+.app.crafted .play-surface[data-play="flight"] .amount-prefix { color: #ffd372; }
+.app.crafted .play-surface[data-play="flight"] .amount input { background: transparent; color: #fff; font-weight: 750; }
+.app.crafted .play-surface[data-play="flight"] .amount .step-btn { background: #193657; color: white; }
+.app.crafted .play-surface[data-play="flight"] .amount .step-max { display: none; }
+.app.crafted .play-surface[data-play="flight"] .panel-form .bet-btn {
+  min-height: 45px;
+  background: linear-gradient(#548ff9, #326fdf);
+  color: white;
+  font-size: 14px;
+  font-weight: 750;
+}
+.app.crafted .play-surface[data-play="flight"] .panel-form .bet-btn:enabled:hover { background: #4b8bf7; }
+
+.app.crafted .play-surface[data-play="flight"] .flight-sky {
+  height: clamp(480px, 67vh, 670px);
+  border-radius: 0;
+  background: linear-gradient(#2b70d9 0%, #519de7 51%, #a4d5f5 84%);
+}
+.app.crafted .play-surface[data-play="flight"] .flight-readout { inset: 11px 13px auto; padding: 0; }
+.app.crafted .play-surface[data-play="flight"] :is(.flight-readout dl div, .flight-status) {
+  background: #0e2349;
+  color: #f2f7ff;
+  border: 1px solid #254979;
+}
+.app.crafted .play-surface[data-play="flight"] .flight-readout dl div { padding: 3px 7px; }
+.app.crafted .play-surface[data-play="flight"] .flight-readout dt {
+  color: #b9d5f1;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.app.crafted .play-surface[data-play="flight"] .flight-readout dd { font-size: 18px; line-height: 1.1; }
+.app.crafted .play-surface[data-play="flight"] .flight-status {
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 750;
+}
+.app.crafted .play-surface[data-play="flight"] .flight-scenery { inset: 0; }
+.app.crafted .play-surface[data-play="flight"] .flight-cloud {
+  width: 27%;
+  height: 6%;
+  background: #e5f3ffaa;
+  box-shadow: 29px -14px 0 2px #e5f3ff99, 63px 1px 0 0 #e5f3ff80;
+}
+.app.crafted .play-surface[data-play="flight"] .cloud-near { left: 49%; top: 15%; }
+.app.crafted .play-surface[data-play="flight"] .cloud-far { left: -9%; top: 29%; scale: .75; }
+.app.crafted .play-surface[data-play="flight"] .flight-hills {
+  inset: 68% -6% 21%;
+  background: #b5d4dd;
+  opacity: .85;
+  clip-path: polygon(0 75%, 7% 59%, 14% 19%, 20% 8%, 28% 23%, 36% 59%, 43% 71%, 58% 63%, 66% 31%, 72% 34%, 81% 71%, 90% 86%, 100% 82%, 100% 100%, 0 100%);
+}
+.app.crafted .play-surface[data-play="flight"] .flight-water {
+  inset: 78% 0 0;
+  background:
+    radial-gradient(ellipse 30px 4px at 20% 26%, #abdcfc68 18%, transparent 90%) 0 0 / 96px 41px,
+    linear-gradient(#398cce, #125097);
+}
+.app.crafted .play-surface[data-play="flight"] .flight-launchpad {
+  bottom: 25.5%;
+  width: 81%;
+  height: 15px;
+  border: 2px solid #492b23;
+  border-radius: 4px;
+  background: repeating-linear-gradient(112deg, #f3bb56 0 23px, #a46430 23px 25px);
+  box-shadow: 0 5px #a15b2d;
+}
+.app.crafted .play-surface[data-play="flight"] .flight-launchpad::after { display: none; }
+.flight-launchpad span {
+  position: absolute;
+  top: 100%;
+  width: 20px;
+  height: 48px;
+  border: 2px solid #47312a;
+  border-radius: 0 0 9px 9px;
+  background: linear-gradient(#9d602f 55%, #40a7b9 56% 82%, #805243 83%);
+}
+.flight-launchpad span:nth-child(1) { left: 24%; }
+.flight-launchpad span:nth-child(2) { left: 56%; }
+.flight-launchpad span:nth-child(3) { left: 88%; }
+.app.crafted .play-surface[data-play="flight"] .flight-plane { width: clamp(46px, 7vw, 68px); z-index: 1; }
+.app.crafted .play-surface[data-play="flight"] .flight-track {
+  inset: auto 14px 13px;
+  min-height: 27px;
+  background: #10345d;
+  color: #e1efff;
+  border: 1px solid #2b5b8d;
+}
+.flight-track progress { accent-color: #8fe1c8; }
+
+.flight-history {
+  margin-top: 24px;
+  padding: 15px 17px;
+  border: 1px solid var(--flight-line);
+  border-radius: 11px;
+  background: #0e1827;
+  overflow-x: auto;
+}
+.app.crafted .play-surface[data-play="flight"] .flight-history h2 {
+  margin: 0 0 7px;
+  color: var(--flight-muted);
+  font-size: 12px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-weight: 750;
+}
+.flight-history table { width: 100%; font-size: 12px; border-collapse: collapse; color: #d7e5fa; white-space: nowrap; }
+.app.crafted .play-surface[data-play="flight"] .flight-history :is(th, td) { padding: 6px 4px; text-align: right; }
+.app.crafted .play-surface[data-play="flight"] .flight-history :is(th, td):first-child { text-align: left; }
+.app.crafted .play-surface[data-play="flight"] .flight-history th { background: #142239; border-bottom: 1px solid var(--flight-line); color: var(--flight-muted); }
+.app.crafted .play-surface[data-play="flight"] .flight-history td[colspan] { padding: 10px; text-align: center; color: var(--flight-muted); }
+.flight-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 17px;
+  margin-top: 9px;
+  padding: 13px 16px;
+  border: 1px solid var(--flight-line);
+  border-radius: 10px;
+  background: var(--flight-panel);
+  color: var(--flight-muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+.flight-footer :is(button, a, summary) { cursor: pointer; }
+.flight-footer button { border: 0; padding: 0; background: none; color: #73c8ef; font: inherit; }
+.flight-footer details p { max-width: 300px; margin: 8px 0 0; font-weight: 400; }
+
+@media (max-width: 850px) {
+  .app.crafted.lobby-home-shell .play-surface[data-play="flight"] .game-card {
+    grid-template-columns: minmax(205px, 36%) minmax(0, 1fr);
+  }
+  .app.crafted .play-surface[data-play="flight"] .flight-sky { height: 535px; }
+}
+@media (max-width: 720px) {
+  .app.crafted.lobby-home-shell .play-surface[data-play="flight"] .game-card { grid-template-columns: minmax(0, 1fr); }
+  .app.crafted.lobby-home-shell .play-surface[data-play="flight"] .game-stage { grid-row: 1; }
+  .app.crafted.lobby-home-shell .play-surface[data-play="flight"] .game-panel { border-right: 0; border-top: 1px solid var(--flight-line); }
+  .app.crafted .play-surface[data-play="flight"] .flight-sky { height: clamp(300px, 80vw, 450px); }
+}

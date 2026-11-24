@@ -1,19 +1,25 @@
 import { useEffect, useRef, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
+import type { ShellContext } from "../components/AppShell";
 import { betCents, formatMult, formatUSD, payout } from "../lib/money";
 import { randInt, random } from "../lib/random";
+import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
+import "./flight-lobby.css";
 
 const duration = 12;
 const checkpoints = [2, 3.4, 4.8, 6.2, 7.6, 9];
 const runway = { min: 13, max: 22 };
+const sceneryAltitude = 14;
 const effects = {
   coin: { lift: 5, multiplier: 0.4 },
   gem: { lift: 9, multiplier: 0.75 },
   bomb: { lift: -13, multiplier: -0.35 },
 };
 const kinds = ["coin", "gem", "bomb", "bomb"] as const;
+const rules = "The plane flies automatically. Finish inside the landing band to collect the return.";
 type Encounter = { time: number; kind: keyof typeof effects };
 type Pickup = Encounter & { height: number };
 type FlightState = { time: number; height: number; velocity: number; mult: number; pickups: Pickup[] };
@@ -36,7 +42,11 @@ function altitude(time: number, encounters: Encounter[], drift: number) {
 }
 
 export function Flight() {
-  const { balance, debit, credit, record } = useWallet();
+  const { balance, debit, credit, record, history } = useWallet();
+  const { muted, toggleSound } = useOutletContext<ShellContext>();
+  const [favorite, setFavorite] = useState(() => {
+    try { return localStorage.getItem("blockbet.flight-favorite") === "true"; } catch { return false; }
+  });
   const [amount, setAmount] = useState(1);
   const [speed, setSpeed] = useState(1);
   const [stake, setStake] = useState(0);
@@ -74,12 +84,13 @@ export function Flight() {
 
     const final = sample(duration);
     const landed = final.height >= runway.min && final.height <= runway.max;
-    const settle = () => {
+    const settle = (audible = false) => {
       if (!active.current) return;
       active.current = false;
       settleOnExit.current = undefined;
       const returned = landed ? credit(payout(wager, final.mult)) : 0;
       record("Flight", wager, returned);
+      if (audible) sound.result(wager, returned);
     };
     settleOnExit.current = settle;
     const started = performance.now();
@@ -87,7 +98,7 @@ export function Flight() {
       const time = Math.min(duration, (now - started) * speed / 1000);
       setFlight(sample(time));
       if (time === duration) {
-        settle();
+        settle(true);
         setRunning(false);
         setStatus(landed ? "Perfect landing" : final.height < runway.min ? "Fell short of the runway" : "Overshot the runway");
         return;
@@ -103,17 +114,38 @@ export function Flight() {
   const approach = flight.time >= 9;
   const aligned = flight.height >= runway.min && flight.height <= runway.max;
   const potential = flight.time > 0 || running ? stake : betCents(amount, balance) ?? 0;
+  const recent = history.filter(row => row.game === "Flight").slice(0, 6);
 
-  return <GameLayout title="Flight" note="The plane flies automatically. Finish inside the landing band to collect the return."
+  return <GameLayout title="Flight" note={rules}
+    headingAction={<button className="flight-favorite" type="button" aria-pressed={favorite} onClick={() => {
+      const selected = !favorite;
+      setFavorite(selected);
+      try { localStorage.setItem("blockbet.flight-favorite", String(selected)); } catch { /* storage unavailable */ }
+    }}>{favorite ? "♥ Favorited" : "♡ Favorite"}</button>}
     panel={<BetPanel amount={amount} onAmount={setAmount} profitCents={0} label={running ? "In flight" : "Play"}
-      onAction={launch} disabled={running} locked={running} showProfit={false}
+      onAction={launch} disabled={running} locked={running} showProfit={false} amountLabel="Stake"
       afterAction={<div className="flight-speed" role="group" aria-label="Flight speed">
         {[1, 2].map(rate => <button key={rate} type="button" aria-pressed={speed === rate} disabled={running}
           onClick={() => setSpeed(rate)}>{rate}× speed</button>)}
       </div>}>
-    </BetPanel>}>
+    </BetPanel>}
+    recentResults={<section className="flight-history" id="flight-history" aria-labelledby="flight-history-title">
+      <h2 id="flight-history-title">Recent flights</h2>
+      <table>
+        <thead><tr><th scope="col">Result</th><th scope="col">Final return</th><th scope="col">Stake</th><th scope="col">Returned</th><th scope="col">Net</th></tr></thead>
+        <tbody>{recent.length === 0 ? <tr><td colSpan={5}>No flights yet</td></tr> : recent.map(row => <tr key={row.id}>
+          <td>{row.payout > 0 ? "Landed" : "Missed"}</td><td>{formatMult(row.payout / row.wager)}</td>
+          <td>{formatUSD(row.wager)}</td><td>{formatUSD(row.payout)}</td><td>{formatUSD(row.payout - row.wager)}</td>
+        </tr>)}</tbody>
+      </table>
+    </section>}
+    footer={<div className="flight-footer">
+      <details><summary>Rules</summary><p>{rules}</p></details>
+      <a href="#flight-history">My bets</a>
+      <button type="button" aria-pressed={!muted} onClick={toggleSound}>Sound {muted ? "off" : "on"}</button>
+    </div>}>
     <div className="flight-game">
-      <div className="flight-sky" style={{backgroundPositionX: (-240 * progress) + "px"}}>
+      <div className="flight-sky">
         <div className="flight-readout">
           <dl><div><dt>Multiplier</dt><dd>{formatMult(flight.mult)}</dd></div>
           <div><dt>Return if landed</dt><dd>{formatUSD(payout(potential, flight.mult))}</dd></div></dl>
@@ -123,12 +155,14 @@ export function Flight() {
           <i className="flight-cloud cloud-near" style={{translate: (-75 * progress) + "% 0"}}/>
           <i className="flight-cloud cloud-far" style={{translate: (-130 * progress) + "% 0"}}/>
           <i className="flight-hills"/><i className="flight-water"/>
-          <i className="flight-launchpad" style={{left: (1 - 38 * progress) + "%"}}/>
-          <span className={"flight-runway" + (approach && aligned ? " aligned" : "")}
-            style={{bottom: runway.min + "%", height: (runway.max - runway.min) + "%"}}>Finish</span>
+          <i className="flight-launchpad" style={{left: (-1 - 55 * progress) + "%"}}>
+            <span/><span/><span/>
+          </i>
+          {(running || progress > 0) && <span className={"flight-runway" + (approach && aligned ? " aligned" : "")}
+            style={{bottom: (runway.min + sceneryAltitude) + "%", height: (runway.max - runway.min) + "%"}}>Finish</span>}
           {flight.pickups.map(item => <span key={item.time} className={"flight-pickup " + item.kind}
-            style={{left: (8 + item.time / duration * 83) + "%", bottom: item.height + "%"}}/>)}
-          <span className="flight-plane" style={{left: (8 + progress * 83) + "%", bottom: Math.max(5, flight.height) + "%",
+            style={{left: (27 + item.time / duration * 64) + "%", bottom: (item.height + sceneryAltitude) + "%"}}/>)}
+          <span className="flight-plane" style={{left: (27 + progress * 64) + "%", bottom: (Math.max(5, flight.height) + sceneryAltitude) + "%",
             rotate: Math.max(-25, Math.min(25, -flight.velocity / 2)) + "deg"}}><img src={`/flight/plane-${1 + Math.floor(flight.time * 16) % 3}.png`} alt="" draggable={false}/></span>
         </div>
         <div className="flight-track">

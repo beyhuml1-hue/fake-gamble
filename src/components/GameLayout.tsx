@@ -6,11 +6,14 @@ import { useWallet } from "../state/wallet";
 
 const historicalNames: Record<string, string> = { dragon: "Dragon Tower", diamonds: "Diamonds" };
 
-export function GameLayout({ title, note, panel, children }: {
+export function GameLayout({ title, note, panel, children, headingAction, recentResults, footer }: {
   title: string;
   note: string;
   panel: ReactNode;
   children: ReactNode;
+  headingAction?: ReactNode;
+  recentResults?: ReactNode;
+  footer?: ReactNode;
 }) {
   const { id = "" } = useParams();
   const { history } = useWallet();
@@ -25,23 +28,23 @@ export function GameLayout({ title, note, panel, children }: {
   return (
     <section className="game-page play-surface" data-play={id} aria-label={title}>
       {!classic && <header className="arcade-game-heading">
-        <Link to="/">Games</Link>
+        <Link to="/">{id === "flight" ? "‹ Lobby" : "Games"}</Link>
         <h1>{title}</h1>
+        {headingAction}
       </header>}
       <div className="game-card">
         <div className="game-panel">{panel}</div>
         <div className="game-stage">{children}</div>
       </div>
-      {(recent.length > 0 || (!classic && id === "flight")) && <section className="play-room-history" aria-label="Your recent results">
+      {recentResults ?? (recent.length > 0 && <section className="play-room-history" aria-label="Your recent results">
         <h2>{id === "flight" ? "Recent flights" : "Recent results"}</h2>
-        {recent.length === 0 && <p>No flights yet.</p>}
         <div>{recent.map(row => <article key={row.id}>
           <small>{new Date(row.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small>
           <strong>{formatUSD(row.payout)}</strong>
           <span>{formatMult(row.payout / row.wager)}</span>
         </article>)}</div>
-      </section>}
-      <div className="play-footer"><Link to="/">‹ Games</Link><span>{note}</span></div>
+      </section>)}
+      {footer ?? <div className="play-footer"><Link to="/">‹ Games</Link><span>{note}</span></div>}
     </section>
   );
 }
