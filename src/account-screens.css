@@ -285,3 +285,88 @@
 .auth-game-form p { margin: 4px 0 0; }
 .auth-game-form .auth-submit { min-height: 44px; }
 .auth-card .auth-link-player { color: #c5def0; }
+.app.crafted.lobby-home-shell .signed-in-header {
+  background: #0e1a2d;
+  border-bottom-color: #2b4665;
+}
+.app.crafted.lobby-home-shell .signed-in-header .mobile-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #edf6ff;
+}
+.header-brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border-radius: 8px;
+  background: #a5e8ff;
+  color: #102033;
+  font-size: 19px;
+  font-weight: 850;
+}
+.signed-in-header .lobby-header-games {
+  min-height: 38px;
+  padding-inline: 12px;
+  background: #203956;
+}
+.signed-in-header .header-balance {
+  min-height: 42px;
+  padding-inline: 12px;
+}
+.signed-in-header .header-coin {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border: 1px solid #ffcc77;
+  border-radius: 50%;
+  color: #412a14;
+  background: #f4b759;
+  font-size: 12px;
+  font-weight: 800;
+}
+.signed-in-header .header-wallet-plus,
+.signed-in-header .header-shortcut {
+  width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  flex-shrink: 0;
+}
+.signed-in-header .header-shortcut { background: #12223a; }
+.signed-in-header .header-rewards { color: #ffd384; }
+.signed-in-header .header-fund-actions button:first-child {
+  background: #16714f;
+  border-color: #2b946e;
+}
+.signed-in-header .header-fund-actions button span { margin-right: 4px; }
+.signed-in-header .header-fund-actions button { display: inline-block; }
+.signed-in-header :is(.header-wallet-plus, .header-shortcut, .header-fund-actions button):hover {
+  filter: brightness(1.2);
+}
+
+@media (min-width: 1100px) {
+  .app.crafted.lobby-home-shell .signed-in-header {
+    --header-gutter: max(24px, calc((100% - 1440px) / 2));
+    padding-inline: var(--header-gutter);
+    min-height: 66px;
+    height: 66px;
+  }
+  .app.crafted .signed-in-header .header-funds {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+  }
+  .signed-in-header .header-balance { min-width: 134px; }
+  .signed-in-header .header-fund-actions { margin-left: auto; }
+  .signed-in-header .arcade-catalog-menu nav { left: var(--header-gutter); }
+}
+
+@media (max-width: 520px) {
+  .signed-in-header .header-brand-mark { display: none; }
+  .signed-in-header .header-balance { padding-inline: 7px; }
+}

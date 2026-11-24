@@ -120,6 +120,7 @@ export function AppShell() {
   const useDsmp = !practiceGame;
   const showChat = chatOpen && location.pathname !== "/chat";
   const arcadeChrome = !classic;
+  const signedInArcade = arcadeChrome && !isGuest;
   const lobbyNavClass = (hash: string) => location.hash === hash ? "nav-item active" : "nav-item";
   const resetSearch = () => {
     setQuery("");
@@ -215,13 +216,16 @@ export function AppShell() {
       {open ? <button className="scrim" type="button" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
 
       <div className="main">
-        <header className={arcadeChrome && !isGuest ? "header signed-in-header" : "header"}>
+        <header className={signedInArcade ? "header signed-in-header" : "header"}>
           <button className="menu-btn" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
             <span />
             <span />
             <span />
           </button>
-          <NavLink to="/" className="mobile-brand" end>BlockBet</NavLink>
+          <NavLink to="/" className="mobile-brand" end>
+            {signedInArcade && <span className="header-brand-mark" aria-hidden="true">B</span>}
+            BlockBet
+          </NavLink>
           {arcadeChrome && <details className="arcade-catalog-menu" key={location.key}
             onKeyDown={event => {
               if (event.key === "Escape") {
@@ -229,7 +233,7 @@ export function AppShell() {
                 event.currentTarget.querySelector("summary")?.focus();
               }
             }}>
-            <summary className="lobby-header-games"><Icon name="casino" />Games <span aria-hidden="true">⌄</span></summary>
+            <summary className="lobby-header-games"><Icon name="gamepad" />Games <span aria-hidden="true">⌄</span></summary>
             <nav aria-label="Arcade game catalog">
               <Link to="/" onClick={resetSearch}>Browse lobby</Link>
               {arcadeCategories.map(category => <section key={category.id}>
@@ -260,24 +264,24 @@ export function AppShell() {
               Wallet
             </button>
           </div>}
-          {arcadeChrome && !isGuest && <>
+          {signedInArcade && <>
             <div className="header-funds">
               <div className="header-balance" aria-label={useDsmp ? "DonutSMP balance" : "Play USD balance"}>
-                <span aria-hidden="true" className="header-coin">{useDsmp ? "◆" : "$"}</span>
-                <div><strong>{useDsmp ? dsmp(donut?.wallet?.balance ?? 0) : formatAmount(rolling.shown)}</strong>
+                <span aria-hidden="true" className="header-coin">{useDsmp ? "◈" : "$"}</span>
+                <div><strong>{useDsmp ? (donut?.wallet?.balance ?? 0).toLocaleString("en-US") : formatAmount(rolling.shown)}</strong>
                   <small>{useDsmp ? "DonutSMP" : "Play USD"}</small></div>
               </div>
               <button type="button" className="header-wallet-plus" aria-label="Open DSMP wallet" onClick={() => openCashier()}>+</button>
             </div>
             <div className="header-fund-actions">
-              <button type="button" onClick={() => openCashier()}>Deposit</button>
+              <button type="button" onClick={() => openCashier()}><span aria-hidden="true">+</span> Deposit</button>
               <button type="button" onClick={() => openCashier("withdraw")}>Withdraw</button>
             </div>
-            <Link to="/rewards" className="header-shortcut" aria-label="Rewards"><Icon name="reward" /></Link>
+            <Link to="/rewards" className="header-shortcut header-rewards" aria-label="Rewards"><Icon name="reward" /></Link>
             {location.pathname !== "/chat" && <button type="button" className="header-shortcut" aria-label="Toggle live chat"
               aria-expanded={showChat} onClick={() => setChatOpen(value => !value)}><Icon name="chat" /></button>}
           </>}
-          <button
+          {!signedInArcade && <button
             type="button"
             className="sound-btn"
             aria-label={muted ? "Unmute" : "Mute"}
@@ -292,7 +296,7 @@ export function AppShell() {
                 <path d="M4 10v4h3l4 3V7L7 10H4zM16 9a4 4 0 0 1 0 6M18.5 7a7 7 0 0 1 0 10" />
               </svg>
             )}
-          </button>
+          </button>}
           {isGuest && canSignIn && <>
             {arcadeChrome && <button type="button" className="lobby-header-chat" aria-label="Toggle live chat"
               aria-expanded={chatOpen} onClick={() => setChatOpen(value => !value)}><Icon name="chat" /></button>}
@@ -313,6 +317,7 @@ export function AppShell() {
                 <button type="button" onClick={() => { setAccountOpen(false); setProfileOpen(true); }}>Profile</button>
                 <Link to="/transactions" onClick={() => setAccountOpen(false)}>Transactions</Link>
                 <Link to="/rewards" onClick={() => setAccountOpen(false)}>Rewards</Link>
+                {signedInArcade && <button type="button" onClick={toggleSound}>{muted ? "Unmute sound" : "Mute sound"}</button>}
                 {isGuest
                   ? (canSignIn
                       ? <button type="button" onClick={showSignIn}>Log in or sign up</button>
