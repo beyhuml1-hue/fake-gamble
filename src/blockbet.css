@@ -82,7 +82,7 @@
 .app.blockbet-edition .play-surface:not([data-play="mines"],[data-play="dragon"]) > .game-card {
   background: #172824; border: 1px solid #304c43; box-shadow: 0 12px 34px #07120f65; gap: 1px;
 }
-.app.blockbet-edition .play-surface:not([data-play="mines"],[data-play="dragon"]) .game-panel { background: #182d27; }
+.app.blockbet-edition .play-surface:not([data-play="mines"],[data-play="dragon"]) .game-panel { background: #1a2538; }
 .app.blockbet-edition .play-surface:is([data-play="flight"],[data-play="digger"],[data-play="poison"],[data-play="slide"]) .game-stage {
   background: #11221d; padding: 0;
 }

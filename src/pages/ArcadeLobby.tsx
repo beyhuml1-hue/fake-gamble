@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useLocation, useOutletContext } from "react-router-dom";
 import type { ShellContext } from "../components/AppShell";
 import { Icon } from "../components/Icons";
@@ -15,7 +15,7 @@ export const arcadeCategories = [
 const coverTones: Partial<Record<GameId, string>> = {
   dice: "blue", mines: "green", plinko: "magenta", roulette: "amber", coinflip: "blue",
   limbo: "amber", blackjack: "red", dragon: "indigo", slide: "indigo", crash: "red",
-  flight: "blue", baccarat: "green", hilo: "teal", keno: "violet", snakes: "violet",
+  flight: "blue", baccarat: "blue", pump: "magenta", diamonds: "teal", upgrader: "violet", hilo: "teal", keno: "violet", snakes: "violet",
   rps: "amber",
   farmyard: "amber", beacon: "teal", vault: "violet",
   packs: "indigo", cases: "teal", "case-battles": "red", rips: "magenta",
@@ -23,6 +23,30 @@ const coverTones: Partial<Record<GameId, string>> = {
 const historicNames = new Map([["derby", "pig-race"]]);
 type Game = (typeof GAMES)[number];
 
+function LinkedPlayerSkin({ player }: { player: string }) {
+  const [id, setId] = useState(player.startsWith(".") ? "" : player);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!/^\.[A-Za-z0-9_]{1,16}$/.test(player)) return;
+    const controller = new AbortController();
+    const gamertag = player.slice(1).replaceAll("_", " ");
+    fetch(`https://api.geysermc.org/v2/xbox/xuid/${encodeURIComponent(gamertag)}`,
+      { signal: controller.signal, referrerPolicy: "no-referrer" })
+      .then(response => response.ok ? response.json() : null)
+      .then(profile => {
+        if (typeof profile?.xuid !== "string" || !/^\d{1,20}$/.test(profile.xuid)) return;
+        const hex = BigInt(profile.xuid).toString(16).padStart(16, "0");
+        if (hex.length === 16) setId(`00000000-0000-0000-${hex.slice(0, 4)}-${hex.slice(4)}`);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [player]);
+  if (!id || failed) return null;
+  return <img className="lobby-player-skin" src={`https://mc-heads.net/body/${encodeURIComponent(id)}`}
+    alt={`${player}’s game skin`} referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+}
+
+const newArt = new Set(["pump", "diamonds", "upgrader"]);
 const coverOrder = Object.keys(coverTones);
 const catalog = [
   ...coverOrder.flatMap(id => GAMES.filter(game => game.id === id)),
@@ -42,7 +66,7 @@ function GameRow({ title, icon, games }: {
     <div className="arcade-grid">
       {games.map(game => <Link key={game.id} to={`/game/${game.id}`} className="arcade-tile"
         data-cover-tone={coverTones[game.id]} title={game.blurb}
-        style={coverTones[game.id] ? { "--cover-object": `url("/covers/arcade/${game.id}-object.webp")` } as CSSProperties : undefined}>
+        style={coverTones[game.id] ? { "--cover-object": `url("/covers/arcade/${game.id}-object.${newArt.has(game.id) ? "png" : "webp"}")` } as CSSProperties : undefined}>
         <span className="arcade-art" data-game={game.id} aria-hidden="true" />
         <strong>{game.name}</strong>
       </Link>)}
@@ -52,9 +76,10 @@ function GameRow({ title, icon, games }: {
 }
 
 export function ArcadeLobby() {
-  const { query, setQuery } = useOutletContext<ShellContext>();
+  const { query, setQuery, donutCashier, openDonutCashier } = useOutletContext<ShellContext>();
+  const player = donutCashier.data?.wallet?.player;
   const { hash } = useLocation();
-  const { history, openCashier } = useWallet();
+  const { history } = useWallet();
   const searchRef = useRef<HTMLInputElement>(null);
   const category = hash.slice(1);
   const recentOnly = category === "recent";
@@ -83,23 +108,16 @@ export function ArcadeLobby() {
   return <section className="lobby arcade-lobby blockbet-lobby">
     <div className="arcade-hero">
       <section className="arcade-hero-card arcade-account">
-        <div className="voxel-scene" aria-hidden="true">
-          <div className="voxel-person">
-            {["head", "body", "arm-left", "arm-right", "leg-left", "leg-right"].map(part =>
-              <div key={part} className={`voxel-part ${part}`}>
-                {["front", "back", "left", "right", "top", "bottom"].map(face => <span key={face} className={face} />)}
-              </div>)}
-          </div>
-        </div>
+        {player && <LinkedPlayerSkin key={player} player={player} />}
         <h1>BlockBet <span>Arcade</span></h1>
         <p>Explore all games and Packs.</p>
         <Link className="lobby-cta" to="/#originals" onClick={() => setQuery("")}>Explore games</Link>
       </section>
       <section className="arcade-hero-card lobby-wallet-card">
         <div className="arcade-art" data-game="account-coins" aria-hidden="true" />
-        <h2>Play USD <span>Wallet</span></h2>
+        <h2>DSMP <span>Wallet</span></h2>
         <p>Check your balance and recent activity.</p>
-        <button className="lobby-cta" type="button" onClick={openCashier}>Open wallet</button>
+        <button className="lobby-cta" type="button" onClick={openDonutCashier}>Open wallet</button>
       </section>
     </div>
 

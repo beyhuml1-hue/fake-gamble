@@ -4,7 +4,7 @@ import { formatMult, formatUSD } from "../lib/money";
 import { classic } from "../data/games";
 import { useWallet } from "../state/wallet";
 
-const historicalNames: Record<string, string> = { dragon: "Dragon Tower", diamonds: "Diamonds" };
+const historicalNames: Record<string, string> = { pump: "Pump", dragon: "Dragon Tower", diamonds: "Diamonds" };
 
 export function GameLayout({ title, note, panel, children, headingAction, recentResults, footer }: {
   title: string;

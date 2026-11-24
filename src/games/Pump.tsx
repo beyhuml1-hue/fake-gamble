@@ -68,7 +68,7 @@ export function Pump() {
 
   return (
     <GameLayout
-      title="Pump"
+      title="Balloon"
       note="98% base RTP"
       panel={
         <BetPanel

@@ -55,10 +55,12 @@ export function useDonutCashier(signedIn: boolean) {
 type CashierProps = {
   open: boolean;
   onClose: () => void;
+  signedIn: boolean;
+  onSignIn: () => void;
   cashier: ReturnType<typeof useDonutCashier>;
 };
 
-export function DonutCashier({ open, onClose, cashier }: CashierProps) {
+export function DonutCashier({ open, onClose, cashier, signedIn, onSignIn }: CashierProps) {
   const { data, refresh, accept } = cashier;
   const [amount, setAmount] = useState("");
   const [player, setPlayer] = useState("");
@@ -98,10 +100,10 @@ export function DonutCashier({ open, onClose, cashier }: CashierProps) {
     }
   }
 
-  if (!data?.configured) return null;
-  const { wallet, intent, withdrawal } = data;
+  const { wallet, intent, withdrawal } = data ?? {};
+  const online = Boolean(data?.enabled);
   const pending = intent?.status === "open";
-  const pay = pending && data.enabled ? `/pay ${data.cashier} ${intent.amount}` : "";
+  const pay = pending && data?.enabled ? `/pay ${data.cashier} ${intent.amount}` : "";
   const withdrawalPending = ["queued", "claimed", "review"].includes(withdrawal?.status || "");
   const validAmount = /^\d+$/.test(amount) && Number(amount) >= 1 && Number(amount) <= 100_000_000;
   const withdrawStatus: Record<string, string> = {
@@ -116,29 +118,31 @@ export function DonutCashier({ open, onClose, cashier }: CashierProps) {
       <header className="wallet-fold-head">
         <div className="wallet-fold-id"><div>
           <p className="donut-kicker">{wallet ? wallet.player : "DonutSMP"}</p>
-          <strong id="donut-cashier-title">{wallet ? dsmp(wallet.balance) : "Sign in with Minecraft"}</strong>
+          <strong id="donut-cashier-title">{wallet ? dsmp(wallet.balance) : "DSMP Wallet"}</strong>
         </div></div>
         <button type="button" className="wallet-fold-x" aria-label="Close cashier" onClick={onClose}>×</button>
       </header>
       <div className="wallet-fold-body">
-        {!data.enabled && <p role="status">Cashier is offline. Wait for it to come online before sending money.</p>}
-        {!wallet && !pending && <form onSubmit={event => void submit("link", event)}>
+        {!signedIn && <button type="button" className="wallet-btn" onClick={onSignIn}>Sign in to BlockBet</button>}
+        {!online && <p role="status">Cashier offline. Deposits and withdrawals are paused.</p>}
+        {signedIn && !wallet && !pending && <form onSubmit={event => void submit("link", event)}>
+          <h2>Sign in with Minecraft</h2>
           <label>In-game name
             <input value={player} maxLength={17} autoComplete="off" pattern="[.]?[A-Za-z0-9_]{1,16}"
               placeholder="Your IGN" onChange={event => setPlayer(event.target.value)} required />
           </label>
           <p>Use a leading dot for Bedrock, like <b>.Player</b>. For Java, enter <b>Player</b>.</p>
-          <button className="wallet-btn" disabled={!data.enabled || busy}>Accept</button>
+          <button className="wallet-btn" disabled={!online || busy}>Accept</button>
         </form>}
-        {wallet && <div className="donut-actions">
+        {<div className="donut-actions">
           <label>Amount in DSMP
             <input value={amount} inputMode="numeric" maxLength={9} placeholder="Enter an amount"
               onChange={event => setAmount(event.target.value)} />
           </label>
           <div>
-            <button className="wallet-btn" disabled={!data.enabled || busy || !validAmount || pending || intent?.status === "review"}
+            <button className="wallet-btn" disabled={!wallet || !online || busy || !validAmount || pending || intent?.status === "review"}
               onClick={() => void submit("deposit")}>Deposit</button>
-            <button className="wallet-btn" disabled={!data.enabled || busy || !validAmount || withdrawalPending || Number(amount) > wallet.balance}
+            <button className="wallet-btn" disabled={!wallet || !online || busy || !validAmount || withdrawalPending || Number(amount) > (wallet?.balance ?? 0)}
               onClick={() => void submit("withdraw")}>Withdraw</button>
           </div>
         </div>}

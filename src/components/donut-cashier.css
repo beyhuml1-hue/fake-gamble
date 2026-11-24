@@ -85,3 +85,10 @@
   font: inherit;
 }
 
+
+.donut-cashier[open]{border-color:#3a4b68;background:#141e32;color:#e4ebfb;border-radius:14px}
+.donut-cashier::backdrop{background:#090f20bf}
+.donut-cashier .donut-kicker,.donut-cashier strong,.donut-cashier code{color:#b5cfff}
+.donut-cashier input,.donut-instruction{background:#101a2d;border-color:#435777}
+.donut-cashier h2{margin:0;font-size:1.1rem}
+.donut-cashier .wallet-btn{background:#283d64;color:#edf3ff;border-color:#4b6390}

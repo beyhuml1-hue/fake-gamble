@@ -6,7 +6,6 @@ import { formatAmount } from "../lib/money";
 import { sound } from "../lib/sound";
 import { useWallet } from "../state/wallet";
 import { BetsTable } from "./BetsTable";
-import { Cashier } from "./Cashier";
 import { DonutCashier, dsmp, useDonutCashier } from "./DonutCashier";
 import { Icon } from "./Icons";
 import { Community } from "../pages/Community";
@@ -57,12 +56,11 @@ export function AppShell() {
   }
   const { displayName, isGuest, canSignIn, logout, showSignIn, showSignUp } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
-  const { balance, cashierNonce, openCashier, notifications, dismissNotification } = useWallet();
+  const { balance, cashierNonce, notifications, dismissNotification } = useWallet();
   const rolling = useRollingBalance(balance);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [lobbyNavCollapsed, setLobbyNavCollapsed] = useState(false);
-  const [walletOpen, setWalletOpen] = useState(false);
   const donutCashier = useDonutCashier(!isGuest);
   const donut = donutCashier.data;
   const [donutOpen, setDonutOpen] = useState(false);
@@ -88,7 +86,7 @@ export function AppShell() {
   }, [location.pathname, location.hash]);
 
   useEffect(() => {
-    if (cashierNonce > 0) setWalletOpen(true);
+    if (cashierNonce > 0) setDonutOpen(true);
   }, [cashierNonce]);
 
   useEffect(() => {
@@ -99,11 +97,19 @@ export function AppShell() {
     if (isGuest) {
       promptedLink.current = false;
       setDonutOpen(false);
+    } else {
+      try {
+        if (sessionStorage.getItem("blockbet.return-to-wallet") === "yes") {
+          sessionStorage.removeItem("blockbet.return-to-wallet");
+          promptedLink.current = true;
+          setDonutOpen(true);
+        }
+      } catch { /* Storage may be blocked. */ }
     }
   }, [donut?.configured, donut?.wallet, isGuest]);
 
   const practiceGame = location.pathname.startsWith("/game/") && location.pathname !== "/game/coinflip";
-  const useDsmp = Boolean(donut?.configured && !practiceGame);
+  const useDsmp = !practiceGame;
   const showChat = chatOpen && location.pathname !== "/chat";
   const arcadeChrome = !classic;
   const lobbyNavClass = (hash: string) => location.hash === hash ? "nav-item active" : "nav-item";
@@ -227,8 +233,8 @@ export function AppShell() {
               <strong>{useDsmp ? dsmp(donut?.wallet?.balance ?? 0) : formatAmount(rolling.shown)}</strong>
               <small>{useDsmp ? "DonutSMP balance" : "Practice credits"}</small>
             </span>
-            <button type="button" className="wallet-btn" aria-label={useDsmp ? "Open DSMP wallet" : "Open practice wallet"}
-              onClick={useDsmp ? () => setDonutOpen(true) : openCashier}>
+            <button type="button" className="wallet-btn" aria-label="Open DSMP wallet"
+              onClick={() => setDonutOpen(true)}>
               Wallet
             </button>
           </div>}
@@ -300,8 +306,12 @@ export function AppShell() {
           <button type="button" aria-label="Dismiss transfer notification" onClick={()=>dismissNotification(item.id)}>✕</button>
         </div>)}
       </section>}
-      <Cashier open={walletOpen} onClose={() => setWalletOpen(false)} />
-      <DonutCashier open={donutOpen} onClose={() => setDonutOpen(false)} cashier={donutCashier} />
+      <DonutCashier open={donutOpen} onClose={() => setDonutOpen(false)} cashier={donutCashier} signedIn={!isGuest}
+        onSignIn={() => {
+          try { sessionStorage.setItem("blockbet.return-to-wallet", "yes"); } catch { /* Storage may be blocked. */ }
+          setDonutOpen(false);
+          showSignIn();
+        }} />
     </div>
   );
 }

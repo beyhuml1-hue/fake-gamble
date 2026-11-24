@@ -112,7 +112,7 @@ const gameCatalog = [
   },
   {
     id: "pump",
-    name: "Pump",
+    name: "Balloon",
     blurb: "Inflate the balloon. Cash out before it pops.",
     note: "99% RTP",
     gradient: "linear-gradient(160deg,#450a0a 0%,#e11d48 55%,#fecdd3 140%)",

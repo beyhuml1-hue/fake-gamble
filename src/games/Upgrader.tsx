@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type PointerEvent } from "react";
 import { BetPanel } from "../components/BetPanel";
 import { GameLayout } from "../components/GameLayout";
 import { EDGE } from "../lib/math";
@@ -13,6 +13,7 @@ export function Upgrader() {
   const [amount, setAmount] = useState(1);
   const [target, setTarget] = useState(2);
   const [angle, setAngle] = useState(0);
+  const [zone, setZone] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [win, setWin] = useState<boolean | null>(null);
   const [error, setError] = useState("");
@@ -22,6 +23,7 @@ export function Upgrader() {
   const profit = Math.max(0, payout(Math.max(cents, 0), target) - Math.max(cents, 0));
 
   const play = () => {
+    if (spinning) return;
     const stake = betCents(amount, balance);
     if (stake == null) {
       setError("Minimum bet is $0.10, and it can't be more than your balance.");
@@ -33,13 +35,9 @@ export function Upgrader() {
     const roll = random();
     const didWin = roll < chance;
     const pay = didWin ? payout(stake, target) : 0;
-    const land = 1440 + roll * 360;
-    setSpinning(false);
-    setAngle((current) => current % 360);
-    window.setTimeout(() => {
-      setSpinning(true);
-      setAngle(land);
-    }, 30);
+    const landing = (zone + roll * 360) % 360;
+    setSpinning(true);
+    setAngle(current => current + 1440 + ((landing - current % 360 + 360) % 360));
     window.setTimeout(() => {
       if (pay) credit(pay);
       record("Upgrader", stake, pay);
@@ -47,6 +45,15 @@ export function Upgrader() {
       setSpinning(false);
     }, SPIN_MS + 40);
   };
+
+  function moveZone(event: PointerEvent<HTMLDivElement>) {
+    if (spinning) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - box.left - box.width / 2;
+    const y = event.clientY - box.top - box.height / 2;
+    if (Math.hypot(x, y) < box.width * .24) return;
+    setZone((Math.round(Math.atan2(x, -y) * 180 / Math.PI) + 360) % 360);
+  }
 
   return (
     <GameLayout
@@ -75,17 +82,25 @@ export function Upgrader() {
               onChange={(event) => setTarget(Number(event.target.value))}
             />
           </label>
+          <label className="field">
+            <span className="field-label">Winning zone position</span>
+            <input className="range" type="range" min={0} max={359} value={zone} disabled={spinning}
+              onChange={event => setZone(Number(event.target.value))} />
+          </label>
         </BetPanel>
       }
     >
       <div className="center-stage">
-        <div className="dial">
-          <div
-            className="dial-face"
-            style={{ background: `conic-gradient(#00e701 0 ${chance * 360}deg, #2f4553 ${chance * 360}deg 360deg)` }}
-          />
-          <div className={spinning ? "needle spin" : "needle"} style={{ transform: `rotate(${angle}deg)` }} />
-          <div className="dial-hub" />
+        <div className="upgrade-wheel"
+          onPointerDown={event => { if (!spinning && event.button === 0) {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            moveZone(event);
+          } }}
+          onPointerMove={event => { if (event.currentTarget.hasPointerCapture(event.pointerId)) moveZone(event); }}>
+          <div className="upgrade-rim" style={{ background: `conic-gradient(from ${zone}deg, #68efa0 0 ${chance * 360}deg, #393d56 ${chance * 360}deg 360deg)` }} />
+          <div className="upgrade-wheel-center"><img src="/covers/slide/gold.png" alt="" /></div>
+          <div className="upgrade-marker" style={{ transform: `rotate(${angle}deg)`,
+            transition: spinning ? `transform ${SPIN_MS}ms cubic-bezier(.13,.65,.2,1)` : "none" }} />
         </div>
         <div className="stat-row">
           <div className="stat">
@@ -96,13 +111,9 @@ export function Upgrader() {
             <span>Target</span>
             <strong>{formatMult(target)}</strong>
           </div>
-          <div className="stat">
-            <span>Zone</span>
-            <strong>Green</strong>
-          </div>
         </div>
         <p className={win == null ? "result-line" : win ? "result-line win" : "result-line lose"}>
-          {spinning ? "Rolling…" : win == null ? "Green hits. The rest misses." : win ? `Upgraded ${formatMult(target)}` : "Miss"}
+          {spinning ? "Rolling…" : win == null ? "Drag the rim to move the winning zone." : win ? `Upgraded ${formatMult(target)}` : "Miss"}
         </p>
       </div>
     </GameLayout>
